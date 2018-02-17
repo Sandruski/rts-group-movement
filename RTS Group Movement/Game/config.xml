@@ -1,0 +1,67 @@
+<!-- Config file for the game -->
+
+<config>
+  <app>
+    <title>Warcraft II</title>
+    <organization>UPC</organization>    
+  </app>
+	
+  <renderer>
+    <vsync value="false"/>
+    <CapFrames value="30"/>
+  </renderer>
+
+  <window>
+    <resolution width="1024" height="768" scale="1"/>
+    <fullscreen value="false"/>
+    <borderless value="false"/>
+    <resizable value="false"/>
+    <fullscreen_window value="false"/>
+    <icon name="Assets/Sprites/Textures/Icon.bmp"/>
+  </window>
+
+  <map>
+    <folder>data/assets/textures/maps/</folder>
+    <general>
+      <blit offset="15"/>
+      <camera_blit value="1"/>
+      <culing value="50"/>
+    </general>
+  </map>
+
+  <gui>
+    <atlas file="Assets/Sprites/atlas.png"/>
+  </gui>
+
+  <scene>
+    <maps>
+      <index first="0"/>
+      <map id="1" name="scene.tmx"/>
+    </maps>
+  </scene>
+
+  <entities>
+    <spritesheets>
+      <spritesheet name="Assets/Sprites/Textures/CatPeasant.png"/>
+    </spritesheets>
+    <types>
+      <player>
+        <general>
+        </general>
+        <animations>
+          <idle speed="10" loop="1">
+            <frame x="1" y="454" w="48" h="48"/>
+            <frame x="50" y="454" w="48" h="48"/>
+          </idle>
+        </animations>
+      </player>
+    </types>    
+  </entities>
+  
+  <particles>
+     <spritesheets>
+      <spritesheet name="Assets/Sprites/Textures/Sparkle.png"/>
+    </spritesheets>
+  </particles>
+
+</config>
