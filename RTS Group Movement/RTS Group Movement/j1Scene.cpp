@@ -184,11 +184,8 @@ bool j1Scene::Update(float dt)
 
 		App->entities->SelectEntitiesWithinRectangle(mouseRect);
 	}
-	else if (App->input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_UP)
-		App->entities->CreateGroupWithSelectedEntities();
 
 	// Debug pathfinding ------------------------------
-	
 
 	// F1, F2, F3, F4, F5, F6, +, -
 	DebugKeys();

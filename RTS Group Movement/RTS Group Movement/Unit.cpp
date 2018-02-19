@@ -1,9 +1,12 @@
+#include "p2Log.h"
+
 #include "j1App.h"
 #include "Unit.h"
 
 #include "j1Collision.h"
 #include "j1Render.h"
 #include "j1Map.h"
+#include "j1Pathfinding.h"
 
 Unit::Unit(EntityInfo entityInfo, UnitInfo unitInfo) : Entity(entityInfo)
 {
@@ -14,7 +17,6 @@ Unit::Unit(EntityInfo entityInfo, UnitInfo unitInfo) : Entity(entityInfo)
 void Unit::Move(float dt)
 {
 	/*
-
 	i_pos.x = (int)position.x;
 	i_pos.y = (int)position.y;
 
@@ -33,6 +35,11 @@ void Unit::Move(float dt)
 	collider_pos = { (int)position.x + player.coll_offset.x, (int)position.y + player.coll_offset.y };
 	collider->SetPos(collider_pos.x, collider_pos.y);
 	*/
+
+	// -------------------------------------------------------
+
+	UnitStateMachine();
+	MovementStateMachine();
 }
 
 void Unit::Draw(SDL_Texture* sprites)
@@ -60,6 +67,95 @@ void Unit::UnitStateMachine() {
 
 		break;
 	}
+}
+
+void Unit::MovementStateMachine() 
+{
+	/*
+	if (currTile == g->goal)
+		// currentPos is the same as goal? Goal reached!
+		movementState = MovementState_GoalReached;
+	
+	else if (u->waypoints.size() == 0)
+		// Out of waypoints? Wait for path.
+		u->movementState = MovementState_WaitForPath;
+
+	// Raycast a line between the units and the nextPos they're heading to
+	iPoint nextPos = App->map->MapToWorld(u->nextTile.x, u->nextTile.y);
+	App->render->DrawLine(u->entity->entityInfo.pos.x, u->entity->entityInfo.pos.y, nextPos.x, nextPos.y, 255, 255, 255, 255);
+	App->render->DrawCircle(nextPos.x, nextPos.y, 10, 255, 255, 255, 255);
+
+	switch (u->movementState) {
+
+	case MovementState_WaitForPath:
+
+		// Find a path
+		if (App->pathfinding->CreatePath(u->currTile, g->GetGoal(), MANHATTAN) == -1)
+			break;
+
+		// Save the path found
+		u->waypoints = *App->pathfinding->GetLastPath();
+
+		u->movementState = MovementState_IncreaseWaypoint;
+
+		break;
+
+	case MovementState_FollowPath:
+
+		// MOVEMENT CALCULATION (update predicted positions)
+		// Calculate the difference between the destination tile and the current tile (1, -1 or 0)
+		moveTile = { u->nextTile.x - u->currTile.x, u->nextTile.y - u->currTile.y };
+
+		// Multiply the calculated speed to reach the destination by the unit speed and the dt
+		moveTile.x *= u->speed * dt;
+		moveTile.y *= u->speed * dt;
+
+		// COLLISION CALCULATION
+		// Check for collisions before moving towards the destination tile
+		endTile = { (int)u->entity->entityInfo.pos.x + moveTile.x ,(int)u->entity->entityInfo.pos.y + moveTile.y };
+		endTile = App->map->WorldToMap(endTile.x, endTile.y);
+
+		if (App->pathfinding->IsWalkable(endTile)) { // MYTODO: Add a complete collision detection system to check collisions within units, etc.
+
+			if (endTile.x == u->nextTile.x && endTile.y == u->nextTile.y) {
+				// If we're going to jump over the waypoint during this move
+				u->movementState = MovementState_IncreaseWaypoint;
+			}
+
+			// Do the actual move
+			u->entity->entityInfo.pos.x += moveTile.x;
+			u->entity->entityInfo.pos.y += moveTile.y;
+		}
+		else
+			u->movementState = MovementState_CollisionFound;
+
+		break;
+
+	case MovementState_GoalReached:
+
+		// Make the appropiate notifications
+		LOG("Goal reached!");
+
+		break;
+
+	case MovementState_CollisionFound:
+
+		// Handle the collision
+		u->movementState = MovementState_WaitForPath;
+
+		break;
+
+	case MovementState_IncreaseWaypoint:
+
+		// Get the next waypoint to head to
+		u->nextTile = u->waypoints.front();
+		u->waypoints.erase(u->waypoints.begin());
+
+		u->movementState = MovementState_FollowPath;
+
+		break;
+	}
+	*/
 }
 
 void Unit::SetUnitState(UnitState unitState)

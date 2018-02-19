@@ -5,6 +5,11 @@
 
 #include "p2Point.h"
 
+#include <algorithm>
+using namespace std;
+
+#define MAX_ENTITIES_SELECTED 8
+
 struct SDL_Texture;
 struct SDL_Rect;
 
@@ -29,8 +34,9 @@ public:
 	void Draw();
 
 	Unit* AddUnit(const EntityInfo& entityInfo, const UnitInfo& unitInfo);
-	void SelectEntitiesWithinRectangle(SDL_Rect rectangleRect);
-	void CreateGroupWithSelectedEntities();
+
+	// Returns a list with all the entities within a given rectangle
+	list<Entity*> SelectEntitiesWithinRectangle(SDL_Rect rectangleRect);
 
 	// Get entities info
 	/*

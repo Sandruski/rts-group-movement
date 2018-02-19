@@ -127,39 +127,39 @@ void j1EntityFactory::Draw()
 	}
 }
 
-void j1EntityFactory::SelectEntitiesWithinRectangle(SDL_Rect rectangleRect)
+list<Entity*> j1EntityFactory::SelectEntitiesWithinRectangle(SDL_Rect rectangleRect)
 {
 	list<Entity*>::const_iterator it = activeEntities.begin();
 
 	while (it != activeEntities.end()) {
 
 		SDL_Rect entityRect = { (*it)->entityInfo.pos.x, (*it)->entityInfo.pos.y, (*it)->entityInfo.size.x, (*it)->entityInfo.size.y };
-		
-		// If the entity is within the selection, select it
-		if (SDL_HasIntersection(&entityRect, &rectangleRect))
-			(*it)->isSelected = true;
-		else
-			(*it)->isSelected = false;
 
+		// If the entity is within the selection:
+		if (SDL_HasIntersection(&entityRect, &rectangleRect)) {
+
+			// It there are less entities than MAX_ENTITIES_SELECTED selected:
+			if (unitsSelected.size() < MAX_ENTITIES_SELECTED) {
+
+				// If the entity isn't in the unitsSelected list, add it
+				if (find(unitsSelected.begin(), unitsSelected.end(), *it) == unitsSelected.end()) {
+					unitsSelected.push_back(*it);
+					(*it)->isSelected = true;
+				}
+			}
+		}
+		else {
+
+			// If the entity is in the unitsSelected list, remove it
+			if (find(unitsSelected.begin(), unitsSelected.end(), *it) != unitsSelected.end()) {
+				unitsSelected.remove(*it);
+				(*it)->isSelected = false;
+			}
+		}
 		it++;
 	}
-}
 
-void j1EntityFactory::CreateGroupWithSelectedEntities() 
-{
-	// Clear last group
-	unitsSelected.clear();
-
-	list<Entity*>::const_iterator it = activeEntities.begin();
-
-	while (it != activeEntities.end()) {
-
-		// Create a new group with selected units
-		if ((*it)->isSelected)
-			unitsSelected.push_back(*it);
-
-		it++;
-	}
+	return unitsSelected;
 }
 
 bool j1EntityFactory::PostUpdate()

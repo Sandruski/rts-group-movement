@@ -6,6 +6,14 @@
 
 struct SDL_Color;
 
+enum MovementState {
+	MovementState_WaitForPath,
+	MovementState_FollowPath,
+	MovementState_GoalReached,
+	MovementState_CollisionFound,
+	MovementState_IncreaseWaypoint
+};
+
 struct UnitInfo {
 
 	UnitInfo();
@@ -30,6 +38,8 @@ public:
 	void Draw(SDL_Texture* sprites);
 
 	void UnitStateMachine();
+	void MovementStateMachine();
+
 	void SetUnitState(UnitState unitState);
 	UnitState GetUnitState() const;
 
@@ -43,6 +53,11 @@ public:
 private:
 
 	UnitState unitState = UnitState_Idle;
+
+	// Movement
+	MovementState movementState = MovementState_WaitForPath;
+	vector<iPoint> commanderPath;
+
 };
 
 #endif //__Entity_H__
