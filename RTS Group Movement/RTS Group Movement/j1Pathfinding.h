@@ -9,8 +9,7 @@
 using namespace std;
 
 #define DEFAULT_PATH_LENGTH 50
-#define INVALID_WALK_CODE 1181
-#define INVALID_WALK_CODES t != 1180 && t != 1181 && t != 1182 && t != 1183
+#define INVALID_WALK_CODE 255
 
 enum Distance {
 	DISTANCE_TO,
@@ -108,12 +107,10 @@ struct PathList
 
 	// -----------
 	// The list itself
-	list<PathNode*> pathList;
+	list<PathNode> pathNodeList;
 };
 
 // Utility: calculate a specific distance
 int CalculateDistance(iPoint origin, iPoint destination, Distance distance_type);
-
-
 
 #endif //__j1PATHFINDING_H__

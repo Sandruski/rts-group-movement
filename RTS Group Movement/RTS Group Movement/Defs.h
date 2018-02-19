@@ -7,6 +7,8 @@
 
 #define ColorBlack { 0,0,0,255 }
 #define ColorWhite { 255,255,255,255 }
+#define ColorRed { 255,0,0,255 }
+#define ColorBlue { 0,0,255,255 }
 #define ColorLightGrey { 231,231,231,255 }
 #define ColorPurple { 47,33,56,255 }
 #define ColorPink { 183,116,141,255 }
