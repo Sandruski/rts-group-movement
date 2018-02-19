@@ -106,7 +106,7 @@ bool j1Scene::PreUpdate()
 		UnitInfo unitInfo;
 
 		entityInfo.pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
-		entityInfo.size = { 16,16 };
+		entityInfo.size = { 32,32 };
 
 		unitInfo.color = ColorBloodyRed;
 

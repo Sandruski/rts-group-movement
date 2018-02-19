@@ -244,17 +244,8 @@ int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, D
 
 				last_path.push_back(close.pathNodeList.front().pos);
 
-				// Use the Pathnode::parent and Flip() the path when you are finish
-				
-				// Flip the path
-				vector<iPoint> ret_path = last_path;
-				last_path.clear();
-
-				vector<iPoint>::reverse_iterator it = ret_path.rbegin();
-				while (it != ret_path.rend()) {
-					last_path.push_back(*it);
-					it++;
-				}
+				// Flip() the path when you are finish
+				reverse(last_path.begin(), last_path.end());
 
 				ret = last_path.size();
 

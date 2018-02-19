@@ -160,7 +160,7 @@ list<Entity*> j1EntityFactory::SelectEntitiesWithinRectangle(SDL_Rect rectangleR
 	return unitsSelected;
 }
 
-bool j1EntityFactory::IsAnotherEntityOnTile(Entity* entity, iPoint tile)
+bool j1EntityFactory::IsAnotherEntityOnTile(Entity* entity, iPoint tile) const
 {
 	list<Entity*>::const_iterator it = activeEntities.begin();
 
@@ -168,7 +168,7 @@ bool j1EntityFactory::IsAnotherEntityOnTile(Entity* entity, iPoint tile)
 
 		if (*it != entity) {
 			iPoint entityTile = { (int)(*it)->entityInfo.pos.x, (int)(*it)->entityInfo.pos.y };
-			App->map->WorldToMap(entityTile.x, entityTile.y);
+			entityTile = App->map->WorldToMap(entityTile.x, entityTile.y);
 
 			if (entityTile == tile)
 				return true;
@@ -177,6 +177,37 @@ bool j1EntityFactory::IsAnotherEntityOnTile(Entity* entity, iPoint tile)
 	}
 
 	return false;
+}
+
+iPoint j1EntityFactory::FindClosestWalkableTile(Entity* entity, iPoint tile) const
+{
+	iPoint currTile = { -1,-1 };
+	vector<iPoint> visitedTiles;
+
+	visitedTiles.push_back(tile);
+
+	while (visitedTiles.size() > 0) {
+
+		currTile = visitedTiles.front();
+		visitedTiles.erase(visitedTiles.begin());
+
+		if (App->pathfinding->IsWalkable(currTile) && !IsAnotherEntityOnTile(entity, currTile))
+			return currTile;
+
+		iPoint neighbors[4];
+		neighbors[0].create(currTile.x + 1, currTile.y + 0);
+		neighbors[1].create(currTile.x + 0, currTile.y + 1);
+		neighbors[2].create(currTile.x - 1, currTile.y + 0);
+		neighbors[3].create(currTile.x + 0, currTile.y - 1);
+
+		for (uint i = 0; i < 4; ++i)
+		{
+			if (find(visitedTiles.begin(), visitedTiles.end(), neighbors[i]) == visitedTiles.end())
+				visitedTiles.push_back(neighbors[i]);
+		}
+	}
+
+	return currTile;
 }
 
 bool j1EntityFactory::PostUpdate()

@@ -6,6 +6,7 @@
 
 #include <list>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
 #define DEFAULT_PATH_LENGTH 50

@@ -25,7 +25,6 @@ struct UnitInfo {
 	~UnitInfo();
 
 	SDL_Color color = { 255,255,255,255 };
-
 };
 
 enum UnitState {

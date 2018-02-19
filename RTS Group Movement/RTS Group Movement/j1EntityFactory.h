@@ -38,8 +38,11 @@ public:
 	// Returns a list with all the entities within a given rectangle
 	list<Entity*> SelectEntitiesWithinRectangle(SDL_Rect rectangleRect);
 
-	// Returns true if an entity occupies the tile
-	bool IsAnotherEntityOnTile(Entity* entity, iPoint tile);
+	// Returns true if an entity (different from the one passed as an argument) occupies the tile
+	bool IsAnotherEntityOnTile(Entity* entity, iPoint tile) const;
+
+	// Looks for the closest walkable tile to the tile passed as an argument
+	iPoint FindClosestWalkableTile(Entity* entity, iPoint tile) const;
 
 	// Get entities info
 	/*

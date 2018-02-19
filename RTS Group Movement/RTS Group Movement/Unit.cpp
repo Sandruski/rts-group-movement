@@ -97,10 +97,7 @@ void Unit::MovementStateMachine(float dt)
 	iPoint currTile = App->map->WorldToMap(entityInfo.pos.x, entityInfo.pos.y);
 	fPoint movePos;
 	iPoint endTile;
-
-	// Has the unit reached the goal?
-	if (currTile == goalTile)
-		movementState = MovementState_GoalReached;
+	iPoint nextPos = App->map->MapToWorld(nextTile.x, nextTile.y);
 
 	/*
 	else if (waypoints.size() == 0)
@@ -134,7 +131,7 @@ void Unit::MovementStateMachine(float dt)
 
 		// MOVEMENT CALCULATION
 
-		// Calculate the difference between nextTile and currTile. The result will be in the interval [-1,0]
+		// Calculate the difference between nextTile and currTile. The result will be in the interval [-1,1]
 		movePos = { (float)(nextTile.x - currTile.x), (float)(nextTile.y - currTile.y) };
 
 		// Apply the speed and the dt to the previous result
@@ -148,9 +145,9 @@ void Unit::MovementStateMachine(float dt)
 		endTile = App->map->WorldToMap(endTile.x, endTile.y);
 
 		// Check for future collisions before moving
-		if (App->pathfinding->IsWalkable(endTile) && !App->entities->IsAnotherEntityOnTile(this, endTile)) { // endTile may change (terrain modification) or may be occupied by a unit
+		if (App->pathfinding->IsWalkable(nextTile) && !App->entities->IsAnotherEntityOnTile(this, nextTile)) { // endTile may change (terrain modification) or may be occupied by a unit
 
-			if (endTile.x == nextTile.x && endTile.y == nextTile.y)
+			if (endTile.x == nextTile.x && endTile.y == nextTile.y)	
 				// If we're going to jump over the waypoint during this move
 				movementState = MovementState_IncreaseWaypoint;
 
@@ -158,32 +155,40 @@ void Unit::MovementStateMachine(float dt)
 			entityInfo.pos.x += movePos.x;
 			entityInfo.pos.y += movePos.y;
 		}
-		else
-			// movementState = MovementState_CollisionFound;
+		else {
+			//nextTile = App->entities->FindClosestWalkableTile(this, nextTile);
+			
+			if (nextTile.x == -1 && nextTile.y == -1)
+				LOG("-1!!!");
+			
+			//movementState = MovementState_CollisionFound;
+		}
 
 		break;
 
 	case MovementState_GoalReached:
 
 		// Make the appropiate notifications
-		LOG("Goal reached!");
 
 		break;
 
 	case MovementState_CollisionFound:
 
-		// Handle the collision
-		// movementState = MovementState_WaitForPath;
+		// If we want to prevent units from standing in line, we must implement local avoidance
+		
+		movementState = MovementState_FollowPath;
 
 		break;
 
 	case MovementState_IncreaseWaypoint:
 
 		// Get the next waypoint to head to
-		nextTile = path.front();
-		path.erase(path.begin());
+		if (path.size() > 0) {
+			nextTile = path.front();
+			path.erase(path.begin());
 
-		movementState = MovementState_FollowPath;
+			movementState = MovementState_FollowPath;
+		}
 
 		break;
 	}
@@ -199,11 +204,13 @@ void Unit::DebugDraw(SDL_Texture* sprites)
 		App->render->DrawCircle(nextPos.x, nextPos.y, 10, 255, 255, 255, 255);
 
 		// Draw path
+		/*
 		for (uint i = 0; i < path.size(); ++i)
 		{
 			iPoint pos = App->map->MapToWorld(path.at(i).x, path.at(i).y);
 			App->render->Blit(sprites, pos.x, pos.y);
 		}
+		*/
 	}
 }
 
