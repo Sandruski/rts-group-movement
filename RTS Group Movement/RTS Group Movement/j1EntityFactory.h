@@ -38,6 +38,9 @@ public:
 	// Returns a list with all the entities within a given rectangle
 	list<Entity*> SelectEntitiesWithinRectangle(SDL_Rect rectangleRect);
 
+	// Returns true if an entity occupies the tile
+	bool IsAnotherEntityOnTile(Entity* entity, iPoint tile);
+
 	// Get entities info
 	/*
 	PlayerInfo& GetPlayerInfo() { return player; }
@@ -56,9 +59,9 @@ private:
 	string CatPeasant_spritesheet;
 
 	// Entities textures
-	/*
-	SDL_Texture* CatPeasantTex = nullptr;
-	*/
+	string footmanTexName;
+	SDL_Texture* footmanTex = nullptr;
+
 
 	// Entities info
 	/*

@@ -30,15 +30,9 @@ bool j1EntityFactory::Awake(pugi::xml_node& config) {
 
 	bool ret = true;
 
-	pugi::xml_node node = config.child("spritesheets").child("spritesheet");
+	pugi::xml_node spritesheets = config.child("spritesheets");
 
-	// Load texture paths
-	/*
-	CatPeasant_spritesheet = node.attribute("name").as_string();
-	node = node.next_sibling("spritesheet");
-	Monkey_spritesheet = node.attribute("name").as_string();
-	*/
-	//_load_texture_paths
+	footmanTexName = spritesheets.child("footman").attribute("name").as_string();
 
 	return ret;
 }
@@ -49,9 +43,7 @@ bool j1EntityFactory::Start()
 
 	LOG("Loading entities textures");
 
-	/*
-	CatPeasantTex = App->tex->Load(CatPeasant_spritesheet.GetString());
-	*/
+	footmanTex = App->tex->Load(footmanTexName.data());
 
 	return ret;
 }
@@ -121,8 +113,14 @@ void j1EntityFactory::Draw()
 	list<Entity*>::const_iterator it = activeEntities.begin();
 
 	while (it != activeEntities.end()) {
-		// MYTODO: Add some code to switch between different textures
-		(*it)->Draw(nullptr);
+		
+		switch ((*it)->type) {
+
+		case EntityType_Unit:
+			(*it)->Draw(footmanTex);
+			break;
+		}
+
 		it++;
 	}
 }
@@ -160,6 +158,25 @@ list<Entity*> j1EntityFactory::SelectEntitiesWithinRectangle(SDL_Rect rectangleR
 	}
 
 	return unitsSelected;
+}
+
+bool j1EntityFactory::IsAnotherEntityOnTile(Entity* entity, iPoint tile)
+{
+	list<Entity*>::const_iterator it = activeEntities.begin();
+
+	while (it != activeEntities.end()) {
+
+		if (*it != entity) {
+			iPoint entityTile = { (int)(*it)->entityInfo.pos.x, (int)(*it)->entityInfo.pos.y };
+			App->map->WorldToMap(entityTile.x, entityTile.y);
+
+			if (entityTile == tile)
+				return true;
+		}
+		it++;
+	}
+
+	return false;
 }
 
 bool j1EntityFactory::PostUpdate()
@@ -204,9 +221,8 @@ bool j1EntityFactory::CleanUp()
 	}
 	toSpawnEntities.clear();
 
-	/*
-	App->tex->UnLoad(CatPeasantTex);
-	*/
+	// Free all textures
+	App->tex->UnLoad(footmanTex);
 
 	return ret;
 }

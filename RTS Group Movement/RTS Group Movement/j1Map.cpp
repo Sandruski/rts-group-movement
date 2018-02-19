@@ -47,7 +47,7 @@ void j1Map::Draw()
 	// TODO 5: Prepare the loop to draw all tilesets + Blit
 	for (list<MapLayer*>::const_iterator layer = data.layers.begin(); layer != data.layers.end(); ++layer) {
 
-		if ((*layer)->properties.GetProperty("Nodraw") != 0)
+		if ((*layer)->properties.GetProperty("Draw", false) == false)
 			continue;
 
 		if ((*layer)->index != ABOVE) {
@@ -69,35 +69,6 @@ void j1Map::Draw()
 					}
 				}//for
 			}//for
-		}
-	}
-}
-
-void j1Map::DrawAboveLayer()
-{
-	if (map_loaded == false)
-		return;
-
-	if (aboveLayer != nullptr) {
-		
-		list<TileSet*>::const_iterator draw_tilesets = data.tilesets.begin();
-		while (draw_tilesets != data.tilesets.end())
-		{
-			for (int i = 0; i < aboveLayer->width; i++) {
-				for (int j = 0; j < aboveLayer->height; j++) {
-
-					if (aboveLayer->Get(i, j) != 0) {
-
-						SDL_Rect rect = (*draw_tilesets)->GetTileRect(aboveLayer->Get(i, j));
-						SDL_Rect* section = &rect;
-
-						iPoint world = MapToWorld(i, j);
-
-						App->render->Blit((*draw_tilesets)->texture, world.x, world.y, section, aboveLayer->speed);
-					}
-				}
-			}
-			draw_tilesets++;
 		}
 	}
 }
@@ -641,7 +612,7 @@ bool j1Map::LoadProperties(pugi::xml_node& node, Properties& properties)
 			Properties::Property* p = new Properties::Property();
 
 			p->name = prop.attribute("name").as_string();
-			p->value = prop.attribute("value").as_int();
+			p->value = prop.attribute("value").as_bool();
 
 			properties.properties.push_back(p);
 		}
@@ -661,7 +632,7 @@ bool j1Map::CreateWalkabilityMap(int& width, int& height, uchar** buffer) const
 	{
 		MapLayer* layer = *item;
 
-		if (layer->properties.GetProperty("Navigation", 0) == 0)
+		if (layer->properties.GetProperty("Navigation", false) == false)
 			continue;
 
 		uchar* map = new uchar[layer->width*layer->height];
@@ -699,7 +670,7 @@ bool j1Map::CreateWalkabilityMap(int& width, int& height, uchar** buffer) const
 	return ret;
 }
 
-int Properties::GetProperty(const char* value, int default_value) const
+bool Properties::GetProperty(const char* value, bool default_value) const
 {
 	list<Property*>::const_iterator item = properties.begin();
 

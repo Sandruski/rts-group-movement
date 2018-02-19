@@ -36,7 +36,6 @@ void j1PathFinding::SetMap(uint width, uint height, uchar* data)
 	RELEASE_ARRAY(map);
 	map = new uchar[width*height];
 	memcpy(map, data, width*height);
-
 }
 
 // Utility: return true if pos is inside the map boundaries
@@ -311,7 +310,7 @@ int CalculateDistance(iPoint origin, iPoint destination, Distance distance_type)
 	case DISTANCE_NO_SQRT:
 		distance = origin.DistanceNoSqrt(destination);
 		break;
-	case MANHATTAN:
+	case DISTANCE_MANHATTAN:
 		distance = origin.DistanceManhattan(destination);
 		break;
 	}

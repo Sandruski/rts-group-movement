@@ -29,6 +29,12 @@ void Entity::Draw(SDL_Texture* sprites)
 
 	if (isSelected)
 		DrawSelected();
+
+	DebugDraw(sprites);
+}
+
+void Entity::DebugDraw(SDL_Texture* sprites)
+{
 }
 
 void Entity::DrawSelected() 

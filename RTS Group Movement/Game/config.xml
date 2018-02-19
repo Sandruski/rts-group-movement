@@ -7,8 +7,8 @@
   </app>
 	
   <renderer>
-    <vsync value="false"/>
-    <CapFrames value="30"/>
+    <vsync value="0"/>
+    <capFrames value="30"/>
   </renderer>
 
   <window>
@@ -22,11 +22,6 @@
 
   <map>
     <folder>data/assets/textures/maps/</folder>
-    <general>
-      <blit offset="15"/>
-      <camera_blit value="1"/>
-      <culing value="50"/>
-    </general>
   </map>
 
   <gui>
@@ -35,27 +30,16 @@
 
   <scene>
     <maps>
-      <index first="0"/>
-      <map id="1" name="scene.tmx"/>
+      <orthogonal name="orthogonal_walk.tmx" active="0"/>
+      <isometric name="iso_walk.tmx" active="0" tex="data/assets/textures/maps/isometricDebugTex.png"/>
+      <warcraft name="warcraft_walk.tmx" active="1" tex="data/assets/textures/maps/warcraftDebugTex.png"/>
     </maps>
   </scene>
 
   <entities>
     <spritesheets>
-      <spritesheet name="Assets/Sprites/Textures/CatPeasant.png"/>
-    </spritesheets>
-    <types>
-      <player>
-        <general>
-        </general>
-        <animations>
-          <idle speed="10" loop="1">
-            <frame x="1" y="454" w="48" h="48"/>
-            <frame x="50" y="454" w="48" h="48"/>
-          </idle>
-        </animations>
-      </player>
-    </types>    
+      <footman name="data/assets/textures/sprites/footman.png"/>
+    </spritesheets>   
   </entities>
   
   <particles>

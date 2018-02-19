@@ -32,9 +32,21 @@ bool j1Scene::Awake(pugi::xml_node& config)
 	bool ret = true;
 
 	LOG("Loading scene");
-	// Load an orthogonal or isometric map, depending on the index of that map
 
 	// Load maps
+	pugi::xml_node maps = config.child("maps");
+
+	orthogonalMap = maps.child("orthogonal").attribute("name").as_string();
+	orthogonalActive = maps.child("orthogonal").attribute("active").as_bool();
+	orthogonalTexName = maps.child("orthogonal").attribute("tex").as_string();
+
+	isometricMap = maps.child("isometric").attribute("name").as_string();
+	isometricActive = maps.child("isometric").attribute("active").as_bool();
+	isometricTexName = maps.child("isometric").attribute("tex").as_string();
+
+	warcraftMap = maps.child("warcraft").attribute("name").as_string();
+	warcraftActive = maps.child("warcraft").attribute("active").as_bool();
+	warcraftTexName = maps.child("warcraft").attribute("tex").as_string();
 
 	return ret;
 }
@@ -42,14 +54,28 @@ bool j1Scene::Awake(pugi::xml_node& config)
 // Called before the first frame
 bool j1Scene::Start()
 {
-	bool ret = true;
+	bool ret = false;
 
-	// Camera
+	// Save camera info
 	App->win->GetWindowSize(width, height);
 	scale = App->win->GetScale();
 
-	// Load map
-	if (App->map->Load("iso_walk.tmx"))
+	// Load an orthogonal, isometric or warcraft-based map
+	if (orthogonalActive) {
+		ret = App->map->Load(orthogonalMap.data());
+		debugTex = App->tex->Load(orthogonalTexName.data());
+	}
+	else if (isometricActive) {
+		ret = App->map->Load(isometricMap.data());
+		debugTex = App->tex->Load(isometricTexName.data());
+	}
+	else if (warcraftActive) {
+		ret = App->map->Load(warcraftMap.data());
+		debugTex = App->tex->Load(warcraftTexName.data());
+	}
+
+	// Create walkability map
+	if (ret)
 	{
 		int w, h;
 		uchar* data = NULL;
@@ -59,13 +85,6 @@ bool j1Scene::Start()
 		RELEASE_ARRAY(data);
 	}
 
-	debug_tex = App->tex->Load("data/assets/textures/maps/path2.png");
-
-	// Pathfinding collision data
-	/*
-	App->pathfinding->SetMap(App->map->data.width, App->map->data.height, (uchar*)App->map->collisionLayer->data);
-	*/
-
 	return ret;
 }
 
@@ -74,19 +93,18 @@ bool j1Scene::PreUpdate()
 {
 	bool ret = true;
 
+	// Save mouse position (world and map coords)
 	int x, y;
 	App->input->GetMousePosition(x, y);
 	iPoint mousePos = App->render->ScreenToWorld(x, y);
 	iPoint mouseTile = App->map->WorldToMap(mousePos.x, mousePos.y);
 	iPoint mouseTilePos = App->map->MapToWorld(mouseTile.x, mouseTile.y);
 
-	// Create a unit
-	if (App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) {
+	// Mouse right click: spawn a unit
+	if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN) {
 		EntityInfo entityInfo;
 		UnitInfo unitInfo;
 
-		mouseTilePos.x += App->map->data.tile_width / 2;
-		mouseTilePos.y += App->map->data.tile_height;
 		entityInfo.pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
 		entityInfo.size = { 16,16 };
 
@@ -94,30 +112,6 @@ bool j1Scene::PreUpdate()
 
 		App->entities->AddUnit(entityInfo, unitInfo);
 	}
-
-
-	// Debug pathfinding
-	/*
-	static iPoint origin;
-	static bool origin_selected = false;
-
-	iPoint p = App->render->ScreenToWorld(x, y);
-	p = App->map->WorldToMap(p.x, p.y);
-
-	if (App->input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_DOWN)
-	{
-		if (origin_selected == true)
-		{
-			App->pathfinding->CreatePath(origin, p, DISTANCE_TO);
-			origin_selected = false;
-		}
-		else
-		{
-			origin = p;
-			origin_selected = true;
-		}
-	}
-	*/
 
 	return ret;
 }
@@ -127,39 +121,17 @@ bool j1Scene::Update(float dt)
 {
 	bool ret = true;
 
+	// Save mouse position (world and map coords)
 	int x, y;
 	App->input->GetMousePosition(x, y);
 	iPoint mousePos = App->render->ScreenToWorld(x, y);
 	iPoint mouseTile = App->map->WorldToMap(mousePos.x, mousePos.y);
 	iPoint mouseTilePos = App->map->MapToWorld(mouseTile.x, mouseTile.y);
 
-	// Draw map
-	App->map->Draw();
-	App->entities->Draw();
-
-	// Move screen
-	if (App->input->GetKey(SDL_SCANCODE_UP) == KEY_REPEAT)
-		App->render->camera.y += 10;
-
-	if (App->input->GetKey(SDL_SCANCODE_DOWN) == KEY_REPEAT)
-		App->render->camera.y -= 10;
-
-	if (App->input->GetKey(SDL_SCANCODE_LEFT) == KEY_REPEAT)
-		App->render->camera.x += 10;
-
-	if (App->input->GetKey(SDL_SCANCODE_RIGHT) == KEY_REPEAT)
-		App->render->camera.x -= 10;
-
-	// Draw the tile under the mouse
-	App->render->Blit(debug_tex, mouseTilePos.x, mouseTilePos.y);
-
-	const vector<iPoint>* path = App->pathfinding->GetLastPath();
-
-	for (uint i = 0; i < path->size(); ++i)
-	{
-		iPoint pos = App->map->MapToWorld(path->at(i).x, path->at(i).y);
-		App->render->Blit(debug_tex, pos.x, pos.y);
-	}
+	// Draw
+	App->map->Draw(); // map
+	App->entities->Draw(); // entities
+	App->render->Blit(debugTex, mouseTilePos.x, mouseTilePos.y); // tile under the mouse pointer
 
 	// Rectangle drawing and selection of units
 	if (App->input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_DOWN)
@@ -185,8 +157,6 @@ bool j1Scene::Update(float dt)
 		App->entities->SelectEntitiesWithinRectangle(mouseRect);
 	}
 
-	// Debug pathfinding ------------------------------
-
 	// F1, F2, F3, F4, F5, F6, +, -
 	DebugKeys();
 
@@ -211,9 +181,11 @@ bool j1Scene::CleanUp()
 
 	LOG("Freeing scene");
 
+	// Unload the map
 	App->map->UnLoad();
 
-	// Set to nullptr the pointers to the UI elements
+	// Free all textures
+	App->tex->UnLoad(debugTex);
 
 	return ret;
 }

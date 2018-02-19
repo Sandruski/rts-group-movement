@@ -49,7 +49,7 @@ struct Properties
 	struct Property
 	{
 		string name;
-		int value = 0;
+		bool value = false;
 	};
 
 	~Properties()
@@ -65,7 +65,7 @@ struct Properties
 		properties.clear();
 	}
 
-	int GetProperty(const char* name, int default_value = 0) const;
+	bool GetProperty(const char* name, bool default_value = false) const;
 
 	list<Property*>	properties;
 };
@@ -176,7 +176,6 @@ public:
 
 	// Called each loop iteration
 	void Draw();
-	void DrawAboveLayer();
 
 	// Called before quitting
 	bool CleanUp();

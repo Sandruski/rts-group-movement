@@ -55,11 +55,15 @@ public:
 	uint scale = 0;
 
 private:
-	string map;
-	SDL_Texture* debug_tex = nullptr;
+	string orthogonalMap, isometricMap, warcraftMap;
+	string orthogonalTexName, isometricTexName, warcraftTexName;
+	bool orthogonalActive, isometricActive, warcraftActive;
 
 	// Draw a rectangle
 	iPoint startRectangle = { 0,0 };
+
+public:
+	SDL_Texture* debugTex = nullptr;
 };
 
 #endif //__j1SCENE1_H__

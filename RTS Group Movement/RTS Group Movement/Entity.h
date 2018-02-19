@@ -44,6 +44,7 @@ public:
 	virtual void LoadAnimationsSpeed() {};
 	virtual void UpdateAnimations(float dt) {};
 	virtual void Draw(SDL_Texture* sprites);
+	virtual void DebugDraw(SDL_Texture* sprites);
 	virtual void DrawSelected();
 	virtual void OnCollision(Collider* collider, Collider* c2);
 };

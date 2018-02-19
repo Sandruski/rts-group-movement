@@ -14,7 +14,7 @@ using namespace std;
 enum Distance {
 	DISTANCE_TO,
 	DISTANCE_NO_SQRT,
-	MANHATTAN
+	DISTANCE_MANHATTAN
 };
 
 // --------------------------------------------------
