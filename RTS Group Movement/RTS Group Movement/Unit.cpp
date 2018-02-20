@@ -15,7 +15,6 @@ Unit::Unit(EntityInfo entityInfo, UnitInfo unitInfo) : Entity(entityInfo)
 {
 	this->unitInfo = unitInfo;
 	type = EntityType_Unit;
-
 	speed = 100.0f;
 }
 
@@ -94,16 +93,13 @@ void Unit::UnitStateMachine() {
 
 void Unit::MovementStateMachine(float dt)
 {
-	iPoint currTile = App->map->WorldToMap(entityInfo.pos.x, entityInfo.pos.y);
+	iPoint currTile = App->map->WorldToMap(entityInfo.pos.x, entityInfo.pos.y); // entityInfo.pos in map coords
 	fPoint movePos;
 	iPoint endTile;
-	iPoint nextPos = App->map->MapToWorld(nextTile.x, nextTile.y);
-
-	/*
-	else if (waypoints.size() == 0)
-		// Out of waypoints? Wait for path.
-		u->movementState = MovementState_WaitForPath;
-	*/
+	fPoint endPos;
+	iPoint nextPos = App->map->MapToWorld(nextTile.x, nextTile.y); // nextTile in world coords
+	float m;
+	fPoint dir;
 
 	switch (movementState) {
 
@@ -132,7 +128,18 @@ void Unit::MovementStateMachine(float dt)
 		// MOVEMENT CALCULATION
 
 		// Calculate the difference between nextTile and currTile. The result will be in the interval [-1,1]
-		movePos = { (float)(nextTile.x - currTile.x), (float)(nextTile.y - currTile.y) };
+		movePos = { (float)nextPos.x - entityInfo.pos.x, (float)nextPos.y - entityInfo.pos.y };
+
+		// Normalize
+		m = sqrtf(pow(movePos.x, 2.0f) + pow(movePos.y, 2.0f));
+
+		if (m > 0.0f) {
+			movePos.x /= m;
+			movePos.y /= m;
+		}
+
+		dir.x = movePos.x;
+		dir.y = movePos.y;
 
 		// Apply the speed and the dt to the previous result
 		movePos.x *= speed * dt;
@@ -141,28 +148,30 @@ void Unit::MovementStateMachine(float dt)
 		// COLLISION CALCULATION
 
 		// Predict where the unit will be after moving
-		endTile = { (int)(entityInfo.pos.x + movePos.x),(int)(entityInfo.pos.y + movePos.y) };
-		endTile = App->map->WorldToMap(endTile.x, endTile.y);
+		endPos = { entityInfo.pos.x + movePos.x,entityInfo.pos.y + movePos.y };
+		// endTile to check collisions
 
 		// Check for future collisions before moving
-		if (App->pathfinding->IsWalkable(nextTile) && !App->entities->IsAnotherEntityOnTile(this, nextTile)) { // endTile may change (terrain modification) or may be occupied by a unit
+		//if (App->pathfinding->IsWalkable(nextTile) && !App->entities->IsAnotherEntityOnTile(this, nextTile)) { // endTile may change (terrain modification) or may be occupied by a unit
 
-			if (endTile.x == nextTile.x && endTile.y == nextTile.y)	
+		// necessary offset
+
+			if ((nextPos.x - 1.0f < endPos.x && endPos.x < nextPos.x + 1.0f) && (nextPos.y - 1.0f < endPos.y && endPos.y < nextPos.y + 1.0f))
 				// If we're going to jump over the waypoint during this move
 				movementState = MovementState_IncreaseWaypoint;
 
 			// Do the actual move
 			entityInfo.pos.x += movePos.x;
 			entityInfo.pos.y += movePos.y;
-		}
-		else {
+		//}
+		//else {
 			//nextTile = App->entities->FindClosestWalkableTile(this, nextTile);
 			
-			if (nextTile.x == -1 && nextTile.y == -1)
-				LOG("-1!!!");
+			//if (nextTile.x == -1 && nextTile.y == -1)
+				//LOG("-1!!!");
 			
 			//movementState = MovementState_CollisionFound;
-		}
+		//}
 
 		break;
 
