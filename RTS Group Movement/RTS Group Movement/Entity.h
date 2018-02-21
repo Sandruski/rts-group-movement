@@ -2,6 +2,7 @@
 #define __Entity_H__
 
 #include "p2Point.h"
+#include "Animation.h"
 
 struct SDL_Texture;
 struct Collider;
@@ -15,8 +16,9 @@ enum EntityType
 
 struct EntityInfo 
 {
-	fPoint pos = { 0,0 };
+	fPoint pos = { 0.0f,0.0f };
 	iPoint size = { 0,0 };
+	float speed = 1.0f;
 };
 
 class Entity
@@ -31,6 +33,7 @@ public:
 protected:
 
 	Collider* collider = nullptr;
+	Animation* animation = nullptr;
 	bool up = false, down = false, left = false, right = false;
 
 public:
@@ -44,8 +47,7 @@ public:
 	virtual void LoadAnimationsSpeed() {};
 	virtual void UpdateAnimations(float dt) {};
 	virtual void Draw(SDL_Texture* sprites);
-	virtual void DebugDraw(SDL_Texture* sprites);
-	virtual void DrawSelected();
+	virtual void DebugDrawSelected();
 	virtual void OnCollision(Collider* collider, Collider* c2);
 };
 

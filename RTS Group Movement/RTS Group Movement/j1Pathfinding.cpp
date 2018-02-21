@@ -146,7 +146,6 @@ uint PathNode::FindWalkableAdjacents(PathList& list_to_fill) const
 	if (App->pathfinding->IsWalkable(cell))
 		list_to_fill.pathNodeList.push_back(PathNode(-1, -1, cell, this));
 
-	/*
 	// north-west
 	cell.create(pos.x + 1, pos.y - 1);
 	if (App->pathfinding->IsWalkable(cell))
@@ -166,7 +165,6 @@ uint PathNode::FindWalkableAdjacents(PathList& list_to_fill) const
 	cell.create(pos.x - 1, pos.y + 1);
 	if (App->pathfinding->IsWalkable(cell))
 		list_to_fill.pathNodeList.push_back(PathNode(-1, -1, cell, this, true));
-	*/
 
 	return list_to_fill.pathNodeList.size();
 }
@@ -184,9 +182,11 @@ float PathNode::Score() const
 // ----------------------------------------------------------------------------------
 float PathNode::CalculateF(const iPoint& destination, Distance distance_type)
 {
-	g = parent->g + 1;
-	if (this->diagonal)
+	if (diagonal)
 		g = parent->g + 1.7f;
+	else
+		g = parent->g + 1.0f;
+
 	h = CalculateDistance(pos, destination, distance_type);
 
 	return g + h;

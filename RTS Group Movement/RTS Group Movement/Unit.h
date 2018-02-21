@@ -2,21 +2,13 @@
 #define __Unit_H__
 
 #include "Entity.h"
+#include "Animation.h"
 #include "SDL\include\SDL.h"
 
 #include <vector>
 using namespace std;
 
 struct SDL_Color;
-
-enum MovementState {
-	MovementState_Stop,
-	MovementState_WaitForPath,
-	MovementState_FollowPath,
-	MovementState_GoalReached,
-	MovementState_CollisionFound,
-	MovementState_IncreaseWaypoint
-};
 
 struct UnitInfo {
 
@@ -25,6 +17,9 @@ struct UnitInfo {
 	~UnitInfo();
 
 	SDL_Color color = { 255,255,255,255 };
+
+	Animation up, down, left, right;
+	Animation upLeft, upRight, downLeft, downRight;
 };
 
 enum UnitState {
@@ -39,11 +34,8 @@ public:
 	Unit(EntityInfo entityInfo, UnitInfo unitInfo);
 	void OnCollision(Collider* c1, Collider* c2);
 	void Move(float dt);
-	void Draw(SDL_Texture* sprites);
-	void DebugDraw(SDL_Texture* sprites);
 
-	void UnitStateMachine();
-	void MovementStateMachine(float dt);
+	void UnitStateMachine(float dt);
 
 	void SetUnitState(UnitState unitState);
 	UnitState GetUnitState() const;
@@ -58,13 +50,6 @@ public:
 private:
 
 	UnitState unitState = UnitState_Idle;
-
-	// Movement variables
-	MovementState movementState = MovementState_Stop;
-	vector<iPoint> path;
-	iPoint nextTile = { -1,-1 }; // next tile the unit is heading to (in order to reach the goal tile)
-	iPoint goalTile = { -1,-1 }; // goal tile of the unit's path
-	float speed = 1.0f;
 
 	// Footman
 	SDL_Rect spriteRect = { 316,12,32,46 };

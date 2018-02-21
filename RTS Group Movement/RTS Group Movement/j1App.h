@@ -21,6 +21,7 @@ class j1Map;
 class j1Collision;
 class j1PathFinding;
 class j1EntityFactory;
+class j1Movement;
 
 class j1App
 {
@@ -96,6 +97,7 @@ public:
 	j1Collision*				collision = nullptr;
 	j1EntityFactory*			entities = nullptr;
 	j1PathFinding*				pathfinding = nullptr;
+	j1Movement*					movement = nullptr;
 
 private:
 

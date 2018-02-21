@@ -38,8 +38,68 @@
 
   <entities>
     <spritesheets>
-      <footman name="data/assets/textures/sprites/footman.png"/>
-    </spritesheets>   
+      <footman name="data/assets/textures/sprites/archer.png"/>
+    </spritesheets>
+    <animations>
+      <archer>
+        <up speed="10" loop="1">
+        <frame x="0" y="0" w="55" h="75"/>
+        <frame x="0" y="75" w="55" h="75"/>
+        <frame x="0" y="150" w="55" h="75"/>
+        <frame x="0" y="225" w="55" h="75"/>
+        <frame x="0" y="300" w="55" h="75"/>
+        </up>
+        <upRight speed="10" loop="1">
+        <frame x="55" y="0" w="55" h="75"/>
+        <frame x="55" y="75" w="55" h="75"/>
+        <frame x="55" y="150" w="55" h="75"/>
+        <frame x="55" y="225" w="55" h="75"/>
+        <frame x="55" y="300" w="55" h="75"/>
+        </upRight>
+        <upLeft speed="10" loop="1">
+        <frame x="440" y="0" w="55" h="75"/>
+        <frame x="440" y="75" w="55" h="75"/>
+        <frame x="440" y="150" w="55" h="75"/>
+        <frame x="440" y="225" w="55" h="75"/>
+        <frame x="440" y="300" w="55" h="75"/>
+        </upLeft>
+        <down speed="10" loop="1">
+        <frame x="220" y="0" w="55" h="75"/>
+        <frame x="220" y="75" w="55" h="75"/>
+        <frame x="220" y="150" w="55" h="75"/>
+        <frame x="220" y="225" w="55" h="75"/>
+        <frame x="220" y="300" w="55" h="75"/>
+        </down>
+        <downRight speed="10" loop="1">
+        <frame x="165" y="0" w="55" h="75"/>
+        <frame x="165" y="75" w="55" h="75"/>
+        <frame x="165" y="150" w="55" h="75"/>
+        <frame x="165" y="225" w="55" h="75"/>
+        <frame x="165" y="300" w="55" h="75"/>
+        </downRight>
+        <downLeft speed="10" loop="1">
+        <frame x="330" y="0" w="55" h="75"/>
+        <frame x="330" y="75" w="55" h="75"/>
+        <frame x="330" y="150" w="55" h="75"/>
+        <frame x="330" y="225" w="55" h="75"/>
+        <frame x="330" y="300" w="55" h="75"/>
+        </downLeft>
+        <left speed="10" loop="1">
+        <frame x="110" y="0" w="55" h="75"/>
+        <frame x="110" y="75" w="55" h="75"/>
+        <frame x="110" y="150" w="55" h="75"/>
+        <frame x="110" y="225" w="55" h="75"/>
+        <frame x="110" y="300" w="55" h="75"/>
+        </left>
+        <right speed="10" loop="1">
+        <frame x="385" y="0" w="55" h="75"/>
+        <frame x="385" y="75" w="55" h="75"/>
+        <frame x="385" y="150" w="55" h="75"/>
+        <frame x="385" y="225" w="55" h="75"/>
+        <frame x="385" y="300" w="55" h="75"/>
+        </right>
+      </archer>
+    </animations>
   </entities>
   
   <particles>

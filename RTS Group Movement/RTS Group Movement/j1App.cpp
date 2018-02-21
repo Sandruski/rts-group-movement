@@ -12,6 +12,7 @@
 #include "j1Collision.h"
 #include "j1EntityFactory.h"
 #include "j1Pathfinding.h"
+#include "j1Movement.h"
 
 #include "j1App.h"
 #include "Brofiler\Brofiler.h"
@@ -31,6 +32,7 @@ j1App::j1App(int argc, char* args[]) : argc(argc), args(args)
 	collision = new j1Collision();
 	entities = new j1EntityFactory();
 	pathfinding = new j1PathFinding();
+	movement = new j1Movement();
 
 	// Ordered for awake / Start / Update
 	// Reverse order of CleanUp
@@ -41,6 +43,7 @@ j1App::j1App(int argc, char* args[]) : argc(argc), args(args)
 	AddModule(pathfinding);
 	AddModule(entities);
 	AddModule(collision);
+	AddModule(movement);
 
 	AddModule(scene);
 

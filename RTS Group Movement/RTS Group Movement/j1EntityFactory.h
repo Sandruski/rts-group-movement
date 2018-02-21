@@ -2,6 +2,7 @@
 #define __j1ENTITY_FACTORY_H__
 
 #include "j1Module.h"
+#include "Unit.h"
 
 #include "p2Point.h"
 
@@ -36,7 +37,7 @@ public:
 	Unit* AddUnit(const EntityInfo& entityInfo, const UnitInfo& unitInfo);
 
 	// Returns a list with all the entities within a given rectangle
-	list<Entity*> SelectEntitiesWithinRectangle(SDL_Rect rectangleRect);
+	void SelectEntitiesWithinRectangle(SDL_Rect rectangleRect);
 
 	// Returns true if an entity (different from the one passed as an argument) occupies the tile
 	bool IsAnotherEntityOnTile(Entity* entity, iPoint tile) const;
@@ -44,10 +45,11 @@ public:
 	// Looks for the closest walkable tile to the tile passed as an argument
 	iPoint FindClosestWalkableTile(Entity* entity, iPoint tile) const;
 
+	// Returns a list with the last units selection
+	list<Entity*> GetLastEntitiesSelected() const;
+
 	// Get entities info
-	/*
-	PlayerInfo& GetPlayerInfo() { return player; }
-	*/
+	UnitInfo& GetUnitInfo() { return unitInfo; }
 
 	bool Save(pugi::xml_node& save) const;
 	bool Load(pugi::xml_node& save);
@@ -59,17 +61,12 @@ private:
 	list<Entity*> toSpawnEntities;
 	list<Entity*> activeEntities;
 
-	string CatPeasant_spritesheet;
-
 	// Entities textures
 	string footmanTexName;
 	SDL_Texture* footmanTex = nullptr;
 
-
 	// Entities info
-	/*
-	PlayerInfo player;
-	*/
+	UnitInfo unitInfo;
 };
 
 #endif //__j1ENTITY_FACTORY_H__

@@ -30,9 +30,70 @@ bool j1EntityFactory::Awake(pugi::xml_node& config) {
 
 	bool ret = true;
 
+	// Load spritesheets
 	pugi::xml_node spritesheets = config.child("spritesheets");
-
 	footmanTexName = spritesheets.child("footman").attribute("name").as_string();
+
+	// Load animations
+	// Archer
+	pugi::xml_node archerAnimations = config.child("animations").child("archer");
+
+	// up
+	archerAnimations = archerAnimations.child("up");
+	unitInfo.up.speed = archerAnimations.attribute("speed").as_float();
+	unitInfo.up.loop = archerAnimations.attribute("loop").as_bool();
+	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
+		unitInfo.up.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	}
+	// down
+	archerAnimations = archerAnimations.child("down");
+	unitInfo.down.speed = archerAnimations.attribute("speed").as_float();
+	unitInfo.down.loop = archerAnimations.attribute("loop").as_bool();
+	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
+		unitInfo.down.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	}
+	// left
+	archerAnimations = archerAnimations.child("left");
+	unitInfo.left.speed = archerAnimations.attribute("speed").as_float();
+	unitInfo.left.loop = archerAnimations.attribute("loop").as_bool();
+	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
+		unitInfo.left.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	}
+	// right
+	archerAnimations = archerAnimations.child("right");
+	unitInfo.right.speed = archerAnimations.attribute("speed").as_float();
+	unitInfo.right.loop = archerAnimations.attribute("loop").as_bool();
+	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
+		unitInfo.right.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	}
+	// up-left
+	archerAnimations = archerAnimations.child("upLeft");
+	unitInfo.upLeft.speed = archerAnimations.attribute("speed").as_float();
+	unitInfo.upLeft.loop = archerAnimations.attribute("loop").as_bool();
+	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
+		unitInfo.upLeft.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	}
+	// up-right
+	archerAnimations = archerAnimations.child("upRight");
+	unitInfo.upRight.speed = archerAnimations.attribute("speed").as_float();
+	unitInfo.upRight.loop = archerAnimations.attribute("loop").as_bool();
+	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
+		unitInfo.upRight.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	}
+	// down-left
+	archerAnimations = archerAnimations.child("downLeft");
+	unitInfo.downLeft.speed = archerAnimations.attribute("speed").as_float();
+	unitInfo.downLeft.loop = archerAnimations.attribute("loop").as_bool();
+	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
+		unitInfo.downLeft.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	}
+	// down-right
+	archerAnimations = archerAnimations.child("downRight");
+	unitInfo.downRight.speed = archerAnimations.attribute("speed").as_float();
+	unitInfo.downRight.loop = archerAnimations.attribute("loop").as_bool();
+	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
+		unitInfo.downRight.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	}
 
 	return ret;
 }
@@ -62,8 +123,8 @@ bool j1EntityFactory::PreUpdate()
 
 		int x = (*it)->entityInfo.pos.x * App->scene->scale;
 		int y = (*it)->entityInfo.pos.y * App->scene->scale;
-		App->map->WorldToMap(x, y);
-		LOG("Spawning entity at tile %d,%d", x, y);
+		iPoint spawnPos = App->map->WorldToMap(x, y);
+		LOG("Spawning entity at tile %d,%d", spawnPos.x, spawnPos.y);
 
 		it++;
 	}
@@ -125,7 +186,7 @@ void j1EntityFactory::Draw()
 	}
 }
 
-list<Entity*> j1EntityFactory::SelectEntitiesWithinRectangle(SDL_Rect rectangleRect)
+void j1EntityFactory::SelectEntitiesWithinRectangle(SDL_Rect rectangleRect)
 {
 	list<Entity*>::const_iterator it = activeEntities.begin();
 
@@ -156,7 +217,10 @@ list<Entity*> j1EntityFactory::SelectEntitiesWithinRectangle(SDL_Rect rectangleR
 		}
 		it++;
 	}
+}
 
+list<Entity*> j1EntityFactory::GetLastEntitiesSelected() const 
+{
 	return unitsSelected;
 }
 

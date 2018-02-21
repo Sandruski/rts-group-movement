@@ -9,13 +9,22 @@
 #include "j1Pathfinding.h"
 #include "j1EntityFactory.h"
 #include "j1Input.h"
-#include "j1Scene.h"
+#include "j1Movement.h"
 
 Unit::Unit(EntityInfo entityInfo, UnitInfo unitInfo) : Entity(entityInfo)
 {
 	this->unitInfo = unitInfo;
+	UnitInfo u = App->entities->GetUnitInfo();
+	this->unitInfo.up = u.up;
+	this->unitInfo.down = u.down;
+	this->unitInfo.left = u.left;
+	this->unitInfo.right = u.right;
+	this->unitInfo.upLeft = u.upLeft;
+	this->unitInfo.upRight = u.upRight;
+	this->unitInfo.downLeft = u.downLeft;
+	this->unitInfo.downRight = u.downRight;
+
 	type = EntityType_Unit;
-	speed = 100.0f;
 }
 
 void Unit::Move(float dt)
@@ -27,14 +36,8 @@ void Unit::Move(float dt)
 	iPoint mouseTile = App->map->WorldToMap(mousePos.x, mousePos.y);
 	iPoint mouseTilePos = App->map->MapToWorld(mouseTile.x, mouseTile.y);
 
-	if (isSelected) {
-		
-		// Mouse left click: select a new goal
-		if (App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) {
-			goalTile = mouseTile;
-			movementState = MovementState_WaitForPath;
-		}
-	}
+	if (isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN)
+		unitState = UnitState_Walk;
 
 	/*
 	i_pos.x = (int)position.x;
@@ -58,26 +61,14 @@ void Unit::Move(float dt)
 
 	// -------------------------------------------------------
 
-	//UnitStateMachine();
-	MovementStateMachine(dt);
-}
-
-void Unit::Draw(SDL_Texture* sprites)
-{
-	iPoint offset = { spriteRect.w - App->map->data.tile_width, spriteRect.h - App->map->data.tile_height };
-	App->render->Blit(sprites, (int)entityInfo.pos.x - offset.x, (int)entityInfo.pos.y - offset.y, &spriteRect);
-
-	if (isSelected)
-		DrawSelected();
-
-	DebugDraw(App->scene->debugTex);
+	UnitStateMachine(dt);
 }
 
 void Unit::OnCollision(Collider* c1, Collider* c2)
 {
 }
 
-void Unit::UnitStateMachine() {
+void Unit::UnitStateMachine(float dt) {
 
 	switch (unitState) {
 
@@ -87,139 +78,9 @@ void Unit::UnitStateMachine() {
 
 	case UnitState_Walk:
 
-		break;
-	}
-}
-
-void Unit::MovementStateMachine(float dt)
-{
-	iPoint currTile = App->map->WorldToMap(entityInfo.pos.x, entityInfo.pos.y); // entityInfo.pos in map coords
-	fPoint movePos;
-	iPoint endTile;
-	fPoint endPos;
-	iPoint nextPos = App->map->MapToWorld(nextTile.x, nextTile.y); // nextTile in world coords
-	float m;
-	fPoint dir;
-
-	switch (movementState) {
-
-	case MovementState_Stop:
-
-		// Do nothing
+		App->movement->MoveEntity(this, dt);
 
 		break;
-
-	case MovementState_WaitForPath:
-
-		// Find a path
-		if (App->pathfinding->CreatePath(currTile, goalTile, DISTANCE_MANHATTAN) == -1)
-			break;
-
-		// Save the path found
-		path = *App->pathfinding->GetLastPath();
-
-		// Set state to IncreaseWaypoint, in order to start following the path
-		movementState = MovementState_IncreaseWaypoint;
-
-		break;
-
-	case MovementState_FollowPath:
-
-		// MOVEMENT CALCULATION
-
-		// Calculate the difference between nextTile and currTile. The result will be in the interval [-1,1]
-		movePos = { (float)nextPos.x - entityInfo.pos.x, (float)nextPos.y - entityInfo.pos.y };
-
-		// Normalize
-		m = sqrtf(pow(movePos.x, 2.0f) + pow(movePos.y, 2.0f));
-
-		if (m > 0.0f) {
-			movePos.x /= m;
-			movePos.y /= m;
-		}
-
-		dir.x = movePos.x;
-		dir.y = movePos.y;
-
-		// Apply the speed and the dt to the previous result
-		movePos.x *= speed * dt;
-		movePos.y *= speed * dt;
-
-		// COLLISION CALCULATION
-
-		// Predict where the unit will be after moving
-		endPos = { entityInfo.pos.x + movePos.x,entityInfo.pos.y + movePos.y };
-		// endTile to check collisions
-
-		// Check for future collisions before moving
-		//if (App->pathfinding->IsWalkable(nextTile) && !App->entities->IsAnotherEntityOnTile(this, nextTile)) { // endTile may change (terrain modification) or may be occupied by a unit
-
-		// necessary offset
-
-			if ((nextPos.x - 1.0f < endPos.x && endPos.x < nextPos.x + 1.0f) && (nextPos.y - 1.0f < endPos.y && endPos.y < nextPos.y + 1.0f))
-				// If we're going to jump over the waypoint during this move
-				movementState = MovementState_IncreaseWaypoint;
-
-			// Do the actual move
-			entityInfo.pos.x += movePos.x;
-			entityInfo.pos.y += movePos.y;
-		//}
-		//else {
-			//nextTile = App->entities->FindClosestWalkableTile(this, nextTile);
-			
-			//if (nextTile.x == -1 && nextTile.y == -1)
-				//LOG("-1!!!");
-			
-			//movementState = MovementState_CollisionFound;
-		//}
-
-		break;
-
-	case MovementState_GoalReached:
-
-		// Make the appropiate notifications
-
-		break;
-
-	case MovementState_CollisionFound:
-
-		// If we want to prevent units from standing in line, we must implement local avoidance
-		
-		movementState = MovementState_FollowPath;
-
-		break;
-
-	case MovementState_IncreaseWaypoint:
-
-		// Get the next waypoint to head to
-		if (path.size() > 0) {
-			nextTile = path.front();
-			path.erase(path.begin());
-
-			movementState = MovementState_FollowPath;
-		}
-
-		break;
-	}
-}
-
-void Unit::DebugDraw(SDL_Texture* sprites)
-{
-	if (nextTile.x > -1 && nextTile.y > -1) {
-
-		// Raycast a line between the unit and the nextTile
-		iPoint nextPos = App->map->MapToWorld(nextTile.x, nextTile.y);
-		App->render->DrawLine(entityInfo.pos.x, entityInfo.pos.y, nextPos.x, nextPos.y, 255, 255, 255, 255);
-		App->render->DrawCircle(nextPos.x, nextPos.y, 10, 255, 255, 255, 255);
-
-		// Draw path
-		/*
-		for (uint i = 0; i < path.size(); ++i)
-		{
-			iPoint pos = App->map->MapToWorld(path.at(i).x, path.at(i).y);
-			App->render->Blit(sprites, pos.x, pos.y);
-		}
-		*/
 	}
 }
 

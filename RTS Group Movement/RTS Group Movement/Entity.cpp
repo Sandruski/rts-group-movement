@@ -22,22 +22,14 @@ const Collider* Entity::GetCollider() const
 
 void Entity::Draw(SDL_Texture* sprites)
 {
-	/*
 	if (animation != nullptr)
-		App->render->Blit(texture, position.x, position.y, &(animation->GetCurrentFrame()));
-	*/
+		App->render->Blit(sprites, entityInfo.pos.x, entityInfo.pos.y, &(animation->GetCurrentFrame()));
 
 	if (isSelected)
-		DrawSelected();
-
-	DebugDraw(sprites);
+		DebugDrawSelected();
 }
 
-void Entity::DebugDraw(SDL_Texture* sprites)
-{
-}
-
-void Entity::DrawSelected() 
+void Entity::DebugDrawSelected()
 {
 	const SDL_Rect entitySize = { entityInfo.pos.x, entityInfo.pos.y, entityInfo.size.x, entityInfo.size.y };
 	App->render->DrawQuad(entitySize, 255, 255, 255, 255, false);

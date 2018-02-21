@@ -90,6 +90,12 @@
     <ClInclude Include="Unit.h">
       <Filter>Modules\Entities</Filter>
     </ClInclude>
+    <ClInclude Include="j1Movement.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>Modules\Tools</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="j1App.cpp">
@@ -142,6 +148,9 @@
     </ClCompile>
     <ClCompile Include="Unit.cpp">
       <Filter>Modules\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="j1Movement.cpp">
+      <Filter>Modules</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
