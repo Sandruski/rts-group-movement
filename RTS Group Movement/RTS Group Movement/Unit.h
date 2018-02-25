@@ -20,11 +20,13 @@ struct UnitInfo {
 
 	Animation up, down, left, right;
 	Animation upLeft, upRight, downLeft, downRight;
+	Animation idle;
 };
 
 enum UnitState {
 	UnitState_Idle,
-	UnitState_Walk
+	UnitState_Walk,
+	UnitState_Attack
 };
 
 class Unit : public Entity
@@ -34,6 +36,10 @@ public:
 	Unit(EntityInfo entityInfo, UnitInfo unitInfo);
 	void OnCollision(Collider* c1, Collider* c2);
 	void Move(float dt);
+	void Draw(SDL_Texture* sprites);
+
+	void UpdateAnimationsSpeed(float dt);
+	void ChangeAnimation();
 
 	void UnitStateMachine(float dt);
 
@@ -51,8 +57,10 @@ private:
 
 	UnitState unitState = UnitState_Idle;
 
-	// Footman
-	SDL_Rect spriteRect = { 316,12,32,46 };
+	// Animations speed
+	float upSpeed, downSpeed, leftSpeed, rightSpeed;
+	float upLeftSpeed, upRightSpeed, downLeftSpeed, downRightSpeed;
+	float idleSpeed;
 };
 
 #endif //__Entity_H__

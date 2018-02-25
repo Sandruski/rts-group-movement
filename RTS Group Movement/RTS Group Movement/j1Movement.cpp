@@ -31,18 +31,19 @@ void j1Movement::DebugDraw() const
 			if ((*unit)->nextTile.x > -1 && (*unit)->nextTile.y > -1) {
 
 				// Raycast a line between the unit and the nextTile
+				iPoint offset = { App->map->data.tile_width / 2, App->map->data.tile_height / 2 };
 				iPoint nextPos = App->map->MapToWorld((*unit)->nextTile.x, (*unit)->nextTile.y);
-				App->render->DrawLine((*unit)->entity->entityInfo.pos.x, (*unit)->entity->entityInfo.pos.y, nextPos.x, nextPos.y, 255, 255, 255, 255);
-				App->render->DrawCircle(nextPos.x, nextPos.y, 10, 255, 255, 255, 255);
+				App->render->DrawLine((*unit)->entity->entityInfo.pos.x + offset.x, (*unit)->entity->entityInfo.pos.y + offset.y, nextPos.x + offset.x, nextPos.y + offset.y, 255, 255, 255, 255);
+				App->render->DrawCircle(nextPos.x + offset.x, nextPos.y + offset.y, 10, 255, 255, 255, 255);
 
 				// Draw path
-				/*
-				for (uint i = 0; i < path.size(); ++i)
+				
+				for (uint i = 0; i < (*unit)->path.size(); ++i)
 				{
-				iPoint pos = App->map->MapToWorld(path.at(i).x, path.at(i).y);
-				App->render->Blit(sprites, pos.x, pos.y);
+					iPoint pos = App->map->MapToWorld((*unit)->path.at(i).x, (*unit)->path.at(i).y);
+					SDL_Rect rect = { pos.x, pos.y, App->map->data.tile_width, App->map->data.tile_height };
+					App->render->DrawQuad(rect, 0, 255, 0, 50);
 				}
-				*/
 			}
 		}
 	}
@@ -57,19 +58,23 @@ bool j1Movement::CleanUp()
 
 UnitGroup* j1Movement::CreateGroup(list<Entity*> entities)
 {
-	// If an entity from the list belongs to an existing group, first delete the group
+	// If an entity from the list belongs to an existing group, delete the entity from the group
 	list<Entity*>::const_iterator it = entities.begin();
 	UnitGroup* group = nullptr;
 
 	while (it != entities.end()) {
 
 		group = GetGroupByEntity(*it);
-		if (group != nullptr)
-			unitGroups.remove(group);
+		if (group != nullptr) {
+			group->units.remove(group->GetUnitByEntity(*it));
+
+			// If the group is empty, delete it
+			if (group->GetSize() == 0)
+				unitGroups.remove(group);
+		}
 
 		it++;
 	}
-	group = nullptr;
 
 	group = new UnitGroup(entities);
 	unitGroups.push_back(group);
@@ -112,22 +117,59 @@ UnitGroup* j1Movement::GetGroupByEntity(Entity* entity) const
 	return group;
 }
 
-bool j1Movement::MoveEntity(Entity* entity, float dt) const 
+UnitGroup* j1Movement::GetGroupByEntities(list<Entity*> entities) const 
+{
+	list<Entity*>::const_iterator it;
+	list<UnitGroup*>::const_iterator groups;
+	list<SingleUnit*>::const_iterator units;
+	uint size = 0;
+
+	for (groups = unitGroups.begin(); groups != unitGroups.end(); ++groups) {
+
+		for (units = (*groups)->units.begin(); units != (*groups)->units.end(); ++units) {
+
+			for (it = entities.begin(); it != entities.end(); ++it) {
+
+				if ((*units)->entity == *it)
+					size++;
+			}
+		}
+
+		if (size == entities.size() && size == (*groups)->GetSize())
+			return *groups;
+
+		size = 0;
+	}
+
+	return nullptr;
+}
+
+bool j1Movement::MoveEntity(Entity* entity, float dt) const
 {
 	bool ret = false;
 
 	UnitGroup* g = GetGroupByEntity(entity);
+
+	if (g == nullptr)
+		return ret;
+
 	SingleUnit* u = g->GetUnitByEntity(entity);
+
+	if (u == nullptr)
+		return ret;
 
 	iPoint currTile = App->map->WorldToMap(u->entity->entityInfo.pos.x, u->entity->entityInfo.pos.y); // unit current pos in map coords
 	iPoint nextPos = App->map->MapToWorld(u->nextTile.x, u->nextTile.y); // unit nextPos in map coords
-
+	
 	fPoint movePos;
 	fPoint endPos;
+	iPoint endTile;
+	iPoint updatedTile;
 
 	float m;
-	fPoint dir;
+	bool increaseWaypoint = false;
 
+	/// For each step:
 	switch (u->movementState) {
 
 	case MovementState_WaitForPath:
@@ -138,6 +180,9 @@ bool j1Movement::MoveEntity(Entity* entity, float dt) const
 
 		// Save the path found
 		u->path = *App->pathfinding->GetLastPath();
+
+		// Erase the first waypoint of the path, so the entities don't behave weird
+		//u->path.erase(u->path.begin());
 
 		// Set state to IncreaseWaypoint, in order to start following the path
 		u->movementState = MovementState_IncreaseWaypoint;
@@ -159,8 +204,8 @@ bool j1Movement::MoveEntity(Entity* entity, float dt) const
 			movePos.y /= m;
 		}
 
-		dir.x = movePos.x;
-		dir.y = movePos.y;
+		u->entity->entityInfo.direction.x = movePos.x;
+		u->entity->entityInfo.direction.y = movePos.y;
 
 		// Apply the speed and the dt to the previous result
 		movePos.x *= u->speed * dt;
@@ -170,75 +215,89 @@ bool j1Movement::MoveEntity(Entity* entity, float dt) const
 
 		// Predict where the unit will be after moving
 		endPos = { u->entity->entityInfo.pos.x + movePos.x,u->entity->entityInfo.pos.y + movePos.y };
-
-		// endTile to check collisions
+		endTile = App->map->WorldToMap(endPos.x, endPos.y);
 
 		// Check for future collisions before moving
-		//if (App->pathfinding->IsWalkable(nextTile) && !App->entities->IsAnotherEntityOnTile(this, nextTile)) { // endTile may change (terrain modification) or may be occupied by a unit
+		// If the tile the unit is running towards an invalid tile:
+		// We stablish 2 levels of depth for the collision checking:
 
-		// necessary offset
+		/// CONS to check endTile: the entity doesn't move in a lot of occasions, because in order to reach nextTile, the entity may stand on an invalid endTile.
+		/// PROS to check endTile: we avoid situations like jumping over another entity, etc.
+		/// nextTile: if the entity is going in the -x, -y diagonal, the endTile will be the same as the nextTile once the entity has arrived at the nextTile.
+		/// So, what if the nextTile was invalid?
 
-		// If we're going to jump over the waypoint during this move
+		if (!App->pathfinding->IsWalkable(endTile) || App->entities->IsAnotherEntityOnTile(u->entity, endTile)
+			|| !App->pathfinding->IsWalkable(u->nextTile) || App->entities->IsAnotherEntityOnTile(u->entity, u->nextTile)) { // endTile may change (terrain modification) or may be occupied by an entity
 
+			LOG("Invalid tile");
+			/// Okay... You don't want to be here forever. If the tile you want to go is occupied for a certain ammount of time, stop!
+			/// This check should be done in pairs. Entities start getting crazy otherwise...
 
-		if (dir.x >= 0) { // Right or stop
+			updatedTile = App->entities->FindClosestWalkableTile(u->entity, currTile);
 
-			if (dir.y >= 0) { // Up or stop
-				if (endPos.x >= nextPos.x && endPos.y >= nextPos.y) {
-					u->entity->entityInfo.pos.x = nextPos.x;
-					u->entity->entityInfo.pos.y = nextPos.y;
-					u->movementState = MovementState_IncreaseWaypoint;
+			if (updatedTile.x != -1 && updatedTile.y != -1) {
+				
+				// Recalculate the path. PROBLEM: the new path may be the same as the old one. This can happen infinite times! The entity will be trapped in a back-and-forth cycle
+				// Find a path
+				/// The new path shouldn't consider the tile that was not walkable because of an entity laying on it...
+				if (App->pathfinding->CreatePath(u->nextTile, u->group->GetGoal(), DISTANCE_MANHATTAN) == -1)
 					break;
-				}
+
+				u->nextTile = updatedTile;
+
+				// Save the path found
+				u->path = *App->pathfinding->GetLastPath();
+
+				// Erase the first waypoint of the path - we have nextTile already updated
+				u->path.erase(u->path.begin());
 			}
-			else { // Down
-				if (endPos.x >= nextPos.x && endPos.y <= nextPos.y) {
-					u->entity->entityInfo.pos.x = nextPos.x;
-					u->entity->entityInfo.pos.y = nextPos.y;
-					u->movementState = MovementState_IncreaseWaypoint;
-					break;
-				}
+
+			break;
+		}
+
+		// If we're going to jump over the waypoint during this move:
+		if (u->entity->entityInfo.direction.x >= 0) { // Right or stop
+
+			if (u->entity->entityInfo.direction.y >= 0) { // Down or stop
+				if (endPos.x >= nextPos.x && endPos.y >= nextPos.y)
+					increaseWaypoint = true;
+			}
+			else { // Up
+				if (endPos.x >= nextPos.x && endPos.y <= nextPos.y)
+					increaseWaypoint = true;
 			}
 		}
 		else { // Left
 
-			   // Up or stop
-			if (dir.y >= 0) {
-				if (endPos.x <= nextPos.x && endPos.y >= nextPos.y) {
-					u->entity->entityInfo.pos.x = nextPos.x;
-					u->entity->entityInfo.pos.y = nextPos.y;
-					u->movementState = MovementState_IncreaseWaypoint;
-					break;
-				}
+			if (u->entity->entityInfo.direction.y >= 0) { // Down or stop
+				if (endPos.x <= nextPos.x && endPos.y >= nextPos.y)
+					increaseWaypoint = true;
 			}
-			else { // Down
-				if (endPos.x <= nextPos.x && endPos.y <= nextPos.y) {
-					u->entity->entityInfo.pos.x = nextPos.x;
-					u->entity->entityInfo.pos.y = nextPos.y;
-					u->movementState = MovementState_IncreaseWaypoint;
-					break;
-				}
+			else { // Up
+				if (endPos.x <= nextPos.x && endPos.y <= nextPos.y)
+					increaseWaypoint = true;
 			}
+		}
+
+		if (increaseWaypoint) {
+			u->entity->entityInfo.pos.x = nextPos.x;
+			u->entity->entityInfo.pos.y = nextPos.y;
+			u->movementState = MovementState_IncreaseWaypoint;
+			break;
 		}
 
 		// Do the actual move
 		u->entity->entityInfo.pos.x += movePos.x;
 		u->entity->entityInfo.pos.y += movePos.y;
-		//}
-		//else {
-		//nextTile = App->entities->FindClosestWalkableTile(this, nextTile);
-
-		//if (nextTile.x == -1 && nextTile.y == -1)
-		//LOG("-1!!!");
-
-		//movementState = MovementState_CollisionFound;
-		//}
 
 		break;
 
 	case MovementState_GoalReached:
 
 		// Make the appropiate notifications
+		u->entity->entityInfo.direction.x = 0.0f;
+		u->entity->entityInfo.direction.y = 0.0f;
+
 		ret = true;
 
 		break;
@@ -260,6 +319,8 @@ bool j1Movement::MoveEntity(Entity* entity, float dt) const
 
 			u->movementState = MovementState_FollowPath;
 		}
+		else
+			u->movementState = MovementState_GoalReached;
 
 		break;
 	}
@@ -356,8 +417,17 @@ bool UnitGroup::SetGoal(iPoint goal)
 		this->goal.x = goal.x;
 		this->goal.y = goal.y;
 
+		// Set all units to wait for a new path (the goal has changed!)
+		list<SingleUnit*>::const_iterator it = units.begin();
+
+		while (it != units.end()) {
+			(*it)->movementState = MovementState_WaitForPath;
+
+			it++;
+		}
+
 		ret = true;
-	}
+	}	
 
 	return ret;
 }

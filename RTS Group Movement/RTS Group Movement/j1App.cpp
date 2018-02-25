@@ -43,9 +43,9 @@ j1App::j1App(int argc, char* args[]) : argc(argc), args(args)
 	AddModule(pathfinding);
 	AddModule(entities);
 	AddModule(collision);
-	AddModule(movement);
 
 	AddModule(scene);
+	AddModule(movement);
 
 	// render last to swap buffer
 	AddModule(render);

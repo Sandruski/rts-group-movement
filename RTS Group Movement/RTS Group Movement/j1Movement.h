@@ -60,6 +60,9 @@ public:
 	// Returns an existing group by a pointer to one of its units or nullptr
 	UnitGroup* GetGroupByEntity(Entity* entity) const;
 
+	// Returns an existing group by the list of all of its entities or nullptr
+	UnitGroup* GetGroupByEntities(list<Entity*> entities) const;
+
 	// Moves an entity (if it is member of a group, through group movement). Returns true if the goal is reached
 	bool MoveEntity(Entity* entity, float dt) const;
 
@@ -131,7 +134,9 @@ struct SingleUnit
 	UnitGroup* group = nullptr;
 	MovementState movementState = MovementState_WaitForPath;
 
-	vector<iPoint> path;
+	/// path to the macro objective
+	vector<iPoint> path; 
+	/// local tracking target for the steering behaviour
 	iPoint nextTile = { -1,-1 }; // next tile the unit is heading to (in order to reach the goal tile)
 
 	float speed = 1.0f; // movement speed: it can be the speed of the entity or the speed of the group

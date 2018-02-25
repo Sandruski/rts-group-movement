@@ -32,67 +32,75 @@ bool j1EntityFactory::Awake(pugi::xml_node& config) {
 
 	// Load spritesheets
 	pugi::xml_node spritesheets = config.child("spritesheets");
-	footmanTexName = spritesheets.child("footman").attribute("name").as_string();
+	archerTexName = spritesheets.child("archer").attribute("name").as_string();
 
 	// Load animations
 	// Archer
 	pugi::xml_node archerAnimations = config.child("animations").child("archer");
+	pugi::xml_node currentAnimation;
 
 	// up
-	archerAnimations = archerAnimations.child("up");
-	unitInfo.up.speed = archerAnimations.attribute("speed").as_float();
-	unitInfo.up.loop = archerAnimations.attribute("loop").as_bool();
-	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
-		unitInfo.up.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	currentAnimation = archerAnimations.child("up");
+	unitInfo.up.speed = currentAnimation.attribute("speed").as_float();
+	unitInfo.up.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		unitInfo.up.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 	// down
-	archerAnimations = archerAnimations.child("down");
-	unitInfo.down.speed = archerAnimations.attribute("speed").as_float();
-	unitInfo.down.loop = archerAnimations.attribute("loop").as_bool();
-	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
-		unitInfo.down.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	currentAnimation = archerAnimations.child("down");
+	unitInfo.down.speed = currentAnimation.attribute("speed").as_float();
+	unitInfo.down.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		unitInfo.down.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 	// left
-	archerAnimations = archerAnimations.child("left");
-	unitInfo.left.speed = archerAnimations.attribute("speed").as_float();
-	unitInfo.left.loop = archerAnimations.attribute("loop").as_bool();
-	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
-		unitInfo.left.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	currentAnimation = archerAnimations.child("left");
+	unitInfo.left.speed = currentAnimation.attribute("speed").as_float();
+	unitInfo.left.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		unitInfo.left.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 	// right
-	archerAnimations = archerAnimations.child("right");
-	unitInfo.right.speed = archerAnimations.attribute("speed").as_float();
-	unitInfo.right.loop = archerAnimations.attribute("loop").as_bool();
-	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
-		unitInfo.right.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	currentAnimation = archerAnimations.child("right");
+	unitInfo.right.speed = currentAnimation.attribute("speed").as_float();
+	unitInfo.right.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		unitInfo.right.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 	// up-left
-	archerAnimations = archerAnimations.child("upLeft");
-	unitInfo.upLeft.speed = archerAnimations.attribute("speed").as_float();
-	unitInfo.upLeft.loop = archerAnimations.attribute("loop").as_bool();
-	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
-		unitInfo.upLeft.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	currentAnimation = archerAnimations.child("upLeft");
+	unitInfo.upLeft.speed = currentAnimation.attribute("speed").as_float();
+	unitInfo.upLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		unitInfo.upLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 	// up-right
-	archerAnimations = archerAnimations.child("upRight");
-	unitInfo.upRight.speed = archerAnimations.attribute("speed").as_float();
-	unitInfo.upRight.loop = archerAnimations.attribute("loop").as_bool();
-	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
-		unitInfo.upRight.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	currentAnimation = archerAnimations.child("upRight");
+	unitInfo.upRight.speed = currentAnimation.attribute("speed").as_float();
+	unitInfo.upRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		unitInfo.upRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 	// down-left
-	archerAnimations = archerAnimations.child("downLeft");
-	unitInfo.downLeft.speed = archerAnimations.attribute("speed").as_float();
-	unitInfo.downLeft.loop = archerAnimations.attribute("loop").as_bool();
-	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
-		unitInfo.downLeft.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	currentAnimation = archerAnimations.child("downLeft");
+	unitInfo.downLeft.speed = currentAnimation.attribute("speed").as_float();
+	unitInfo.downLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		unitInfo.downLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 	// down-right
-	archerAnimations = archerAnimations.child("downRight");
-	unitInfo.downRight.speed = archerAnimations.attribute("speed").as_float();
-	unitInfo.downRight.loop = archerAnimations.attribute("loop").as_bool();
-	for (archerAnimations = archerAnimations.child("frame"); archerAnimations; archerAnimations = archerAnimations.next_sibling("frame")) {
-		unitInfo.downRight.PushBack({ archerAnimations.attribute("x").as_int(), archerAnimations.attribute("y").as_int(), archerAnimations.attribute("w").as_int(), archerAnimations.attribute("h").as_int() });
+	currentAnimation = archerAnimations.child("downRight");
+	unitInfo.downRight.speed = currentAnimation.attribute("speed").as_float();
+	unitInfo.downRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		unitInfo.downRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// idle
+	currentAnimation = archerAnimations.child("idle");
+	unitInfo.idle.speed = currentAnimation.attribute("speed").as_float();
+	unitInfo.idle.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		unitInfo.idle.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 
 	return ret;
@@ -104,7 +112,7 @@ bool j1EntityFactory::Start()
 
 	LOG("Loading entities textures");
 
-	footmanTex = App->tex->Load(footmanTexName.data());
+	archerTex = App->tex->Load(archerTexName.data());
 
 	return ret;
 }
@@ -131,6 +139,11 @@ bool j1EntityFactory::PreUpdate()
 	toSpawnEntities.clear();
 
 	return ret;
+}
+
+UnitInfo& j1EntityFactory::GetUnitInfo() 
+{
+	return unitInfo;
 }
 
 // Called before render is available
@@ -178,7 +191,7 @@ void j1EntityFactory::Draw()
 		switch ((*it)->type) {
 
 		case EntityType_Unit:
-			(*it)->Draw(footmanTex);
+			(*it)->Draw(archerTex);
 			break;
 		}
 
@@ -245,33 +258,78 @@ bool j1EntityFactory::IsAnotherEntityOnTile(Entity* entity, iPoint tile) const
 
 iPoint j1EntityFactory::FindClosestWalkableTile(Entity* entity, iPoint tile) const
 {
-	iPoint currTile = { -1,-1 };
-	vector<iPoint> visitedTiles;
+	iPoint neighbors[8];
+	fPoint dir = entity->entityInfo.direction;
 
-	visitedTiles.push_back(tile);
+	// Set tiles depending on the direction the entity is going
+	if (dir.x > 0.0f) {
 
-	while (visitedTiles.size() > 0) {
+		if (dir.y > 0.0f) { // Down-right
+			neighbors[0].create(tile.x + 1, tile.y + 0);
+			neighbors[1].create(tile.x + 0, tile.y + 1);
+			neighbors[2].create(tile.x + 1, tile.y + 1);
+		}
+		else if (dir.y < 0.0f) { // Up-right
+			neighbors[0].create(tile.x + 1, tile.y + 0);
+			neighbors[1].create(tile.x + 0, tile.y - 1);
+			neighbors[2].create(tile.x + 1, tile.y - 1);
+		}
+		else { // Right
+			neighbors[0].create(tile.x + 1, tile.y + 0);
+			neighbors[1].create(tile.x + 1, tile.y + 1);
+			neighbors[2].create(tile.x + 1, tile.y - 1);
+		}
+	}
+	else if (dir.x < 0.0f) {
 
-		currTile = visitedTiles.front();
-		visitedTiles.erase(visitedTiles.begin());
+		if (dir.y > 0.0f) { // Down-left
+			neighbors[0].create(tile.x - 1, tile.y + 0);
+			neighbors[1].create(tile.x + 0, tile.y + 1);
+			neighbors[2].create(tile.x - 1, tile.y + 1);
+		}
+		else if (dir.y < 0.0f) { // Up-left
+			neighbors[0].create(tile.x - 1, tile.y + 0);
+			neighbors[1].create(tile.x + 0, tile.y - 1);
+			neighbors[2].create(tile.x - 1, tile.y - 1);
+		}
+		else { // Left
+			neighbors[0].create(tile.x - 1, tile.y + 0);
+			neighbors[1].create(tile.x - 1, tile.y + 1);
+			neighbors[2].create(tile.x - 1, tile.y - 1);
+		}
+	}
+	else {
 
-		if (App->pathfinding->IsWalkable(currTile) && !IsAnotherEntityOnTile(entity, currTile))
-			return currTile;
-
-		iPoint neighbors[4];
-		neighbors[0].create(currTile.x + 1, currTile.y + 0);
-		neighbors[1].create(currTile.x + 0, currTile.y + 1);
-		neighbors[2].create(currTile.x - 1, currTile.y + 0);
-		neighbors[3].create(currTile.x + 0, currTile.y - 1);
-
-		for (uint i = 0; i < 4; ++i)
-		{
-			if (find(visitedTiles.begin(), visitedTiles.end(), neighbors[i]) == visitedTiles.end())
-				visitedTiles.push_back(neighbors[i]);
+		if (dir.y > 0.0f) { // Down
+			neighbors[0].create(tile.x - 1, tile.y + 1);
+			neighbors[1].create(tile.x + 1, tile.y + 1);
+			neighbors[2].create(tile.x + 0, tile.y + 1);
+		}
+		else if (dir.y < 0.0f) { // Up
+			neighbors[0].create(tile.x - 1, tile.y - 1);
+			neighbors[1].create(tile.x + 1, tile.y - 1);
+			neighbors[2].create(tile.x + 0, tile.y - 1);
 		}
 	}
 
-	return currTile;
+	/*
+	neighbors[0].create(tile.x + 1, tile.y + 0);
+	neighbors[1].create(tile.x + 0, tile.y + 1);
+	neighbors[2].create(tile.x - 1, tile.y + 0);
+	neighbors[3].create(tile.x + 0, tile.y - 1);
+	neighbors[4].create(tile.x + 1, tile.y + 1);
+	neighbors[5].create(tile.x + 1, tile.y - 1);
+	neighbors[6].create(tile.x - 1, tile.y + 1);
+	neighbors[7].create(tile.x - 1, tile.y - 1);
+	*/
+
+	for (uint i = 0; i < 8; ++i)
+	{
+		if (App->pathfinding->IsWalkable(neighbors[i]) && !IsAnotherEntityOnTile(entity, neighbors[i]))
+			return neighbors[i];
+	}
+
+	return { -1,-1 };
 }
 
 bool j1EntityFactory::PostUpdate()
@@ -317,7 +375,7 @@ bool j1EntityFactory::CleanUp()
 	toSpawnEntities.clear();
 
 	// Free all textures
-	App->tex->UnLoad(footmanTex);
+	App->tex->UnLoad(archerTex);
 
 	return ret;
 }

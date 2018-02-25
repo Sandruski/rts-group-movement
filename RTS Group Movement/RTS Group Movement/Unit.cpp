@@ -14,7 +14,12 @@
 Unit::Unit(EntityInfo entityInfo, UnitInfo unitInfo) : Entity(entityInfo)
 {
 	this->unitInfo = unitInfo;
-	UnitInfo u = App->entities->GetUnitInfo();
+	type = EntityType_Unit;
+
+	UnitInfo u;
+	u = App->entities->GetUnitInfo();
+
+	// Save animations
 	this->unitInfo.up = u.up;
 	this->unitInfo.down = u.down;
 	this->unitInfo.left = u.left;
@@ -23,8 +28,18 @@ Unit::Unit(EntityInfo entityInfo, UnitInfo unitInfo) : Entity(entityInfo)
 	this->unitInfo.upRight = u.upRight;
 	this->unitInfo.downLeft = u.downLeft;
 	this->unitInfo.downRight = u.downRight;
+	this->unitInfo.idle = u.idle;
 
-	type = EntityType_Unit;
+	// Save animations speed
+	upSpeed = u.up.speed;
+	downSpeed = u.down.speed;
+	leftSpeed = u.left.speed;
+	rightSpeed = u.right.speed;
+	upLeftSpeed = u.upLeft.speed;
+	upRightSpeed = u.upRight.speed;
+	downLeftSpeed = u.downLeft.speed;
+	downRightSpeed = u.downRight.speed;
+	idleSpeed = u.idle.speed;
 }
 
 void Unit::Move(float dt)
@@ -62,6 +77,74 @@ void Unit::Move(float dt)
 	// -------------------------------------------------------
 
 	UnitStateMachine(dt);
+
+	// Update animations
+	UpdateAnimationsSpeed(dt);
+	ChangeAnimation();
+}
+
+void Unit::UpdateAnimationsSpeed(float dt) 
+{
+	unitInfo.up.speed = upSpeed * dt;
+	unitInfo.down.speed = downSpeed * dt;
+	unitInfo.left.speed = leftSpeed * dt;
+	unitInfo.right.speed = rightSpeed * dt;
+	unitInfo.upLeft.speed = upLeftSpeed * dt;
+	unitInfo.upRight.speed = upRightSpeed * dt;
+	unitInfo.downLeft.speed = downLeftSpeed * dt;
+	unitInfo.downRight.speed = downRightSpeed * dt;
+	unitInfo.idle.speed = idleSpeed * dt;
+}
+
+void Unit::ChangeAnimation() 
+{
+	if (entityInfo.direction.x > 0.0f) {
+
+		if (entityInfo.direction.y > 0.0f) { // Down-right
+			animation = &unitInfo.downRight;
+		}
+		else if (entityInfo.direction.y < 0.0f) { // Up-right
+			animation = &unitInfo.upRight;
+		}
+		else { // Right
+			animation = &unitInfo.right;
+		}
+	}
+	else if (entityInfo.direction.x < 0.0f) {
+
+		if (entityInfo.direction.y > 0.0f) { // Down-left
+			animation = &unitInfo.downLeft;
+		}
+		else if (entityInfo.direction.y < 0.0f) { // Up-left
+			animation = &unitInfo.upLeft;
+		}
+		else { // Left
+			animation = &unitInfo.left;
+		}
+	}
+	else {
+
+		if (entityInfo.direction.y > 0.0f) { // Down
+			animation = &unitInfo.down;
+		}
+		else if (entityInfo.direction.y < 0.0f) { // Up
+			animation = &unitInfo.up;
+		}
+		else { // Stop
+			animation = &unitInfo.idle;
+		}
+	}
+}
+
+void Unit::Draw(SDL_Texture* sprites)
+{
+	fPoint offset = { 60.0f / 4.0f, 75.0f / 2.0f };
+
+	if (animation != nullptr)
+		App->render->Blit(sprites, entityInfo.pos.x - offset.x, entityInfo.pos.y - offset.y, &(animation->GetCurrentFrame()));
+
+	if (isSelected)
+		DebugDrawSelected();
 }
 
 void Unit::OnCollision(Collider* c1, Collider* c2)

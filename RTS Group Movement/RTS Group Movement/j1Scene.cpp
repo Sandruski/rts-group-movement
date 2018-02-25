@@ -157,13 +157,17 @@ bool j1Scene::Update(float dt)
 
 		App->entities->SelectEntitiesWithinRectangle(mouseRect);
 	}
-	else if (App->input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_UP)
-		// Selected units will now behave as a group
-		App->movement->CreateGroup(App->entities->GetLastEntitiesSelected());
 
 	// Mouse left click: select a new goal for the selected units
-	if (App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN)
-		App->movement->GetGroupByIndex(1)->SetGoal(mouseTile);
+	if (App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) {
+
+		if (App->movement->GetGroupByEntities(App->entities->GetLastEntitiesSelected()) == nullptr)
+
+			// Selected units will now behave as a group
+			App->movement->CreateGroup(App->entities->GetLastEntitiesSelected());
+
+		App->movement->GetGroupByEntities(App->entities->GetLastEntitiesSelected())->SetGoal(mouseTile);
+	}
 
 	// F1, F2, F3, F4, F5, F6, +, -
 	DebugKeys();

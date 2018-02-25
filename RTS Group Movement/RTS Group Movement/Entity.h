@@ -17,7 +17,9 @@ enum EntityType
 struct EntityInfo 
 {
 	fPoint pos = { 0.0f,0.0f };
+	fPoint direction = { 0.0f,0.0f };
 	iPoint size = { 0,0 };
+
 	float speed = 1.0f;
 };
 

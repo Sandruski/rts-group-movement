@@ -49,7 +49,7 @@ public:
 	list<Entity*> GetLastEntitiesSelected() const;
 
 	// Get entities info
-	UnitInfo& GetUnitInfo() { return unitInfo; }
+	UnitInfo& GetUnitInfo();
 
 	bool Save(pugi::xml_node& save) const;
 	bool Load(pugi::xml_node& save);
@@ -62,8 +62,8 @@ private:
 	list<Entity*> activeEntities;
 
 	// Entities textures
-	string footmanTexName;
-	SDL_Texture* footmanTex = nullptr;
+	string archerTexName;
+	SDL_Texture* archerTex = nullptr;
 
 	// Entities info
 	UnitInfo unitInfo;
