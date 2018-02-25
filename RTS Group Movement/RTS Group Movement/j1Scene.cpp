@@ -164,7 +164,7 @@ bool j1Scene::Update(float dt)
 		if (App->movement->GetGroupByEntities(App->entities->GetLastEntitiesSelected()) == nullptr)
 
 			// Selected units will now behave as a group
-			App->movement->CreateGroup(App->entities->GetLastEntitiesSelected());
+			App->movement->CreateGroupFromList(App->entities->GetLastEntitiesSelected());
 
 		App->movement->GetGroupByEntities(App->entities->GetLastEntitiesSelected())->SetGoal(mouseTile);
 	}

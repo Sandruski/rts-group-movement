@@ -40,6 +40,8 @@ Unit::Unit(EntityInfo entityInfo, UnitInfo unitInfo) : Entity(entityInfo)
 	downLeftSpeed = u.downLeft.speed;
 	downRightSpeed = u.downRight.speed;
 	idleSpeed = u.idle.speed;
+
+	App->movement->CreateGroupFromEntity(this);
 }
 
 void Unit::Move(float dt)
@@ -51,8 +53,11 @@ void Unit::Move(float dt)
 	iPoint mouseTile = App->map->WorldToMap(mousePos.x, mousePos.y);
 	iPoint mouseTilePos = App->map->MapToWorld(mouseTile.x, mouseTile.y);
 
-	if (isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN)
+	if (isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) {
 		unitState = UnitState_Walk;
+		iPoint currTile = App->map->WorldToMap(entityInfo.pos.x, entityInfo.pos.y);
+		LOG("%d,%d", currTile.x, currTile.y);
+	}
 
 	/*
 	i_pos.x = (int)position.x;

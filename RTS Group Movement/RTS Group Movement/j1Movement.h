@@ -13,14 +13,8 @@ using namespace std;
 
 class Entity;
 
-/*
-enum UnitGroupType {
-UnitGroupType_NoType
-
-};
-*/
-
 enum MovementState {
+	MovementState_NoState,
 	MovementState_WaitForPath,
 	MovementState_FollowPath,
 	MovementState_GoalReached,
@@ -49,7 +43,10 @@ public:
 	bool CleanUp();
 
 	// Creates a group from a list of entities
-	UnitGroup* CreateGroup(list<Entity*> entities);
+	UnitGroup* CreateGroupFromList(list<Entity*> entities);
+
+	// Creates a group from a single entity
+	UnitGroup* CreateGroupFromEntity(Entity* entity);
 
 	// Returns the last group created or nullptr
 	UnitGroup* GetLastGroup() const;
@@ -63,13 +60,22 @@ public:
 	// Returns an existing group by the list of all of its entities or nullptr
 	UnitGroup* GetGroupByEntities(list<Entity*> entities) const;
 
-	// Moves an entity (if it is member of a group, through group movement). Returns true if the goal is reached
-	bool MoveEntity(Entity* entity, float dt) const;
+	// Moves an entity (if it is member of a group, through group movement). Returns the state of the movement
+	/// Call this method from any entity's update if you want to move the entity
+	MovementState MoveEntity(Entity* entity, float dt) const;
+
+	// Returns true if there would be a collision between the unit and another unit
+	bool CheckForFutureCollision(SingleUnit* unit) const;
+
+	// Returns true if the tile passed isn't and won't be occupied by a unit
+	bool IsValidTile(iPoint tile) const;
+
+	// Returns a valid tile for the unit (8 possibilities) or {-1,-1}
+	iPoint FindNewValidTile(SingleUnit* unit) const;
 
 private:
 
-	// Stores all the existing groups
-	list<UnitGroup*> unitGroups;
+	list<UnitGroup*> unitGroups; // contains all the existing groups
 };
 
 // ---------------------------------------------------------------------
@@ -78,6 +84,8 @@ private:
 
 struct UnitGroup
 {
+	UnitGroup(Entity* entity);
+
 	UnitGroup(list<Entity*> entities);
 
 	// Adds an entity to the group. Returns the ID of the entity or -1
@@ -110,9 +118,9 @@ struct UnitGroup
 
 	// -----
 
-	list<SingleUnit*> units;
-
-	iPoint goal = { 0,0 };
+	
+	list<SingleUnit*> units; // contains all the units of a given group
+	iPoint goal = { -1,-1 }; // current goal of the group
 
 	float maxSpeed = 0.0f;
 
@@ -134,12 +142,39 @@ struct SingleUnit
 	UnitGroup* group = nullptr;
 	MovementState movementState = MovementState_WaitForPath;
 
-	/// path to the macro objective
-	vector<iPoint> path; 
-	/// local tracking target for the steering behaviour
-	iPoint nextTile = { -1,-1 }; // next tile the unit is heading to (in order to reach the goal tile)
+	vector<iPoint> path; // path to the group goal
+	iPoint currTile = { -1,-1 }; // position of the unit in map coords
+	iPoint nextTile = { -1,-1 }; // next waypoint from the path (next tile the unit is heading to in map coords)
+
+	iPoint goal = { -1,-1 }; // current goal of the unit
+	iPoint newGoal = { -1,-1 }; // new goal of the unit
 
 	float speed = 1.0f; // movement speed: it can be the speed of the entity or the speed of the group
+	uint priority = 0; // priority of the unit in relation to the rest of the units of the group
+};
+
+class iPointPriority
+{
+public:
+	iPointPriority() {}
+	iPointPriority(iPoint point, int priority) :point(point), priority(priority) {}
+	iPointPriority(const iPointPriority& i) 
+	{
+		point = i.point;
+		priority = i.priority;
+	}
+
+	iPoint point;
+	int priority;
+};
+
+class Comparator
+{
+public:
+	int operator() (const iPointPriority a, const iPointPriority b)
+	{
+		return a.priority > b.priority;
+	}
 };
 
 #endif //__j1MOVEMENT_H__
