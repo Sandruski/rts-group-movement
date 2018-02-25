@@ -39,11 +39,6 @@ public:
 	// Returns a list with all the entities within a given rectangle
 	void SelectEntitiesWithinRectangle(SDL_Rect rectangleRect);
 
-
-
-	// Looks for the closest walkable tile to the tile passed as an argument
-	iPoint FindClosestWalkableTile(Entity* entity, iPoint tile) const;
-
 	// Returns a list with the last units selection
 	list<Entity*> GetLastEntitiesSelected() const;
 
@@ -55,9 +50,9 @@ public:
 
 private:
 
-	list<Entity*> unitsSelected;
-
+	list<Entity*> activeEntities;
 	list<Entity*> toSpawnEntities;
+	list<Entity*> unitsSelected;
 
 	// Entities textures
 	string archerTexName;
@@ -65,11 +60,6 @@ private:
 
 	// Entities info
 	UnitInfo unitInfo;
-
-public:
-
-	list<Entity*> activeEntities;
-
 };
 
 #endif //__j1ENTITY_FACTORY_H__

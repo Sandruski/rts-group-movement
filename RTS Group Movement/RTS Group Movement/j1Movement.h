@@ -22,6 +22,18 @@ enum MovementState {
 	MovementState_IncreaseWaypoint
 };
 
+enum CollisionType {
+	CollisionType_NoCollision,
+	CollisionType_SameCell,
+	CollisionType_ItsCell,
+	CollisionType_DiagonalCrossing
+};
+
+enum CollisionBehaviour {
+	CollisionBehaviour_FindNewCell,
+	CollisionBehaviour_Wait
+};
+
 // forward declaration
 struct SingleUnit;
 struct UnitGroup;
@@ -64,8 +76,8 @@ public:
 	/// Call this method from any entity's update if you want to move the entity
 	MovementState MoveEntity(Entity* entity, float dt) const;
 
-	// Returns true if there would be a collision between the unit and another unit
-	bool CheckForFutureCollision(SingleUnit* unit) const;
+	// Returns the type of collision that there would be between the unit and another unit or CollisionType_NoCollision
+	CollisionType CheckForFutureCollision(SingleUnit* unit) const;
 
 	// Returns true if the tile passed isn't and won't be occupied by a unit
 	bool IsValidTile(iPoint tile) const;
@@ -151,6 +163,9 @@ struct SingleUnit
 
 	float speed = 1.0f; // movement speed: it can be the speed of the entity or the speed of the group
 	uint priority = 0; // priority of the unit in relation to the rest of the units of the group
+
+	bool wait = false;
+	SingleUnit* waitForUnit = nullptr;
 };
 
 class iPointPriority

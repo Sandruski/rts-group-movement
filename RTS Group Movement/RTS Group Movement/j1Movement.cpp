@@ -191,6 +191,7 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 
 	float m;
 	bool increaseWaypoint = false;
+	CollisionType coll;
 
 	/// For each step:
 	switch (u->movementState) {
@@ -214,6 +215,11 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 		break;
 
 	case MovementState_FollowPath:
+
+		if (u->wait)
+			LOG("I am waiting");
+		else
+			LOG("I am not waiting");
 
 		// MOVEMENT CALCULATION
 
@@ -241,35 +247,54 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 		endPos = { u->entity->entityInfo.pos.x + movePos.x,u->entity->entityInfo.pos.y + movePos.y };
 
 		// If there would be a collision if the unit moved to the endPos:
-		if (CheckForFutureCollision(u)) {
+		coll = CheckForFutureCollision(u);
 
-			// Find a new, valid nextTile to move
-			newTile = FindNewValidTile(u);
+		// Treat the collision
+		if (coll != CollisionType_NoCollision) {
 
-			if (newTile.x != -1 && newTile.y != -1) {
+			if (coll == CollisionType_ItsCell || coll == CollisionType_SameCell) {
+				// Find a new, valid nextTile to move
+				newTile = FindNewValidTile(u);
 
-				// If the nextTile was going to be the goal tile, stop the unit when it reaches its new nextTile
-				if (u->nextTile == u->goal) {
+				if (newTile.x != -1 && newTile.y != -1) {
 
-					u->path.clear();
+					// If the nextTile was going to be the goal tile, stop the unit when it reaches its new nextTile
+					if (u->nextTile == u->goal) {
+
+						u->path.clear();
+						u->nextTile = newTile;
+						u->goal = u->newGoal = u->nextTile;
+
+						break;
+					}
+
+					// Update the unit's nextTile
 					u->nextTile = newTile;
-					u->goal = u->newGoal = u->nextTile;
 
-					break;
+					// Recalculate the path
+					if (App->pathfinding->CreatePath(u->nextTile, u->goal, DISTANCE_MANHATTAN) == -1)
+						break;
+
+					// Save the path found
+					u->path = *App->pathfinding->GetLastPath();
 				}
 
-				// Update the unit's nextTile
-				u->nextTile = newTile;
-
-				// Recalculate the path
-				if (App->pathfinding->CreatePath(u->nextTile, u->goal, DISTANCE_MANHATTAN) == -1)
-					break;
-
-				// Save the path found
-				u->path = *App->pathfinding->GetLastPath();
+				break;
 			}
+			else if (coll == CollisionType_DiagonalCrossing) {
 
-			break;
+				/// TODO: clean this part
+				// One of the units must stop and let the other one pass
+				u->wait = true;
+			}
+		}
+
+		/// TODO: clean this part
+		if (u->wait) {
+			if (u->waitForUnit->nextTile == u->waitForUnit->currTile)
+				u->wait = false;
+			else
+				break;
 		}
 
 		// Check if the unit would reach the nextTile during this move
@@ -327,8 +352,6 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 			break;
 		}
 
-		LOG("GOAL REACHED!");
-
 		break;
 
 	case MovementState_CollisionFound:
@@ -368,7 +391,7 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 	return ret;
 }
 
-bool j1Movement::CheckForFutureCollision(SingleUnit* unit) const
+CollisionType j1Movement::CheckForFutureCollision(SingleUnit* unit) const
 {
 	/// We don't check the walkability of the tile since the A* algorithm already did it for us
 
@@ -382,17 +405,65 @@ bool j1Movement::CheckForFutureCollision(SingleUnit* unit) const
 
 				if (unit->nextTile == (*units)->currTile) {
 					// A reaches B's tile
-					return true;
+					return CollisionType_ItsCell;
 				}
 				else if (unit->nextTile == (*units)->nextTile) {
 					// A and B reach the same tile
-					return true;
+					return CollisionType_SameCell;
+				}
+
+				// Diagonal crossing: even though the units don't reach the same tile, we want to avoid this situation
+				iPoint up = { (*units)->currTile.x, (*units)->currTile.y - 1 };
+				iPoint down = { (*units)->currTile.x, (*units)->currTile.y + 1 };
+				iPoint left = { (*units)->currTile.x - 1, (*units)->currTile.y };
+				iPoint right = { (*units)->currTile.x + 1, (*units)->currTile.y };
+
+				iPoint myUp = { unit->currTile.x, unit->currTile.y - 1 };
+				iPoint myDown = { unit->currTile.x, unit->currTile.y + 1 };
+				iPoint myLeft = { unit->currTile.x - 1, unit->currTile.y };
+				iPoint myRight = { unit->currTile.x + 1, unit->currTile.y };
+
+				if (unit->nextTile == up) {
+					if ((*units)->nextTile == myUp && !(*units)->wait) {
+
+						// Decide which unit waits (depending on its priority value)
+						unit->waitForUnit = *units;
+
+						return CollisionType_DiagonalCrossing;
+					}
+				}
+				else if (unit->nextTile == down) {
+					if ((*units)->nextTile == myDown && !(*units)->wait) {
+
+						// Decide which unit waits (depending on its priority value)
+						unit->waitForUnit = *units;
+
+						return CollisionType_DiagonalCrossing;
+					}
+				}
+				else if (unit->nextTile == left) {
+					if ((*units)->nextTile == myLeft && !(*units)->wait) {
+
+						// Decide which unit waits (depending on its priority value)
+						unit->waitForUnit = *units;
+
+						return CollisionType_DiagonalCrossing;
+					}
+				}
+				else if (unit->nextTile == right) {
+					if ((*units)->nextTile == myRight && !(*units)->wait) {
+
+						// Decide which unit waits (depending on its priority value)
+						unit->waitForUnit = *units;
+
+						return CollisionType_DiagonalCrossing;
+					}
 				}
 			}
 		}
 	}
 
-	return false;
+	return CollisionType_NoCollision;
 }
 
 bool j1Movement::IsValidTile(iPoint tile) const 
@@ -431,7 +502,7 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* unit) const
 	for (uint i = 0; i < 8; ++i)
 	{
 		priorityNeighbors.point = neighbors[i];
-		priorityNeighbors.priority = neighbors[i].DistanceManhattan(unit->goal);
+		priorityNeighbors.priority = neighbors[i].DistanceManhattan(unit->goal); /// TODO: we could use the path size to track the priority, but it's too heavy...
 		queue.push(priorityNeighbors);
 	}
 	
@@ -441,8 +512,12 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* unit) const
 		curr = queue.top();
 		queue.pop();
 
-		if (App->pathfinding->IsWalkable(curr.point) && IsValidTile(curr.point))
+		if (App->pathfinding->IsWalkable(curr.point) && IsValidTile(curr.point)) {
+
+			/// TODO: be careful! currTile may be closer to the goal than the neighbor found!
+			// if (curr.point.DistanceManhattan(unit->goal) < unit->currTile.DistanceManhattan(unit->goal))
 			return curr.point;
+		}
 	}
 
 	return { -1,-1 };
