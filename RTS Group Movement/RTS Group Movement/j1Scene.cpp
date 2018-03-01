@@ -101,18 +101,19 @@ bool j1Scene::PreUpdate()
 	iPoint mouseTile = App->map->WorldToMap(mousePos.x, mousePos.y);
 	iPoint mouseTilePos = App->map->MapToWorld(mouseTile.x, mouseTile.y);
 
-	// Mouse right click: spawn a unit
-	if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN) {
-		EntityInfo entityInfo;
-		UnitInfo unitInfo;
+	// ---------------------------------------------------------------------
 
-		entityInfo.pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
-		entityInfo.size = { 32,32 };
+	EntityInfo entityInfo;
+	entityInfo.pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
+	entityInfo.size = { 32,32 };
 
-		unitInfo.color = ColorBloodyRed;
+	// 1: spawn a unit with priority 1
+	if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN)
+		App->entities->AddUnit(entityInfo, 1);
 
-		App->entities->AddUnit(entityInfo, unitInfo);
-	}
+	// 2: spawn a unit with priority 2
+	if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
+		App->entities->AddUnit(entityInfo, 2);
 
 	return ret;
 }
@@ -129,19 +130,27 @@ bool j1Scene::Update(float dt)
 	iPoint mouseTile = App->map->WorldToMap(mousePos.x, mousePos.y);
 	iPoint mouseTilePos = App->map->MapToWorld(mouseTile.x, mouseTile.y);
 
+	// ---------------------------------------------------------------------
+
 	// Draw
 	App->map->Draw(); // map
 	App->entities->Draw(); // entities
 	App->render->Blit(debugTex, mouseTilePos.x, mouseTilePos.y); // tile under the mouse pointer
 
-	// Rectangle drawing and selection of units
-	if (App->input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_DOWN)
+	// Select units by mouse click
+	if (App->input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_DOWN) {
 		startRectangle = mousePos;
-	else if (App->input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_REPEAT) {
+
+		App->entities->SelectEntity(mouseTile);
+	}
+
+	int width = mousePos.x - startRectangle.x;
+	int height = mousePos.y - startRectangle.y;
+
+	// Select units by rectangle drawing
+	if (abs(width) >= 5 && abs(height) >= 5 && App->input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_REPEAT) {
 
 		// Draw the rectangle
-		int width = mousePos.x - startRectangle.x;
-		int height = mousePos.y - startRectangle.y;
 		SDL_Rect mouseRect = { startRectangle.x, startRectangle.y, width, height };
 		App->render->DrawQuad(mouseRect, 255, 255, 255, 255, false);
 

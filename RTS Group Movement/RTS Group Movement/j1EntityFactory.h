@@ -34,9 +34,12 @@ public:
 	void OnCollision(Collider* c1, Collider* c2);
 	void Draw();
 
-	Unit* AddUnit(const EntityInfo& entityInfo, const UnitInfo& unitInfo);
+	Unit* AddUnit(const EntityInfo& entityInfo, uint priority);
 
-	// Returns a list with all the entities within a given rectangle
+	// Selects the entity within the tile
+	void SelectEntity(iPoint tile);
+
+	// Selects the entities within the rectangle
 	void SelectEntitiesWithinRectangle(SDL_Rect rectangleRect);
 
 	// Returns a list with the last units selection

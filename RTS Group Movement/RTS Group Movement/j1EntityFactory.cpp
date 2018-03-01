@@ -199,6 +199,34 @@ void j1EntityFactory::Draw()
 	}
 }
 
+void j1EntityFactory::SelectEntity(iPoint tile)
+{
+	list<Entity*>::const_iterator it = activeEntities.begin();
+
+	while (it != activeEntities.end()) {
+
+		iPoint entityTile = App->map->WorldToMap((*it)->entityInfo.pos.x, (*it)->entityInfo.pos.y);
+
+		if (tile.x == entityTile.x && tile.y == entityTile.y) {
+
+			// If the entity isn't in the unitsSelected list, add it
+			if (find(unitsSelected.begin(), unitsSelected.end(), *it) == unitsSelected.end()) {
+				unitsSelected.push_back(*it);
+				(*it)->isSelected = true;
+			}
+		}
+		else {
+
+			// If the entity is in the unitsSelected list, remove it
+			if (find(unitsSelected.begin(), unitsSelected.end(), *it) != unitsSelected.end()) {
+				unitsSelected.remove(*it);
+				(*it)->isSelected = false;
+			}
+		}
+		it++;
+	}
+}
+
 void j1EntityFactory::SelectEntitiesWithinRectangle(SDL_Rect rectangleRect)
 {
 	list<Entity*>::const_iterator it = activeEntities.begin();
@@ -288,7 +316,6 @@ bool j1EntityFactory::CleanUp()
 void j1EntityFactory::OnCollision(Collider* c1, Collider* c2)
 {
 	// Check for collisions
-
 	list<Entity*>::const_iterator it = activeEntities.begin();
 
 	while (it != activeEntities.end()) {
@@ -300,9 +327,9 @@ void j1EntityFactory::OnCollision(Collider* c1, Collider* c2)
 	}
 }
 
-Unit* j1EntityFactory::AddUnit(const EntityInfo& entityInfo, const UnitInfo& unitInfo)
+Unit* j1EntityFactory::AddUnit(const EntityInfo& entityInfo, uint priority)
 {
-	Unit* unit = new Unit(entityInfo, unitInfo);
+	Unit* unit = new Unit(entityInfo, priority);
 	toSpawnEntities.push_back(unit);
 
 	return unit;

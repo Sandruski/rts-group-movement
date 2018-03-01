@@ -30,7 +30,8 @@ void j1Movement::DebugDraw() const
 	for (list<UnitGroup*>::const_iterator group = unitGroups.begin(); group != unitGroups.end(); ++group) {
 		for (list<SingleUnit*>::const_iterator unit = (*group)->units.begin(); unit != (*group)->units.end(); ++unit) {
 
-			if ((*unit)->nextTile.x > -1 && (*unit)->nextTile.y > -1) {
+			if ((*unit)->movementState != MovementState_NoState && (*unit)->movementState != MovementState_GoalReached 
+				&& (*unit)->nextTile.x > -1 && (*unit)->nextTile.y > -1) {
 
 				// Raycast a line between the unit and the nextTile
 				iPoint offset = { App->map->data.tile_width / 2, App->map->data.tile_height / 2 };
@@ -38,8 +39,7 @@ void j1Movement::DebugDraw() const
 				App->render->DrawLine((*unit)->entity->entityInfo.pos.x + offset.x, (*unit)->entity->entityInfo.pos.y + offset.y, nextPos.x + offset.x, nextPos.y + offset.y, 255, 255, 255, 255);
 				App->render->DrawCircle(nextPos.x + offset.x, nextPos.y + offset.y, 10, 255, 255, 255, 255);
 
-				// Draw path
-				
+				// Draw unit's path
 				for (uint i = 0; i < (*unit)->path.size(); ++i)
 				{
 					iPoint pos = App->map->MapToWorld((*unit)->path.at(i).x, (*unit)->path.at(i).y);
@@ -185,12 +185,10 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 	u->currTile = App->map->WorldToMap(u->entity->entityInfo.pos.x, u->entity->entityInfo.pos.y); // unit current pos in map coords
 	iPoint nextPos = App->map->MapToWorld(u->nextTile.x, u->nextTile.y); // unit nextPos in map coords
 	
-	fPoint movePos;
-	fPoint endPos;
+	fPoint movePos, endPos;
 	iPoint newTile;
 
 	float m;
-	bool increaseWaypoint = false;
 	CollisionType coll;
 
 	/// For each step:
@@ -198,30 +196,18 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 
 	case MovementState_WaitForPath:
 
-		// If there is a valid goal:
-		if (u->goal.x != -1 && u->goal.y != -1) {
-
-			// Find a path
-			if (App->pathfinding->CreatePath(u->currTile, u->goal, DISTANCE_MANHATTAN) == -1)
-				break;
-
-			// Save the path found
-			u->path = *App->pathfinding->GetLastPath();
+		if (u->CreatePath(u->currTile))
 
 			// Set state to IncreaseWaypoint, in order to start following the path
 			u->movementState = MovementState_IncreaseWaypoint;
-		}
 
 		break;
 
 	case MovementState_FollowPath:
 
-		if (u->wait)
-			LOG("I am waiting");
-		else
-			LOG("I am not waiting");
-
+		// ---------------------------------------------------------------------
 		// MOVEMENT CALCULATION
+		// ---------------------------------------------------------------------
 
 		// Calculate the difference between nextTile and currTile. The result will be in the interval [-1,1]
 		movePos = { (float)nextPos.x - u->entity->entityInfo.pos.x, (float)nextPos.y - u->entity->entityInfo.pos.y };
@@ -241,29 +227,30 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 		movePos.x *= u->speed * dt;
 		movePos.y *= u->speed * dt;
 
+		// ---------------------------------------------------------------------
 		// COLLISION CALCULATION
+		// ---------------------------------------------------------------------
 
-		// Predict where the unit will be after moving
-		endPos = { u->entity->entityInfo.pos.x + movePos.x,u->entity->entityInfo.pos.y + movePos.y };
-
-		// If there would be a collision if the unit moved to the endPos:
+		// Check if there would be a collision if the unit reached nextTile during this move
 		coll = CheckForFutureCollision(u);
 
 		// Treat the collision
 		if (coll != CollisionType_NoCollision) {
 
 			if (coll == CollisionType_ItsCell || coll == CollisionType_SameCell) {
+				
 				// Find a new, valid nextTile to move
 				newTile = FindNewValidTile(u);
 
 				if (newTile.x != -1 && newTile.y != -1) {
 
-					// If the nextTile was going to be the goal tile, stop the unit when it reaches its new nextTile
+					// If the nextTile was going to be the goal tile:
 					if (u->nextTile == u->goal) {
 
+						// Stop the unit when it reaches its new nextTile
 						u->path.clear();
 						u->nextTile = newTile;
-						u->goal = u->newGoal = u->nextTile;
+						u->goal = u->newGoal = newTile;
 
 						break;
 					}
@@ -272,74 +259,54 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 					u->nextTile = newTile;
 
 					// Recalculate the path
-					if (App->pathfinding->CreatePath(u->nextTile, u->goal, DISTANCE_MANHATTAN) == -1)
-						break;
-
-					// Save the path found
-					u->path = *App->pathfinding->GetLastPath();
+					u->CreatePath(u->nextTile);	
 				}
 
 				break;
 			}
 			else if (coll == CollisionType_DiagonalCrossing) {
 
-				/// TODO: clean this part
 				// One of the units must stop and let the other one pass
 				u->wait = true;
 			}
 		}
 
-		/// TODO: clean this part
 		if (u->wait) {
-			if (u->waitForUnit->nextTile == u->waitForUnit->currTile)
+
+			// The other unit must notificate to the waiting unit when it has finished its movement
+			if (u->waitForUnit->nextTile == u->waitForUnit->currTile) {
 				u->wait = false;
+				u->waitForUnit = nullptr;
+			}
 			else
 				break;
 		}
 
+		// ---------------------------------------------------------------------
+		// TILE FITTING
+		// ---------------------------------------------------------------------
+
+		// Predict where the unit will be after moving
+		endPos = { u->entity->entityInfo.pos.x + movePos.x,u->entity->entityInfo.pos.y + movePos.y };
+
 		// Check if the unit would reach the nextTile during this move
 		/// We check with an offset, in order to avoid the unit to miss the nextTile
-
-		if (u->entity->entityInfo.direction.x >= 0) { // Right or stop
-
-			if (u->entity->entityInfo.direction.y >= 0) { // Down or stop
-				if (endPos.x >= nextPos.x && endPos.y >= nextPos.y)
-					increaseWaypoint = true;
-			}
-			else { // Up
-				if (endPos.x >= nextPos.x && endPos.y <= nextPos.y)
-					increaseWaypoint = true;
-			}
-		}
-		else { // Left
-
-			if (u->entity->entityInfo.direction.y >= 0) { // Down or stop
-				if (endPos.x <= nextPos.x && endPos.y >= nextPos.y)
-					increaseWaypoint = true;
-			}
-			else { // Up
-				if (endPos.x <= nextPos.x && endPos.y <= nextPos.y)
-					increaseWaypoint = true;
-			}
-		}
-
-		// If the unit's going to reach the nextTile during this move:
-		if (increaseWaypoint) {
+		if (u->IsTileReached(nextPos, endPos)) {
+		
+			// If the unit's going to reach the nextTile during this move:
 			u->entity->entityInfo.pos.x = nextPos.x;
 			u->entity->entityInfo.pos.y = nextPos.y;
 			u->movementState = MovementState_IncreaseWaypoint;
 			break;
 		}
 
-		// Do the actual move
+		// If the unit's not going to reach the nextTile yet, keep moving
 		u->entity->entityInfo.pos.x += movePos.x;
 		u->entity->entityInfo.pos.y += movePos.y;
 
 		break;
 
 	case MovementState_GoalReached:
-
-		// Make the appropiate notifications
 
 		// The unit is still
 		u->entity->entityInfo.direction.x = 0.0f;
@@ -351,14 +318,6 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 			u->movementState = MovementState_WaitForPath;
 			break;
 		}
-
-		break;
-
-	case MovementState_CollisionFound:
-
-		// MYTODO: organize the collision code here?
-
-		u->movementState = MovementState_FollowPath;
 
 		break;
 
@@ -466,7 +425,7 @@ CollisionType j1Movement::CheckForFutureCollision(SingleUnit* unit) const
 	return CollisionType_NoCollision;
 }
 
-bool j1Movement::IsValidTile(iPoint tile) const 
+bool j1Movement::IsValidTile(SingleUnit* unit, iPoint tile) const 
 {
 	list<UnitGroup*>::const_iterator groups;
 	list<SingleUnit*>::const_iterator units;
@@ -474,8 +433,9 @@ bool j1Movement::IsValidTile(iPoint tile) const
 	for (groups = unitGroups.begin(); groups != unitGroups.end(); ++groups) {
 		for (units = (*groups)->units.begin(); units != (*groups)->units.end(); ++units) {
 
-			if ((*units)->currTile == tile || (*units)->nextTile == tile)
-				return false;
+			if ((*units) != unit)
+				if ((*units)->currTile == tile || (*units)->nextTile == tile)
+					return false;
 		}
 	}
 
@@ -512,15 +472,36 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* unit) const
 		curr = queue.top();
 		queue.pop();
 
-		if (App->pathfinding->IsWalkable(curr.point) && IsValidTile(curr.point)) {
+		if (App->pathfinding->IsWalkable(curr.point) && IsValidTile(unit, curr.point)) {
 
 			/// TODO: be careful! currTile may be closer to the goal than the neighbor found!
-			// if (curr.point.DistanceManhattan(unit->goal) < unit->currTile.DistanceManhattan(unit->goal))
+			//if (curr.point.DistanceManhattan(unit->goal) < unit->currTile.DistanceManhattan(unit->goal))
 			return curr.point;
+			//else
+				//return unit->currTile;
 		}
 	}
 
 	return { -1,-1 };
+}
+
+
+bool j1Movement::IsTileOccupied(SingleUnit* unit, iPoint tile) const
+{
+	list<UnitGroup*>::const_iterator groups;
+	list<SingleUnit*>::const_iterator units;
+
+		for (groups = unitGroups.begin(); groups != unitGroups.end(); ++groups) {
+			for (units = (*groups)->units.begin(); units != (*groups)->units.end(); ++units) {
+
+				if ((*units) != unit)
+					if (tile == (*units)->currTile 
+						&& (*units)->entity->entityInfo.direction.x == 0.0f && (*units)->entity->entityInfo.direction.y == 0.0f)
+						return true;
+			}
+		}
+
+	return false;
 }
 
 // UnitGroup struct ---------------------------------------------------------------------------------
@@ -652,4 +633,53 @@ SingleUnit::SingleUnit(Entity* entity, UnitGroup* group) :entity(entity), group(
 	speed *= 50.0f; // MYTODO: delete this 50.0f magic number!!!
 
 	goal = group->goal;
+}
+
+bool SingleUnit::CreatePath(iPoint startPos)
+{
+	bool ret = true;
+
+	// If there is a valid goal:
+	if (goal.x != -1 && goal.y != -1) {
+
+		// Find a path
+		if (App->pathfinding->CreatePath(startPos, goal, DISTANCE_MANHATTAN) == -1)
+			ret = false;
+
+		// Save the path found
+		if (ret)
+			path = *App->pathfinding->GetLastPath();
+	}
+
+	return ret;
+}
+
+bool SingleUnit::IsTileReached(iPoint nextPos, fPoint endPos) const 
+{
+	bool ret = false;
+
+	if (entity->entityInfo.direction.x >= 0) { // Right or stop
+
+		if (entity->entityInfo.direction.y >= 0) { // Down or stop
+			if (endPos.x >= nextPos.x && endPos.y >= nextPos.y)
+				ret = true;
+		}
+		else { // Up
+			if (endPos.x >= nextPos.x && endPos.y <= nextPos.y)
+				ret = true;
+		}
+	}
+	else { // Left
+
+		if (entity->entityInfo.direction.y >= 0) { // Down or stop
+			if (endPos.x <= nextPos.x && endPos.y >= nextPos.y)
+				ret = true;
+		}
+		else { // Up
+			if (endPos.x <= nextPos.x && endPos.y <= nextPos.y)
+				ret = true;
+		}
+	}
+
+	return ret;
 }

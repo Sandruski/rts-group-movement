@@ -18,7 +18,6 @@ enum MovementState {
 	MovementState_WaitForPath,
 	MovementState_FollowPath,
 	MovementState_GoalReached,
-	MovementState_CollisionFound,
 	MovementState_IncreaseWaypoint
 };
 
@@ -80,10 +79,12 @@ public:
 	CollisionType CheckForFutureCollision(SingleUnit* unit) const;
 
 	// Returns true if the tile passed isn't and won't be occupied by a unit
-	bool IsValidTile(iPoint tile) const;
+	bool IsValidTile(SingleUnit* unit, iPoint tile) const;
 
 	// Returns a valid tile for the unit (8 possibilities) or {-1,-1}
 	iPoint FindNewValidTile(SingleUnit* unit) const;
+
+	bool IsTileOccupied(SingleUnit* unit, iPoint tile) const;
 
 private:
 
@@ -129,7 +130,6 @@ struct UnitGroup
 	//fPoint GetCentroid() const;
 
 	// -----
-
 	
 	list<SingleUnit*> units; // contains all the units of a given group
 	iPoint goal = { -1,-1 }; // current goal of the group
@@ -148,6 +148,9 @@ struct SingleUnit
 {
 	SingleUnit(Entity* entity, UnitGroup* group);
 
+	bool CreatePath(iPoint startPos);
+	bool IsTileReached(iPoint nextPos, fPoint endPos) const;
+
 	// -----
 
 	Entity* entity = nullptr;
@@ -162,7 +165,7 @@ struct SingleUnit
 	iPoint newGoal = { -1,-1 }; // new goal of the unit
 
 	float speed = 1.0f; // movement speed: it can be the speed of the entity or the speed of the group
-	uint priority = 0; // priority of the unit in relation to the rest of the units of the group
+	int priority = 0; // priority of the unit in relation to the rest of the units of the group
 
 	bool wait = false;
 	SingleUnit* waitForUnit = nullptr;
@@ -173,14 +176,14 @@ class iPointPriority
 public:
 	iPointPriority() {}
 	iPointPriority(iPoint point, int priority) :point(point), priority(priority) {}
-	iPointPriority(const iPointPriority& i) 
+	iPointPriority(const iPointPriority& i)
 	{
 		point = i.point;
 		priority = i.priority;
 	}
 
-	iPoint point;
-	int priority;
+	iPoint point = { 0,0 };
+	int priority = 0;
 };
 
 class Comparator
