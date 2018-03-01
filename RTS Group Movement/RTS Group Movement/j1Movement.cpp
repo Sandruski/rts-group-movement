@@ -196,10 +196,16 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 
 	case MovementState_WaitForPath:
 
-		if (u->CreatePath(u->currTile))
+		// Check if the goal is valid
+		if (!IsValidTile(u, u->goal, false, false, true))
+			// If the goal is not valid, find a new goal
+			u->goal = FindNewValidGoal(u);
 
-			// Set state to IncreaseWaypoint, in order to start following the path
-			u->movementState = MovementState_IncreaseWaypoint;
+		// Check if the goal is valid (the new valid goal could not be valid)
+		if (u->goal.x != -1 && u->goal.y != -1)
+			if (u->CreatePath(u->currTile))
+				// Set state to IncreaseWaypoint, in order to start following the path
+				u->movementState = MovementState_IncreaseWaypoint;
 
 		break;
 
@@ -309,8 +315,7 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 	case MovementState_GoalReached:
 
 		// The unit is still
-		u->entity->entityInfo.direction.x = 0.0f;
-		u->entity->entityInfo.direction.y = 0.0f;
+		u->StopUnit();
 
 		// If the goal has been changed:
 		if (u->goal != u->newGoal) {
@@ -425,7 +430,7 @@ CollisionType j1Movement::CheckForFutureCollision(SingleUnit* unit) const
 	return CollisionType_NoCollision;
 }
 
-bool j1Movement::IsValidTile(SingleUnit* unit, iPoint tile) const 
+bool j1Movement::IsValidTile(SingleUnit* unit, iPoint tile, bool currTile, bool nextTile, bool goalTile) const
 {
 	list<UnitGroup*>::const_iterator groups;
 	list<SingleUnit*>::const_iterator units;
@@ -433,9 +438,21 @@ bool j1Movement::IsValidTile(SingleUnit* unit, iPoint tile) const
 	for (groups = unitGroups.begin(); groups != unitGroups.end(); ++groups) {
 		for (units = (*groups)->units.begin(); units != (*groups)->units.end(); ++units) {
 
-			if ((*units) != unit)
-				if ((*units)->currTile == tile || (*units)->nextTile == tile)
-					return false;
+			if ((*units) != unit) {
+
+				if (currTile) {
+					if ((*units)->currTile == tile)
+						return false;
+				}
+				if (nextTile) {
+					if ((*units)->nextTile == tile)
+						return false;
+				}
+				if (goalTile) {
+					if ((*units)->goal == tile)
+						return false;
+				}
+			}
 		}
 	}
 
@@ -444,7 +461,10 @@ bool j1Movement::IsValidTile(SingleUnit* unit, iPoint tile) const
 
 iPoint j1Movement::FindNewValidTile(SingleUnit* unit) const
 {
-	// 1. Units can only move in 8 directions from their current tile
+	if (unit == nullptr)
+		return { -1,-1 };
+
+	// 1. Units can only move in 8 directions from their current tile (the search only expands to 8 possible tiles)
 	iPoint neighbors[8];
 	neighbors[0].create(unit->currTile.x + 1, unit->currTile.y + 0);
 	neighbors[1].create(unit->currTile.x + 0, unit->currTile.y + 1);
@@ -472,7 +492,7 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* unit) const
 		curr = queue.top();
 		queue.pop();
 
-		if (App->pathfinding->IsWalkable(curr.point) && IsValidTile(unit, curr.point)) {
+		if (App->pathfinding->IsWalkable(curr.point) && IsValidTile(unit, curr.point, true, true)) {
 
 			/// TODO: be careful! currTile may be closer to the goal than the neighbor found!
 			//if (curr.point.DistanceManhattan(unit->goal) < unit->currTile.DistanceManhattan(unit->goal))
@@ -485,23 +505,50 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* unit) const
 	return { -1,-1 };
 }
 
-
-bool j1Movement::IsTileOccupied(SingleUnit* unit, iPoint tile) const
+iPoint j1Movement::FindNewValidGoal(SingleUnit* unit) const 
 {
-	list<UnitGroup*>::const_iterator groups;
-	list<SingleUnit*>::const_iterator units;
+	if (unit == nullptr)
+		return { -1,-1 };
 
-		for (groups = unitGroups.begin(); groups != unitGroups.end(); ++groups) {
-			for (units = (*groups)->units.begin(); units != (*groups)->units.end(); ++units) {
+	// 1. We use BFS to calculate a new goal for the unit (we want to expand the search to all the possible tiles)
+	// 2. PRIORITY: the neighbor closer to the group goal
+	priority_queue<iPointPriority, vector<iPointPriority>, Comparator> priorityQueue;
+	iPointPriority curr;
+	list<iPoint> visited;
 
-				if ((*units) != unit)
-					if (tile == (*units)->currTile 
-						&& (*units)->entity->entityInfo.direction.x == 0.0f && (*units)->entity->entityInfo.direction.y == 0.0f)
-						return true;
+	while (priorityQueue.size() > 0) {
+
+		curr = priorityQueue.top();
+		priorityQueue.pop();
+
+		if (App->pathfinding->IsWalkable(curr.point) && IsValidTile(unit, curr.point, false, false, true))
+			return curr.point;
+
+		iPoint neighbors[8];
+		neighbors[0].create(unit->group->GetGoal().x + 1, unit->group->GetGoal().y + 0);
+		neighbors[1].create(unit->group->GetGoal().x + 0, unit->group->GetGoal().y + 1);
+		neighbors[2].create(unit->group->GetGoal().x - 1, unit->group->GetGoal().y + 0);
+		neighbors[3].create(unit->group->GetGoal().x + 0, unit->group->GetGoal().y - 1);
+		neighbors[4].create(unit->group->GetGoal().x + 1, unit->group->GetGoal().y + 1);
+		neighbors[5].create(unit->group->GetGoal().x + 1, unit->group->GetGoal().y - 1);
+		neighbors[6].create(unit->group->GetGoal().x - 1, unit->group->GetGoal().y + 1);
+		neighbors[7].create(unit->group->GetGoal().x - 1, unit->group->GetGoal().y - 1);
+
+		for (uint i = 0; i < 8; ++i)
+		{
+			if (find(visited.begin(), visited.end(), neighbors[i]) == visited.end()) {
+				
+				iPointPriority priorityNeighbors;
+				priorityNeighbors.point = neighbors[i];
+				priorityNeighbors.priority = neighbors[i].DistanceManhattan(unit->group->goal);
+				priorityQueue.push(priorityNeighbors);
+
+				visited.push_back(neighbors[i]);
 			}
 		}
+	}
 
-	return false;
+	return { -1,-1 };
 }
 
 // UnitGroup struct ---------------------------------------------------------------------------------
@@ -682,4 +729,10 @@ bool SingleUnit::IsTileReached(iPoint nextPos, fPoint endPos) const
 	}
 
 	return ret;
+}
+
+void SingleUnit::StopUnit() 
+{
+	entity->entityInfo.direction.x = 0.0f;
+	entity->entityInfo.direction.y = 0.0f;
 }

@@ -79,12 +79,12 @@ public:
 	CollisionType CheckForFutureCollision(SingleUnit* unit) const;
 
 	// Returns true if the tile passed isn't and won't be occupied by a unit
-	bool IsValidTile(SingleUnit* unit, iPoint tile) const;
+	bool IsValidTile(SingleUnit* unit, iPoint tile, bool currTile = false, bool nextTile = false, bool goalTile = false) const;
 
 	// Returns a valid tile for the unit (8 possibilities) or {-1,-1}
 	iPoint FindNewValidTile(SingleUnit* unit) const;
 
-	bool IsTileOccupied(SingleUnit* unit, iPoint tile) const;
+	iPoint FindNewValidGoal(SingleUnit* unit) const;
 
 private:
 
@@ -150,6 +150,7 @@ struct SingleUnit
 
 	bool CreatePath(iPoint startPos);
 	bool IsTileReached(iPoint nextPos, fPoint endPos) const;
+	void StopUnit();
 
 	// -----
 
