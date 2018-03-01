@@ -36,7 +36,7 @@ void j1Movement::DebugDraw() const
 				// Raycast a line between the unit and the nextTile
 				iPoint offset = { App->map->data.tile_width / 2, App->map->data.tile_height / 2 };
 				iPoint nextPos = App->map->MapToWorld((*unit)->nextTile.x, (*unit)->nextTile.y);
-				App->render->DrawLine((*unit)->entity->entityInfo.pos.x + offset.x, (*unit)->entity->entityInfo.pos.y + offset.y, nextPos.x + offset.x, nextPos.y + offset.y, 255, 255, 255, 255);
+				App->render->DrawLine((*unit)->unit->entityInfo.pos.x + offset.x, (*unit)->unit->entityInfo.pos.y + offset.y, nextPos.x + offset.x, nextPos.y + offset.y, 255, 255, 255, 255);
 				App->render->DrawCircle(nextPos.x + offset.x, nextPos.y + offset.y, 10, 255, 255, 255, 255);
 
 				// Draw unit's path
@@ -46,6 +46,11 @@ void j1Movement::DebugDraw() const
 					SDL_Rect rect = { pos.x, pos.y, App->map->data.tile_width, App->map->data.tile_height };
 					App->render->DrawQuad(rect, 0, 255, 0, 50);
 				}
+
+				// Draw unit's goal (in a different color than the path)
+				iPoint pos = App->map->MapToWorld((*unit)->goal.x, (*unit)->goal.y);
+				SDL_Rect rect = { pos.x, pos.y, App->map->data.tile_width, App->map->data.tile_height };
+				App->render->DrawQuad(rect, 0, 0, 0, 200);
 			}
 		}
 	}
@@ -129,7 +134,7 @@ UnitGroup* j1Movement::GetGroupByEntity(Entity* entity) const
 
 	for (groups = unitGroups.begin(); groups != unitGroups.end(); ++groups) {
 		for (units = (*groups)->units.begin(); units != (*groups)->units.end(); ++units) {
-			if ((*units)->entity == entity) {
+			if ((Entity*)(*units)->unit == entity) {
 				group = *groups;
 				break;
 			}
@@ -152,7 +157,7 @@ UnitGroup* j1Movement::GetGroupByEntities(list<Entity*> entities) const
 
 			for (it = entities.begin(); it != entities.end(); ++it) {
 
-				if ((*units)->entity == *it)
+				if ((Entity*)(*units)->unit == *it)
 					size++;
 			}
 		}
@@ -182,7 +187,7 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 
 	ret = u->movementState;
 
-	u->currTile = App->map->WorldToMap(u->entity->entityInfo.pos.x, u->entity->entityInfo.pos.y); // unit current pos in map coords
+	u->currTile = App->map->WorldToMap(u->unit->entityInfo.pos.x, u->unit->entityInfo.pos.y); // unit current pos in map coords
 	iPoint nextPos = App->map->MapToWorld(u->nextTile.x, u->nextTile.y); // unit nextPos in map coords
 	
 	fPoint movePos, endPos;
@@ -198,12 +203,16 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 
 		// Check if the goal is valid
 		if (!IsValidTile(u, u->goal, false, false, true))
+
 			// If the goal is not valid, find a new goal
-			u->goal = FindNewValidGoal(u);
+			u->goal = u->newGoal = FindNewValidGoal(u);
 
 		// Check if the goal is valid (the new valid goal could not be valid)
 		if (u->goal.x != -1 && u->goal.y != -1)
+
+			// If the goal is valid, find a path
 			if (u->CreatePath(u->currTile))
+
 				// Set state to IncreaseWaypoint, in order to start following the path
 				u->movementState = MovementState_IncreaseWaypoint;
 
@@ -216,7 +225,7 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 		// ---------------------------------------------------------------------
 
 		// Calculate the difference between nextTile and currTile. The result will be in the interval [-1,1]
-		movePos = { (float)nextPos.x - u->entity->entityInfo.pos.x, (float)nextPos.y - u->entity->entityInfo.pos.y };
+		movePos = { (float)nextPos.x - u->unit->entityInfo.pos.x, (float)nextPos.y - u->unit->entityInfo.pos.y };
 
 		// Normalize
 		m = sqrtf(pow(movePos.x, 2.0f) + pow(movePos.y, 2.0f));
@@ -226,8 +235,7 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 			movePos.y /= m;
 		}
 
-		u->entity->entityInfo.direction.x = movePos.x;
-		u->entity->entityInfo.direction.y = movePos.y;
+		u->unit->SetUnitDirectionByValue(movePos);
 
 		// Apply the speed and the dt to the previous result
 		movePos.x *= u->speed * dt;
@@ -246,7 +254,7 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 			if (coll == CollisionType_ItsCell || coll == CollisionType_SameCell) {
 				
 				// Find a new, valid nextTile to move
-				newTile = FindNewValidTile(u);
+				newTile = FindNewValidTile(u, true);
 
 				if (newTile.x != -1 && newTile.y != -1) {
 
@@ -265,7 +273,11 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 					u->nextTile = newTile;
 
 					// Recalculate the path
-					u->CreatePath(u->nextTile);	
+					u->CreatePath(u->nextTile);
+				}
+				else if (newTile.x == -1 && newTile.y == -1) {
+
+					u->unit->SetUnitDirection(UnitDirection_Idle);
 				}
 
 				break;
@@ -293,22 +305,22 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 		// ---------------------------------------------------------------------
 
 		// Predict where the unit will be after moving
-		endPos = { u->entity->entityInfo.pos.x + movePos.x,u->entity->entityInfo.pos.y + movePos.y };
+		endPos = { u->unit->entityInfo.pos.x + movePos.x,u->unit->entityInfo.pos.y + movePos.y };
 
 		// Check if the unit would reach the nextTile during this move
 		/// We check with an offset, in order to avoid the unit to miss the nextTile
 		if (u->IsTileReached(nextPos, endPos)) {
 		
 			// If the unit's going to reach the nextTile during this move:
-			u->entity->entityInfo.pos.x = nextPos.x;
-			u->entity->entityInfo.pos.y = nextPos.y;
+			u->unit->entityInfo.pos.x = nextPos.x;
+			u->unit->entityInfo.pos.y = nextPos.y;
 			u->movementState = MovementState_IncreaseWaypoint;
 			break;
 		}
 
 		// If the unit's not going to reach the nextTile yet, keep moving
-		u->entity->entityInfo.pos.x += movePos.x;
-		u->entity->entityInfo.pos.y += movePos.y;
+		u->unit->entityInfo.pos.x += movePos.x;
+		u->unit->entityInfo.pos.y += movePos.y;
 
 		break;
 
@@ -355,7 +367,7 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 	return ret;
 }
 
-CollisionType j1Movement::CheckForFutureCollision(SingleUnit* unit) const
+CollisionType j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 {
 	/// We don't check the walkability of the tile since the A* algorithm already did it for us
 
@@ -365,13 +377,13 @@ CollisionType j1Movement::CheckForFutureCollision(SingleUnit* unit) const
 	for (groups = unitGroups.begin(); groups != unitGroups.end(); ++groups) {
 		for (units = (*groups)->units.begin(); units != (*groups)->units.end(); ++units) {
 
-			if ((*units) != unit) {
+			if ((*units) != singleUnit) {
 
-				if (unit->nextTile == (*units)->currTile) {
+				if (singleUnit->nextTile == (*units)->currTile) {
 					// A reaches B's tile
 					return CollisionType_ItsCell;
 				}
-				else if (unit->nextTile == (*units)->nextTile) {
+				else if (singleUnit->nextTile == (*units)->nextTile) {
 					// A and B reach the same tile
 					return CollisionType_SameCell;
 				}
@@ -382,43 +394,43 @@ CollisionType j1Movement::CheckForFutureCollision(SingleUnit* unit) const
 				iPoint left = { (*units)->currTile.x - 1, (*units)->currTile.y };
 				iPoint right = { (*units)->currTile.x + 1, (*units)->currTile.y };
 
-				iPoint myUp = { unit->currTile.x, unit->currTile.y - 1 };
-				iPoint myDown = { unit->currTile.x, unit->currTile.y + 1 };
-				iPoint myLeft = { unit->currTile.x - 1, unit->currTile.y };
-				iPoint myRight = { unit->currTile.x + 1, unit->currTile.y };
+				iPoint myUp = { singleUnit->currTile.x, singleUnit->currTile.y - 1 };
+				iPoint myDown = { singleUnit->currTile.x, singleUnit->currTile.y + 1 };
+				iPoint myLeft = { singleUnit->currTile.x - 1, singleUnit->currTile.y };
+				iPoint myRight = { singleUnit->currTile.x + 1, singleUnit->currTile.y };
 
-				if (unit->nextTile == up) {
+				if (singleUnit->nextTile == up) {
 					if ((*units)->nextTile == myUp && !(*units)->wait) {
 
 						// Decide which unit waits (depending on its priority value)
-						unit->waitForUnit = *units;
+						singleUnit->waitForUnit = *units;
 
 						return CollisionType_DiagonalCrossing;
 					}
 				}
-				else if (unit->nextTile == down) {
+				else if (singleUnit->nextTile == down) {
 					if ((*units)->nextTile == myDown && !(*units)->wait) {
 
 						// Decide which unit waits (depending on its priority value)
-						unit->waitForUnit = *units;
+						singleUnit->waitForUnit = *units;
 
 						return CollisionType_DiagonalCrossing;
 					}
 				}
-				else if (unit->nextTile == left) {
+				else if (singleUnit->nextTile == left) {
 					if ((*units)->nextTile == myLeft && !(*units)->wait) {
 
 						// Decide which unit waits (depending on its priority value)
-						unit->waitForUnit = *units;
+						singleUnit->waitForUnit = *units;
 
 						return CollisionType_DiagonalCrossing;
 					}
 				}
-				else if (unit->nextTile == right) {
+				else if (singleUnit->nextTile == right) {
 					if ((*units)->nextTile == myRight && !(*units)->wait) {
 
 						// Decide which unit waits (depending on its priority value)
-						unit->waitForUnit = *units;
+						singleUnit->waitForUnit = *units;
 
 						return CollisionType_DiagonalCrossing;
 					}
@@ -430,7 +442,7 @@ CollisionType j1Movement::CheckForFutureCollision(SingleUnit* unit) const
 	return CollisionType_NoCollision;
 }
 
-bool j1Movement::IsValidTile(SingleUnit* unit, iPoint tile, bool currTile, bool nextTile, bool goalTile) const
+bool j1Movement::IsValidTile(SingleUnit* singleUnit, iPoint tile, bool currTile, bool nextTile, bool goalTile) const
 {
 	list<UnitGroup*>::const_iterator groups;
 	list<SingleUnit*>::const_iterator units;
@@ -438,7 +450,7 @@ bool j1Movement::IsValidTile(SingleUnit* unit, iPoint tile, bool currTile, bool 
 	for (groups = unitGroups.begin(); groups != unitGroups.end(); ++groups) {
 		for (units = (*groups)->units.begin(); units != (*groups)->units.end(); ++units) {
 
-			if ((*units) != unit) {
+			if ((*units) != singleUnit) {
 
 				if (currTile) {
 					if ((*units)->currTile == tile)
@@ -459,21 +471,111 @@ bool j1Movement::IsValidTile(SingleUnit* unit, iPoint tile, bool currTile, bool 
 	return true;
 }
 
-iPoint j1Movement::FindNewValidTile(SingleUnit* unit) const
+iPoint j1Movement::FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront) const
 {
-	if (unit == nullptr)
+	if (singleUnit == nullptr)
 		return { -1,-1 };
 
 	// 1. Units can only move in 8 directions from their current tile (the search only expands to 8 possible tiles)
-	iPoint neighbors[8];
-	neighbors[0].create(unit->currTile.x + 1, unit->currTile.y + 0);
-	neighbors[1].create(unit->currTile.x + 0, unit->currTile.y + 1);
-	neighbors[2].create(unit->currTile.x - 1, unit->currTile.y + 0);
-	neighbors[3].create(unit->currTile.x + 0, unit->currTile.y - 1);
-	neighbors[4].create(unit->currTile.x + 1, unit->currTile.y + 1);
-	neighbors[5].create(unit->currTile.x + 1, unit->currTile.y - 1);
-	neighbors[6].create(unit->currTile.x - 1, unit->currTile.y + 1);
-	neighbors[7].create(unit->currTile.x - 1, unit->currTile.y - 1);
+	iPoint neighbors[8] = { {-1,-1},{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 } };
+
+	if (checkOnlyFront) {
+
+		// Check only the 3 tiles in front of the unit (depending on its direction)
+		/// This way, the unit can only move forward in its direction
+
+		switch (singleUnit->unit->GetUnitDirection()) {
+		
+		case UnitDirection_Idle:
+
+			neighbors[0].create(singleUnit->currTile.x + 1, singleUnit->currTile.y + 0); // Right
+			neighbors[1].create(singleUnit->currTile.x + 0, singleUnit->currTile.y + 1); // Down
+			neighbors[2].create(singleUnit->currTile.x - 1, singleUnit->currTile.y + 0); // Left
+			neighbors[3].create(singleUnit->currTile.x + 0, singleUnit->currTile.y - 1); // Up
+			neighbors[4].create(singleUnit->currTile.x + 1, singleUnit->currTile.y + 1); // DownRight
+			neighbors[5].create(singleUnit->currTile.x + 1, singleUnit->currTile.y - 1); // UpRight
+			neighbors[6].create(singleUnit->currTile.x - 1, singleUnit->currTile.y + 1); // DownLeft
+			neighbors[7].create(singleUnit->currTile.x - 1, singleUnit->currTile.y - 1); // UpLeft
+
+			break;
+
+		case UnitDirection_Up:
+
+			neighbors[0].create(singleUnit->currTile.x + 0, singleUnit->currTile.y - 1); // Up
+			neighbors[1].create(singleUnit->currTile.x + 1, singleUnit->currTile.y - 1); // UpRight
+			neighbors[2].create(singleUnit->currTile.x - 1, singleUnit->currTile.y - 1); // UpLeft
+
+			break;
+
+		case UnitDirection_Down:
+
+			neighbors[0].create(singleUnit->currTile.x + 0, singleUnit->currTile.y + 1); // Down
+			neighbors[1].create(singleUnit->currTile.x + 1, singleUnit->currTile.y + 1); // DownRight
+			neighbors[2].create(singleUnit->currTile.x - 1, singleUnit->currTile.y + 1); // DownLeft
+
+			break;
+
+		case UnitDirection_Left:
+
+			neighbors[0].create(singleUnit->currTile.x - 1, singleUnit->currTile.y + 0); // Left
+			neighbors[1].create(singleUnit->currTile.x - 1, singleUnit->currTile.y - 1); // UpLeft
+			neighbors[2].create(singleUnit->currTile.x - 1, singleUnit->currTile.y + 1); // DownLeft
+
+			break;
+
+		case UnitDirection_Right:
+
+			neighbors[0].create(singleUnit->currTile.x + 1, singleUnit->currTile.y + 0); // Right
+			neighbors[1].create(singleUnit->currTile.x + 1, singleUnit->currTile.y - 1); // UpRight
+			neighbors[2].create(singleUnit->currTile.x + 1, singleUnit->currTile.y + 1); // DownRight
+
+			break;
+
+		case UnitDirection_UpLeft:
+
+			neighbors[0].create(singleUnit->currTile.x - 1, singleUnit->currTile.y - 1); // UpLeft
+			neighbors[1].create(singleUnit->currTile.x - 1, singleUnit->currTile.y + 0); // Left
+			neighbors[2].create(singleUnit->currTile.x + 0, singleUnit->currTile.y - 1); // Up
+
+			break;
+
+		case UnitDirection_UpRight:
+
+			neighbors[0].create(singleUnit->currTile.x + 1, singleUnit->currTile.y - 1); // UpRight
+			neighbors[1].create(singleUnit->currTile.x + 0, singleUnit->currTile.y - 1); // Up
+			neighbors[2].create(singleUnit->currTile.x + 1, singleUnit->currTile.y + 0); // Right
+
+			break;
+
+		case UnitDirection_DownLeft:
+
+			neighbors[0].create(singleUnit->currTile.x - 1, singleUnit->currTile.y + 1); // DownLeft
+			neighbors[1].create(singleUnit->currTile.x + 0, singleUnit->currTile.y + 1); // Down
+			neighbors[2].create(singleUnit->currTile.x - 1, singleUnit->currTile.y + 0); // Left
+
+			break;
+
+		case UnitDirection_DownRight:
+
+			neighbors[0].create(singleUnit->currTile.x + 1, singleUnit->currTile.y + 1); // DownRight
+			neighbors[1].create(singleUnit->currTile.x + 0, singleUnit->currTile.y + 1); // Down
+			neighbors[2].create(singleUnit->currTile.x + 1, singleUnit->currTile.y + 0); // Right
+
+			break;
+		}
+	}
+	else {
+
+		// Consider all tiles (the unit will be able to move backwards, then)
+		neighbors[0].create(singleUnit->currTile.x + 1, singleUnit->currTile.y + 0);
+		neighbors[1].create(singleUnit->currTile.x + 0, singleUnit->currTile.y + 1);
+		neighbors[2].create(singleUnit->currTile.x - 1, singleUnit->currTile.y + 0);
+		neighbors[3].create(singleUnit->currTile.x + 0, singleUnit->currTile.y - 1);
+		neighbors[4].create(singleUnit->currTile.x + 1, singleUnit->currTile.y + 1);
+		neighbors[5].create(singleUnit->currTile.x + 1, singleUnit->currTile.y - 1);
+		neighbors[6].create(singleUnit->currTile.x - 1, singleUnit->currTile.y + 1);
+		neighbors[7].create(singleUnit->currTile.x - 1, singleUnit->currTile.y - 1);
+	}
 
 	// 2. PRIORITY: the neighbor closer to the unit's goal
 	priority_queue<iPointPriority, vector<iPointPriority>, Comparator> queue;
@@ -482,7 +584,7 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* unit) const
 	for (uint i = 0; i < 8; ++i)
 	{
 		priorityNeighbors.point = neighbors[i];
-		priorityNeighbors.priority = neighbors[i].DistanceManhattan(unit->goal); /// TODO: we could use the path size to track the priority, but it's too heavy...
+		priorityNeighbors.priority = neighbors[i].DistanceManhattan(singleUnit->goal); /// TODO: we could use the path size to track the priority, but it's too heavy...
 		queue.push(priorityNeighbors);
 	}
 	
@@ -492,7 +594,7 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* unit) const
 		curr = queue.top();
 		queue.pop();
 
-		if (App->pathfinding->IsWalkable(curr.point) && IsValidTile(unit, curr.point, true, true)) {
+		if (App->pathfinding->IsWalkable(curr.point) && IsValidTile(singleUnit, curr.point, true, true)) {
 
 			/// TODO: be careful! currTile may be closer to the goal than the neighbor found!
 			//if (curr.point.DistanceManhattan(unit->goal) < unit->currTile.DistanceManhattan(unit->goal))
@@ -505,34 +607,38 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* unit) const
 	return { -1,-1 };
 }
 
-iPoint j1Movement::FindNewValidGoal(SingleUnit* unit) const 
+iPoint j1Movement::FindNewValidGoal(SingleUnit* singleUnit) const
 {
-	if (unit == nullptr)
+	if (singleUnit == nullptr)
 		return { -1,-1 };
 
 	// 1. We use BFS to calculate a new goal for the unit (we want to expand the search to all the possible tiles)
 	// 2. PRIORITY: the neighbor closer to the group goal
 	priority_queue<iPointPriority, vector<iPointPriority>, Comparator> priorityQueue;
-	iPointPriority curr;
 	list<iPoint> visited;
+
+	iPointPriority curr;
+	curr.point = singleUnit->group->goal;
+	curr.priority = curr.point.DistanceManhattan(singleUnit->group->goal);
+	priorityQueue.push(curr);
 
 	while (priorityQueue.size() > 0) {
 
 		curr = priorityQueue.top();
 		priorityQueue.pop();
 
-		if (App->pathfinding->IsWalkable(curr.point) && IsValidTile(unit, curr.point, false, false, true))
+		if (App->pathfinding->IsWalkable(curr.point) && IsValidTile(singleUnit, curr.point, false, false, true))
 			return curr.point;
 
 		iPoint neighbors[8];
-		neighbors[0].create(unit->group->GetGoal().x + 1, unit->group->GetGoal().y + 0);
-		neighbors[1].create(unit->group->GetGoal().x + 0, unit->group->GetGoal().y + 1);
-		neighbors[2].create(unit->group->GetGoal().x - 1, unit->group->GetGoal().y + 0);
-		neighbors[3].create(unit->group->GetGoal().x + 0, unit->group->GetGoal().y - 1);
-		neighbors[4].create(unit->group->GetGoal().x + 1, unit->group->GetGoal().y + 1);
-		neighbors[5].create(unit->group->GetGoal().x + 1, unit->group->GetGoal().y - 1);
-		neighbors[6].create(unit->group->GetGoal().x - 1, unit->group->GetGoal().y + 1);
-		neighbors[7].create(unit->group->GetGoal().x - 1, unit->group->GetGoal().y - 1);
+		neighbors[0].create(singleUnit->group->GetGoal().x + 1, singleUnit->group->GetGoal().y + 0);
+		neighbors[1].create(singleUnit->group->GetGoal().x + 0, singleUnit->group->GetGoal().y + 1);
+		neighbors[2].create(singleUnit->group->GetGoal().x - 1, singleUnit->group->GetGoal().y + 0);
+		neighbors[3].create(singleUnit->group->GetGoal().x + 0, singleUnit->group->GetGoal().y - 1);
+		neighbors[4].create(singleUnit->group->GetGoal().x + 1, singleUnit->group->GetGoal().y + 1);
+		neighbors[5].create(singleUnit->group->GetGoal().x + 1, singleUnit->group->GetGoal().y - 1);
+		neighbors[6].create(singleUnit->group->GetGoal().x - 1, singleUnit->group->GetGoal().y + 1);
+		neighbors[7].create(singleUnit->group->GetGoal().x - 1, singleUnit->group->GetGoal().y - 1);
 
 		for (uint i = 0; i < 8; ++i)
 		{
@@ -540,7 +646,7 @@ iPoint j1Movement::FindNewValidGoal(SingleUnit* unit) const
 				
 				iPointPriority priorityNeighbors;
 				priorityNeighbors.point = neighbors[i];
-				priorityNeighbors.priority = neighbors[i].DistanceManhattan(unit->group->goal);
+				priorityNeighbors.priority = neighbors[i].DistanceManhattan(singleUnit->group->goal);
 				priorityQueue.push(priorityNeighbors);
 
 				visited.push_back(neighbors[i]);
@@ -578,7 +684,7 @@ SingleUnit* UnitGroup::AddUnit(Entity* entity)
 		units.remove(unit);
 	unit = nullptr;
 
-	unit = new SingleUnit(entity, this);
+	unit = new SingleUnit((Unit*)entity, this);
 	units.push_back(unit);
 
 	return unit;
@@ -592,7 +698,7 @@ bool UnitGroup::RemoveUnit(Entity* entity)
 
 	while (it != units.end()) {
 
-		if ((*it)->entity == entity) {
+		if ((Entity*)(*it)->unit == entity) {
 			units.remove(*it);
 			ret = true;
 		}
@@ -623,7 +729,7 @@ SingleUnit* UnitGroup::GetUnitByEntity(Entity* entity) const
 	list<SingleUnit*>::const_iterator it = units.begin();
 
 	while (it != units.end()) {
-		if ((*it)->entity == entity)
+		if ((Entity*)(*it)->unit == entity)
 			return *it;
 
 		it++;
@@ -653,8 +759,6 @@ bool UnitGroup::SetGoal(iPoint goal)
 			it++;
 		}
 
-		LOG("New goal!");
-
 		ret = true;
 	}	
 
@@ -673,10 +777,10 @@ float UnitGroup::GetMaxSpeed() const
 
 // Unit struct ---------------------------------------------------------------------------------
 
-SingleUnit::SingleUnit(Entity* entity, UnitGroup* group) :entity(entity), group(group)
+SingleUnit::SingleUnit(Unit* unit, UnitGroup* group) :unit(unit), group(group)
 {
-	currTile = App->map->WorldToMap(entity->entityInfo.pos.x, entity->entityInfo.pos.y);
-	speed = entity->entityInfo.speed;
+	currTile = App->map->WorldToMap(this->unit->entityInfo.pos.x, this->unit->entityInfo.pos.y);
+	speed = this->unit->entityInfo.speed;
 	speed *= 50.0f; // MYTODO: delete this 50.0f magic number!!!
 
 	goal = group->goal;
@@ -705,9 +809,11 @@ bool SingleUnit::IsTileReached(iPoint nextPos, fPoint endPos) const
 {
 	bool ret = false;
 
-	if (entity->entityInfo.direction.x >= 0) { // Right or stop
+	fPoint dir = unit->GetUnitDirectionByValue();
 
-		if (entity->entityInfo.direction.y >= 0) { // Down or stop
+	if (dir.x >= 0) { // Right or stop
+
+		if (dir.y >= 0) { // Down or stop
 			if (endPos.x >= nextPos.x && endPos.y >= nextPos.y)
 				ret = true;
 		}
@@ -718,7 +824,7 @@ bool SingleUnit::IsTileReached(iPoint nextPos, fPoint endPos) const
 	}
 	else { // Left
 
-		if (entity->entityInfo.direction.y >= 0) { // Down or stop
+		if (dir.y >= 0) { // Down or stop
 			if (endPos.x <= nextPos.x && endPos.y >= nextPos.y)
 				ret = true;
 		}
@@ -731,8 +837,7 @@ bool SingleUnit::IsTileReached(iPoint nextPos, fPoint endPos) const
 	return ret;
 }
 
-void SingleUnit::StopUnit() 
+void SingleUnit::StopUnit()
 {
-	entity->entityInfo.direction.x = 0.0f;
-	entity->entityInfo.direction.y = 0.0f;
+	unit->SetUnitDirection(UnitDirection_Idle);
 }

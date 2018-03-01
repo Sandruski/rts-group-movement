@@ -76,15 +76,15 @@ public:
 	MovementState MoveEntity(Entity* entity, float dt) const;
 
 	// Returns the type of collision that there would be between the unit and another unit or CollisionType_NoCollision
-	CollisionType CheckForFutureCollision(SingleUnit* unit) const;
+	CollisionType CheckForFutureCollision(SingleUnit* singleUnit) const;
 
 	// Returns true if the tile passed isn't and won't be occupied by a unit
-	bool IsValidTile(SingleUnit* unit, iPoint tile, bool currTile = false, bool nextTile = false, bool goalTile = false) const;
+	bool IsValidTile(SingleUnit* singleUnit, iPoint tile, bool currTile = false, bool nextTile = false, bool goalTile = false) const;
 
 	// Returns a valid tile for the unit (8 possibilities) or {-1,-1}
-	iPoint FindNewValidTile(SingleUnit* unit) const;
+	iPoint FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront = false) const;
 
-	iPoint FindNewValidGoal(SingleUnit* unit) const;
+	iPoint FindNewValidGoal(SingleUnit* singleUnit) const;
 
 private:
 
@@ -146,7 +146,7 @@ struct UnitGroup
 
 struct SingleUnit
 {
-	SingleUnit(Entity* entity, UnitGroup* group);
+	SingleUnit(Unit* entity, UnitGroup* group);
 
 	bool CreatePath(iPoint startPos);
 	bool IsTileReached(iPoint nextPos, fPoint endPos) const;
@@ -154,7 +154,7 @@ struct SingleUnit
 
 	// -----
 
-	Entity* entity = nullptr;
+	Unit* unit = nullptr;
 	UnitGroup* group = nullptr;
 	MovementState movementState = MovementState_WaitForPath;
 
@@ -166,7 +166,7 @@ struct SingleUnit
 	iPoint newGoal = { -1,-1 }; // new goal of the unit
 
 	float speed = 1.0f; // movement speed: it can be the speed of the entity or the speed of the group
-	int priority = 0; // priority of the unit in relation to the rest of the units of the group
+	uint priority = 0; // priority of the unit in relation to the rest of the units of the group
 
 	bool wait = false;
 	SingleUnit* waitForUnit = nullptr;
@@ -184,7 +184,7 @@ public:
 	}
 
 	iPoint point = { 0,0 };
-	int priority = 0;
+	uint priority = 0;
 };
 
 class Comparator

@@ -80,41 +80,52 @@ void Unit::UpdateAnimationsSpeed(float dt)
 
 void Unit::ChangeAnimation() 
 {
-	if (entityInfo.direction.x > 0.0f) {
+	switch (GetUnitDirection()) {
 
-		if (entityInfo.direction.y > 0.0f) { // Down-right
-			animation = &unitInfo.downRight;
-		}
-		else if (entityInfo.direction.y < 0.0f) { // Up-right
-			animation = &unitInfo.upRight;
-		}
-		else { // Right
-			animation = &unitInfo.right;
-		}
-	}
-	else if (entityInfo.direction.x < 0.0f) {
+	case UnitDirection_Idle:
 
-		if (entityInfo.direction.y > 0.0f) { // Down-left
-			animation = &unitInfo.downLeft;
-		}
-		else if (entityInfo.direction.y < 0.0f) { // Up-left
-			animation = &unitInfo.upLeft;
-		}
-		else { // Left
-			animation = &unitInfo.left;
-		}
-	}
-	else {
+		animation = &unitInfo.idle;
+		break;
 
-		if (entityInfo.direction.y > 0.0f) { // Down
-			animation = &unitInfo.down;
-		}
-		else if (entityInfo.direction.y < 0.0f) { // Up
-			animation = &unitInfo.up;
-		}
-		else { // Stop
-			animation = &unitInfo.idle;
-		}
+	case UnitDirection_Up:
+
+		animation = &unitInfo.up;
+		break;
+
+	case UnitDirection_Down:
+
+		animation = &unitInfo.down;
+		break;
+
+	case UnitDirection_Left:
+
+		animation = &unitInfo.left;
+		break;
+
+	case UnitDirection_Right:
+
+		animation = &unitInfo.right;
+		break;
+
+	case UnitDirection_UpLeft:
+
+		animation = &unitInfo.upLeft;
+		break;
+
+	case UnitDirection_UpRight:
+
+		animation = &unitInfo.upRight;
+		break;
+
+	case UnitDirection_DownLeft:
+
+		animation = &unitInfo.downLeft;
+		break;
+
+	case UnitDirection_DownRight:
+
+		animation = &unitInfo.downRight;
+		break;
 	}
 }
 
@@ -182,6 +193,115 @@ void Unit::SetUnitState(UnitState unitState)
 UnitState Unit::GetUnitState() const
 {
 	return unitState;
+}
+
+void Unit::SetUnitDirection(UnitDirection unitDirection) 
+{
+	switch (unitDirection) {
+	
+	case UnitDirection_Idle:
+
+		direction.x = 0.0f;
+		direction.y = 0.0f;
+		break;
+
+	case UnitDirection_Up:
+
+		direction.x = 0.0f;
+		direction.y = -1.0f;
+		break;
+
+	case UnitDirection_Down:
+
+		direction.x = 0.0f;
+		direction.y = 1.0f;
+		break;
+
+	case UnitDirection_Left:
+
+		direction.x = -1.0f;
+		direction.y = 0.0f;
+		break;
+
+	case UnitDirection_Right:
+
+		direction.x = 1.0f;
+		direction.y = 0.0f;
+		break;
+
+	case UnitDirection_UpLeft:
+
+		direction.x = -1.0f;
+		direction.y = -1.0f;
+		break;
+
+	case UnitDirection_UpRight:
+
+		direction.x = 1.0f;
+		direction.y = -1.0f;
+		break;
+
+	case UnitDirection_DownLeft:
+
+		direction.x = -1.0f;
+		direction.y = 1.0f;
+		break;
+
+	case UnitDirection_DownRight:
+
+		direction.x = 1.0f;
+		direction.y = 1.0f;
+		break;
+	}
+}
+
+UnitDirection Unit::GetUnitDirection() const 
+{
+	if (direction.x > 0.0f) {
+
+		if (direction.y > 0.0f)
+			return UnitDirection_DownRight;
+
+		else if (direction.y < 0.0f)
+			return UnitDirection_UpRight;
+
+		else
+			return UnitDirection_Right;
+	}
+	else if (direction.x < 0.0f) {
+
+		if (direction.y > 0.0f)
+			return UnitDirection_DownLeft;
+
+		else if (direction.y < 0.0f)
+			return UnitDirection_UpLeft;
+
+		else
+			return UnitDirection_Left;
+	}
+	else {
+
+		if (direction.y > 0.0f)
+			return UnitDirection_Down;
+
+		else if (direction.y < 0.0f)
+			return UnitDirection_Up;
+
+		else
+			return UnitDirection_Idle;
+	}
+
+	return UnitDirection_Idle;
+}
+
+void Unit::SetUnitDirectionByValue(fPoint unitDirection) 
+{
+	direction = unitDirection;
+}
+
+fPoint Unit::GetUnitDirectionByValue() const 
+{
+	return direction;
 }
 
 // -------------------------------------------------------------

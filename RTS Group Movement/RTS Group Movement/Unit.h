@@ -20,13 +20,25 @@ struct UnitInfo {
 	Animation upLeft, upRight, downLeft, downRight;
 	Animation idle;
 
-	int priority = 0;
+	uint priority = 0;
 };
 
 enum UnitState {
 	UnitState_Idle,
 	UnitState_Walk,
 	UnitState_Attack
+};
+
+enum UnitDirection {
+	UnitDirection_Idle,
+	UnitDirection_Up,
+	UnitDirection_Down,
+	UnitDirection_Left,
+	UnitDirection_Right,
+	UnitDirection_UpLeft,
+	UnitDirection_UpRight,
+	UnitDirection_DownLeft,
+	UnitDirection_DownRight
 };
 
 class Unit : public Entity
@@ -47,6 +59,11 @@ public:
 	void SetUnitState(UnitState unitState);
 	UnitState GetUnitState() const;
 
+	void SetUnitDirection(UnitDirection unitDirection);
+	UnitDirection GetUnitDirection() const;
+	void SetUnitDirectionByValue(fPoint unitDirection);
+	fPoint GetUnitDirectionByValue() const;
+
 public:
 
 	UnitInfo unitInfo;
@@ -54,6 +71,7 @@ public:
 private:
 
 	UnitState unitState = UnitState_Idle;
+	fPoint direction = { 0.0f,0.0f };
 
 	// Animations speed
 	float upSpeed, downSpeed, leftSpeed, rightSpeed;
