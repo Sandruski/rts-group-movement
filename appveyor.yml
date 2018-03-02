@@ -3,8 +3,8 @@ image: Visual Studio 2017
 build:
   verbosity: minimal
 after_build:
-- 7z a SpikeFromAppveyor.zip "%APPVEYOR_BUILD_FOLDER%\RTS Group Movement\Debug\RTS Group Movement.exe"
-- 7z a SpikeFromAppveyor.zip "%APPVEYOR_BUILD_FOLDER%\RTS Group Movement\Game"
-- 7z a SpikeFromAppveyor.zip "%APPVEYOR_BUILD_FOLDER%\README.md"
+- 7z a RTSGroupMovementFromAppveyor.zip "%APPVEYOR_BUILD_FOLDER%\RTS Group Movement\Debug\RTS Group Movement.exe"
+- 7z a RTSGroupMovementFromAppveyor.zip "%APPVEYOR_BUILD_FOLDER%\RTS Group Movement\Game"
+- 7z a RTSGroupMovementFromAppveyor.zip "%APPVEYOR_BUILD_FOLDER%\README.md"
 artifacts:
-- path: RTSGroupMovementFromAppVeyor.zip
+- path: RTSGroupMovementFromAppveyor.zip
