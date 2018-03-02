@@ -1,0 +1,8 @@
+version: 1.0.{build}
+image: Visual Studio 2017
+build:
+  verbosity: minimal
+after_build:
+- 7z a SpikeFromAppveyor.zip "%APPVEYOR_BUILD_FOLDER%\RTS Group Movement\Debug\RTS Group Movement.exe"
+- 7z a SpikeFromAppveyor.zip "%APPVEYOR_BUILD_FOLDER%\RTS Group Movement\Game"
+- 7z a SpikeFromAppveyor.zip "%APPVEYOR_BUILD_FOLDER%\README.md"
