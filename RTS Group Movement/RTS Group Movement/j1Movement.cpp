@@ -39,6 +39,7 @@ void j1Movement::DebugDraw() const
 				App->render->DrawLine((*unit)->unit->entityInfo.pos.x + offset.x, (*unit)->unit->entityInfo.pos.y + offset.y, nextPos.x + offset.x, nextPos.y + offset.y, 255, 255, 255, 255);
 				App->render->DrawCircle(nextPos.x + offset.x, nextPos.y + offset.y, 10, 255, 255, 255, 255);
 
+				/*
 				// Draw unit's path
 				for (uint i = 0; i < (*unit)->path.size(); ++i)
 				{
@@ -51,6 +52,7 @@ void j1Movement::DebugDraw() const
 				iPoint pos = App->map->MapToWorld((*unit)->goal.x, (*unit)->goal.y);
 				SDL_Rect rect = { pos.x, pos.y, App->map->data.tile_width, App->map->data.tile_height };
 				App->render->DrawQuad(rect, 0, 0, 0, 200);
+				*/
 			}
 		}
 	}
@@ -201,20 +203,23 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 
 	case MovementState_WaitForPath:
 
-		// Check if the goal is valid
-		if (!IsValidTile(u, u->goal, false, false, true))
+		if (u->goal.x != -1 && u->goal.y != -1) {
 
-			// If the goal is not valid, find a new goal
-			u->goal = u->newGoal = FindNewValidGoal(u);
+			// Check if the goal is valid
+			if (!IsValidTile(u, u->goal, false, false, true))
 
-		// Check if the goal is valid (the new valid goal could not be valid)
-		if (u->goal.x != -1 && u->goal.y != -1)
+				// If the goal is not valid, find a new goal
+				u->goal = u->newGoal = FindNewValidGoal(u);
 
-			// If the goal is valid, find a path
-			if (u->CreatePath(u->currTile))
+			// Check if the goal is valid (the new valid goal could not be valid)
+			if (u->goal.x != -1 && u->goal.y != -1)
 
-				// Set state to IncreaseWaypoint, in order to start following the path
-				u->movementState = MovementState_IncreaseWaypoint;
+				// If the goal is valid, find a path
+				if (u->CreatePath(u->currTile))
+
+					// Set state to IncreaseWaypoint, in order to start following the path
+					u->movementState = MovementState_IncreaseWaypoint;
+		}
 
 		break;
 
@@ -252,9 +257,13 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 		if (coll != CollisionType_NoCollision) {
 
 			if (coll == CollisionType_ItsCell || coll == CollisionType_SameCell) {
-				
-				// Find a new, valid nextTile to move
-				newTile = FindNewValidTile(u, true);
+
+				if (coll == CollisionType_ItsCell)
+					// Find a new, valid nextTile to move
+					newTile = FindNewValidTile(u, true);
+				else if (coll == CollisionType_SameCell)
+					// Find a new, valid nextTile to move
+					newTile = FindNewValidTile(u);
 
 				if (newTile.x != -1 && newTile.y != -1) {
 
@@ -278,6 +287,27 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 				else if (newTile.x == -1 && newTile.y == -1) {
 
 					u->unit->SetUnitDirection(UnitDirection_Idle);
+
+					/// Timer!!!
+					u->timer += 1 * dt;
+
+					if (u->timer >= 3) {
+						// Stop the unit when it reaches its new nextTile
+						u->path.clear();
+						u->nextTile = u->currTile;
+						u->goal = u->newGoal = u->currTile;
+
+						u->timer = 0;
+					}
+
+					// If the goal has been changed:
+					/// We only want to update the goal when the unit has reached nextTile. That's why we do it here
+					if (u->goal != u->newGoal) {
+						u->goal = u->newGoal;
+						u->movementState = MovementState_WaitForPath;
+						break;
+					}
+
 				}
 
 				break;
@@ -289,12 +319,15 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 			}
 		}
 
+		u->timer = 0;
+
 		if (u->wait) {
 
 			// The other unit must notificate to the waiting unit when it has finished its movement
-			if (u->waitForUnit->nextTile == u->waitForUnit->currTile) {
+			/// We check that by simply checking if the other unit's nextTile is different from the collision tile
+			if (u->waitUnit->nextTile != u->waitTile || u->waitUnit->nextTile == u->waitUnit->currTile) {
 				u->wait = false;
-				u->waitForUnit = nullptr;
+				u->waitUnit = nullptr;
 			}
 			else
 				break;
@@ -403,7 +436,8 @@ CollisionType j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 					if ((*units)->nextTile == myUp && !(*units)->wait) {
 
 						// Decide which unit waits (depending on its priority value)
-						singleUnit->waitForUnit = *units;
+						singleUnit->waitUnit = *units;
+						singleUnit->waitTile = myUp;
 
 						return CollisionType_DiagonalCrossing;
 					}
@@ -412,7 +446,8 @@ CollisionType j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 					if ((*units)->nextTile == myDown && !(*units)->wait) {
 
 						// Decide which unit waits (depending on its priority value)
-						singleUnit->waitForUnit = *units;
+						singleUnit->waitUnit = *units;
+						singleUnit->waitTile = myDown;
 
 						return CollisionType_DiagonalCrossing;
 					}
@@ -421,7 +456,8 @@ CollisionType j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 					if ((*units)->nextTile == myLeft && !(*units)->wait) {
 
 						// Decide which unit waits (depending on its priority value)
-						singleUnit->waitForUnit = *units;
+						singleUnit->waitUnit = *units;
+						singleUnit->waitTile = myLeft;
 
 						return CollisionType_DiagonalCrossing;
 					}
@@ -430,7 +466,8 @@ CollisionType j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 					if ((*units)->nextTile == myRight && !(*units)->wait) {
 
 						// Decide which unit waits (depending on its priority value)
-						singleUnit->waitForUnit = *units;
+						singleUnit->waitUnit = *units;
+						singleUnit->waitTile = myRight;
 
 						return CollisionType_DiagonalCrossing;
 					}
@@ -631,14 +668,14 @@ iPoint j1Movement::FindNewValidGoal(SingleUnit* singleUnit) const
 			return curr.point;
 
 		iPoint neighbors[8];
-		neighbors[0].create(singleUnit->group->GetGoal().x + 1, singleUnit->group->GetGoal().y + 0);
-		neighbors[1].create(singleUnit->group->GetGoal().x + 0, singleUnit->group->GetGoal().y + 1);
-		neighbors[2].create(singleUnit->group->GetGoal().x - 1, singleUnit->group->GetGoal().y + 0);
-		neighbors[3].create(singleUnit->group->GetGoal().x + 0, singleUnit->group->GetGoal().y - 1);
-		neighbors[4].create(singleUnit->group->GetGoal().x + 1, singleUnit->group->GetGoal().y + 1);
-		neighbors[5].create(singleUnit->group->GetGoal().x + 1, singleUnit->group->GetGoal().y - 1);
-		neighbors[6].create(singleUnit->group->GetGoal().x - 1, singleUnit->group->GetGoal().y + 1);
-		neighbors[7].create(singleUnit->group->GetGoal().x - 1, singleUnit->group->GetGoal().y - 1);
+		neighbors[0].create(curr.point.x + 1, curr.point.y + 0);
+		neighbors[1].create(curr.point.x + 0, curr.point.y + 1);
+		neighbors[2].create(curr.point.x - 1, curr.point.y + 0);
+		neighbors[3].create(curr.point.x + 0, curr.point.y - 1);
+		neighbors[4].create(curr.point.x + 1, curr.point.y + 1);
+		neighbors[5].create(curr.point.x + 1, curr.point.y - 1);
+		neighbors[6].create(curr.point.x - 1, curr.point.y + 1);
+		neighbors[7].create(curr.point.x - 1, curr.point.y - 1);
 
 		for (uint i = 0; i < 8; ++i)
 		{

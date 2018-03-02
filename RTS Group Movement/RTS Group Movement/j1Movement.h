@@ -168,8 +168,12 @@ struct SingleUnit
 	float speed = 1.0f; // movement speed: it can be the speed of the entity or the speed of the group
 	uint priority = 0; // priority of the unit in relation to the rest of the units of the group
 
+	// Collision avoidance
 	bool wait = false;
-	SingleUnit* waitForUnit = nullptr;
+	iPoint waitTile = { -1,-1 };
+	SingleUnit* waitUnit = nullptr;
+
+	float timer = 0;
 };
 
 class iPointPriority
