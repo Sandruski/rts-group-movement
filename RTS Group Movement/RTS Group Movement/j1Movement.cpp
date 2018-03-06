@@ -165,6 +165,8 @@ UnitGroup* j1Movement::GetGroupByUnits(list<Unit*> units) const
 
 MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	MovementState ret = MovementState_NoState;
 
 	UnitGroup* g = GetGroupByUnit(unit);
@@ -180,10 +182,10 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 	ret = u->movementState;
 
 	iPoint nextPos = App->map->MapToWorld(u->nextTile.x, u->nextTile.y); // unit nextPos in map coords
-	
 	fPoint movePos, endPos;
 	float m;
 	CollisionType coll;
+	iPoint changedGoal;
 
 	/// For each step:
 	switch (u->movementState) {
@@ -236,18 +238,6 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 
 		CheckForFutureCollision(u);
 
-		/*
-		// If the nextTile was going to be the goal tile:
-		if (u->nextTile == u->goal) {
-
-		// Stop the unit when it reaches its new nextTile
-		u->path.clear();
-		u->nextTile = newTile;
-		u->goal = u->newGoal = newTile;
-
-		break;
-		*/
-
 		// Treat the collision
 		if (u->collision != CollisionType_NoCollision) {
 
@@ -257,16 +247,32 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 			// In this case, find a new, valid nextTile
 
 			if (u->waitUnit != nullptr) {
-				if (u->waitTile == u->waitUnit->goal && u->waitUnit->currTile == u->waitUnit->goal) {
+				if (u->nextTile == u->waitUnit->goal && u->waitUnit->currTile == u->waitUnit->goal) {
 
-					// GET OUT OF THE WAY!
+					// Unit politely asks the other unit to move
 
-					if (ChangeNextTile(u))
-						LOG("%s: FOUND NEW TILE. IT WAS ITS GOAL", u->unit->GetColorName().data());
+					// If the unit wants to go on the other unit's goal tile
+					/*
+					if (u->goal == u->waitUnit->goal)
+
+						// The other unit must find a new goal to go
+						u->waitUnit->newGoal = FindNewValidGoal(u->waitUnit);
 					else
-						// WHAT TO DO IF NO TILE HAS BEEN FOUND? STOP THE UNIT!
-						LOG("%s: COULDN'T FIND NEW TILE. IT WAS ITS GOAL", u->unit->GetColorName().data());
+					*/
 
+					LOG("CHANGED GOALS!");
+					
+					changedGoal = u->waitUnit->goal;
+
+					u->waitUnit->goal = u->waitUnit->newGoal = u->goal;
+					u->waitUnit->movementState = MovementState_WaitForPath;
+
+					u->goal = u->newGoal = changedGoal;
+					u->movementState = MovementState_WaitForPath;
+
+					if (!u->waitUnit->wakeUp)
+						u->waitUnit->wakeUp = true;
+					
 					break;
 				}
 			}
@@ -281,8 +287,6 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 
 						LOG("%s: RESOLVED ITS CELL", u->unit->GetColorName().data());
 					}
-
-				break;
 			}
 			else if (u->collision == CollisionType_SameCell) {
 
@@ -304,8 +308,6 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 						u->wait = false;
 
 						LOG("%s: RESOLVED CROSSING", u->unit->GetColorName().data());
-
-						break;
 					}
 			}
 			else if (u->collision == CollisionType_TowardsCell) {
@@ -337,7 +339,9 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 			u->unit->entityInfo.pos.x = nextPos.x;
 			u->unit->entityInfo.pos.y = nextPos.y;
 
+			// Notice that we update the currTile here!
 			u->currTile = u->nextTile;
+
 			u->movementState = MovementState_IncreaseWaypoint;
 			break;
 		}
@@ -1008,7 +1012,7 @@ float UnitGroup::GetMaxSpeed() const
 
 SingleUnit::SingleUnit(Unit* unit, UnitGroup* group) :unit(unit), group(group)
 {
-	currTile = goal = App->map->WorldToMap(this->unit->entityInfo.pos.x, this->unit->entityInfo.pos.y);
+	currTile = goal = newGoal = App->map->WorldToMap(this->unit->entityInfo.pos.x, this->unit->entityInfo.pos.y);
 	speed = this->unit->entityInfo.speed;
 	speed *= 50.0f; // MYTODO: delete this 50.0f magic number!!!
 

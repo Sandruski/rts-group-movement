@@ -82,7 +82,7 @@ private:
 	fPoint direction = { 0.0f,0.0f };
 
 	SDL_Color color = ColorWhite;
-	string colorName;
+	string colorName = "White";
 
 	SingleUnit* singleUnit = nullptr;
 

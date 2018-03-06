@@ -164,6 +164,7 @@ struct SingleUnit
 
 	// Collision avoidance
 	bool wait = false;
+	bool wakeUp = false;
 	iPoint waitTile = { -1,-1 };
 	SingleUnit* waitUnit = nullptr;
 	CollisionType collision = CollisionType_NoCollision;

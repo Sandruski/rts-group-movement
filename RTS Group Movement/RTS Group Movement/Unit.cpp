@@ -50,6 +50,7 @@ Unit::Unit(EntityInfo entityInfo, uint priority) : Entity(entityInfo)
 void Unit::Move(float dt)
 {
 	BROFILER_CATEGORY("Move", Profiler::Color::Orchid);
+
 	// Save mouse position (world and map coords)
 	int x, y;
 	App->input->GetMousePosition(x, y);
@@ -59,7 +60,7 @@ void Unit::Move(float dt)
 
 	// ---------------------------------------------------------------------
 
-	if (isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN)
+	if ((isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) || singleUnit->wakeUp)
 		unitState = UnitState_Walk;
 
 	UnitStateMachine(dt);
@@ -155,7 +156,9 @@ void Unit::OnCollision(Collider* c1, Collider* c2)
 }
 
 void Unit::UnitStateMachine(float dt) {
+
 	BROFILER_CATEGORY("UnitStateMachine", Profiler::Color::Orchid);
+
 	switch (unitState) {
 
 	case UnitState_Idle:
