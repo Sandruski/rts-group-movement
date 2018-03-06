@@ -190,18 +190,6 @@ void j1App::FinishUpdate()
 	uint32 frames_on_last_update = 0;
 	frame_count++;
 
-	/*
-	if (App->entities->playerData != nullptr) {
-		if (App->input->GetKey(SDL_SCANCODE_F11) == KEY_DOWN
-			&& (App->entities->playerData->animationPlayer == &App->entities->playerData->player.idle || App->entities->playerData->animationPlayer == &App->entities->playerData->player.idle2)
-			&& !App->menu->active)
-			toCap = !toCap;
-	}
-	else
-		if (App->input->GetKey(SDL_SCANCODE_F11) == KEY_DOWN && !App->menu->active)
-			toCap = !toCap;
-	*/
-
 	// Cap frames
 	if (!App->render->vsync && toCap) {
 		float toVsync = 1000 / capFrames;
@@ -266,6 +254,8 @@ bool j1App::PreUpdate()
 // Call modules on each loop iteration
 bool j1App::DoUpdate()
 {
+	BROFILER_CATEGORY("UpdateLogic", Profiler::Color::Orchid);
+
 	bool ret = true;
 	list<j1Module*>::const_iterator item;
 	item = modules.begin();
@@ -289,8 +279,6 @@ bool j1App::DoUpdate()
 // Call modules after each loop iteration
 bool j1App::PostUpdate()
 {
-	BROFILER_CATEGORY("PostUpdate", Profiler::Color::LightSeaGreen);
-
 	bool ret = true;
 	list<j1Module*>::const_iterator item;
 	j1Module* pModule = NULL;

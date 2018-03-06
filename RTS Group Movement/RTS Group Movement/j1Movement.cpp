@@ -8,7 +8,7 @@
 #include "j1Map.h"
 #include "j1Render.h"
 
-#include "Brofiler\Brofiler.h"
+#include"Brofiler\Brofiler.h"
 
 #include <queue>
 
@@ -179,11 +179,9 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 
 	ret = u->movementState;
 
-	//u->currTile = App->map->WorldToMap(u->unit->entityInfo.pos.x, u->unit->entityInfo.pos.y); // unit current pos in map coords
 	iPoint nextPos = App->map->MapToWorld(u->nextTile.x, u->nextTile.y); // unit nextPos in map coords
-
+	
 	fPoint movePos, endPos;
-
 	float m;
 	CollisionType coll;
 
@@ -253,11 +251,15 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 		// Treat the collision
 		if (u->collision != CollisionType_NoCollision) {
 
+			u->StopUnit();
+
 			// If the waitTile is the waitUnit's goal, the tile will never be available (unless the waitUnit changes its goal)
 			// In this case, find a new, valid nextTile
 
 			if (u->waitUnit != nullptr) {
 				if (u->waitTile == u->waitUnit->goal && u->waitUnit->currTile == u->waitUnit->goal) {
+
+					// GET OUT OF THE WAY!
 
 					if (ChangeNextTile(u))
 						LOG("%s: FOUND NEW TILE. IT WAS ITS GOAL", u->unit->GetColorName().data());
