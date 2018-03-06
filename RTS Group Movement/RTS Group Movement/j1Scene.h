@@ -35,17 +35,11 @@ public:
 	// Called before quitting
 	bool CleanUp();
 
-	// On triggered
-	//void OnUIEvent(UIElement* UIelem, UIEvents UIevent);
-
 	// Save
 	bool Save(pugi::xml_node&) const;
 
 	// Load
 	bool Load(pugi::xml_node&);
-
-	// Debug keys
-	void DebugKeys();
 
 public:
 	// Camera

@@ -4,17 +4,19 @@
 #include <stdio.h>
 
 // SDL colors
-
 #define ColorBlack { 0,0,0,255 }
 #define ColorWhite { 255,255,255,255 }
 #define ColorRed { 255,0,0,255 }
+#define ColorGreen { 0,255,0,255 }
 #define ColorBlue { 0,0,255,255 }
-#define ColorLightGrey { 231,231,231,255 }
-#define ColorPurple { 47,33,56,255 }
-#define ColorPink { 183,116,141,255 }
-#define ColorLightPink { 255,247,226,255 }
-#define ColorWarmYellow { 255,193,82,255 }
-#define ColorBloodyRed { 85,5,0,255 }
+
+#define ColorYellow { 255,255,0,255 }
+#define ColorDarkGreen { 0,102,0,255 }
+#define ColorBrightBlue { 0,255,255,255 }
+#define ColorOrange { 255,128,0,255 }
+#define ColorPink { 255,0,127,255 }
+#define ColorPurple { 127,0,255,255 }
+#define ColorGrey { 128,128,128,255 }
 
 //  NULL just in case ----------------------
 

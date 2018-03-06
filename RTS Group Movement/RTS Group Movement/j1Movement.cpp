@@ -16,7 +16,7 @@ j1Movement::j1Movement() {}
 
 j1Movement::~j1Movement() {}
 
-bool j1Movement::Update(float dt) 
+bool j1Movement::Update(float dt)
 {
 	bool ret = true;
 
@@ -25,13 +25,13 @@ bool j1Movement::Update(float dt)
 	return ret;
 }
 
-void j1Movement::DebugDraw() const 
+void j1Movement::DebugDraw() const
 {
 	for (list<UnitGroup*>::const_iterator group = unitGroups.begin(); group != unitGroups.end(); ++group) {
 		for (list<SingleUnit*>::const_iterator unit = (*group)->units.begin(); unit != (*group)->units.end(); ++unit) {
 
-			if ((*unit)->movementState != MovementState_NoState && (*unit)->movementState != MovementState_GoalReached 
-				&& (*unit)->nextTile.x > -1 && (*unit)->nextTile.y > -1) {
+			if ((*unit)->movementState != MovementState_NoState && (*unit)->movementState != MovementState_GoalReached
+				&& (*unit)->movementState != MovementState_WaitForPath && (*unit)->nextTile.x > -1 && (*unit)->nextTile.y > -1) {
 
 				// Raycast a line between the unit and the nextTile
 				iPoint offset = { App->map->data.tile_width / 2, App->map->data.tile_height / 2 };
@@ -39,20 +39,21 @@ void j1Movement::DebugDraw() const
 				App->render->DrawLine((*unit)->unit->entityInfo.pos.x + offset.x, (*unit)->unit->entityInfo.pos.y + offset.y, nextPos.x + offset.x, nextPos.y + offset.y, 255, 255, 255, 255);
 				App->render->DrawCircle(nextPos.x + offset.x, nextPos.y + offset.y, 10, 255, 255, 255, 255);
 
-				/*
 				// Draw unit's path
+				/*
 				for (uint i = 0; i < (*unit)->path.size(); ++i)
 				{
-					iPoint pos = App->map->MapToWorld((*unit)->path.at(i).x, (*unit)->path.at(i).y);
-					SDL_Rect rect = { pos.x, pos.y, App->map->data.tile_width, App->map->data.tile_height };
-					App->render->DrawQuad(rect, 0, 255, 0, 50);
+				iPoint pos = App->map->MapToWorld((*unit)->path.at(i).x, (*unit)->path.at(i).y);
+				SDL_Rect rect = { pos.x, pos.y, App->map->data.tile_width, App->map->data.tile_height };
+				App->render->DrawQuad(rect, 0, 255, 0, 50);
 				}
+				*/
 
 				// Draw unit's goal (in a different color than the path)
 				iPoint pos = App->map->MapToWorld((*unit)->goal.x, (*unit)->goal.y);
 				SDL_Rect rect = { pos.x, pos.y, App->map->data.tile_width, App->map->data.tile_height };
-				App->render->DrawQuad(rect, 0, 0, 0, 200);
-				*/
+				SDL_Color col = (*unit)->unit->GetColor();
+				App->render->DrawQuad(rect, col.r, col.g, col.b, 200);
 			}
 		}
 	}
@@ -65,17 +66,18 @@ bool j1Movement::CleanUp()
 	return ret;
 }
 
-UnitGroup* j1Movement::CreateGroupFromList(list<Entity*> entities)
+UnitGroup* j1Movement::CreateGroupFromUnits(list<Unit*> units)
 {
-	// If an entity from the list belongs to an existing group, delete the entity from the group
-	list<Entity*>::const_iterator it = entities.begin();
+	list<Unit*>::const_iterator it = units.begin();
 	UnitGroup* group = nullptr;
 
-	while (it != entities.end()) {
+	while (it != units.end()) {
 
-		group = GetGroupByEntity(*it);
+		// If a unit from the list belongs to an existing group, delete the unit from the group
+		group = GetGroupByUnit(*it);
+
 		if (group != nullptr) {
-			group->units.remove(group->GetUnitByEntity(*it));
+			group->RemoveUnit((*it)->GetSingleUnit());
 
 			// If the group is empty, delete it
 			if (group->GetSize() == 0)
@@ -85,50 +87,38 @@ UnitGroup* j1Movement::CreateGroupFromList(list<Entity*> entities)
 		it++;
 	}
 
-	group = new UnitGroup(entities);
+	group = new UnitGroup(units);
 	unitGroups.push_back(group);
 
 	return group;
 }
 
-UnitGroup* j1Movement::CreateGroupFromEntity(Entity* entity) 
+UnitGroup* j1Movement::CreateGroupFromUnit(Unit* unit)
 {
-	// If the entity belongs to an existing group, delete the entity from the group
+	// If a unit from the list belongs to an existing group, delete the unit from the group
 	UnitGroup* group = nullptr;
-	group = GetGroupByEntity(entity);
-	if (group != nullptr) {
+	group = GetGroupByUnit(unit);
 
-		group->units.remove(group->GetUnitByEntity(entity));
+	if (group != nullptr) {
+		group->RemoveUnit(unit->GetSingleUnit());
 
 		// If the group is empty, delete it
 		if (group->GetSize() == 0)
 			unitGroups.remove(group);
 	}
 
-	group = new UnitGroup(entity);
+	group = new UnitGroup(unit);
 	unitGroups.push_back(group);
 
 	return group;
 }
 
-UnitGroup* j1Movement::GetLastGroup() const 
+UnitGroup* j1Movement::GetLastGroup() const
 {
 	return unitGroups.back();
 }
 
-UnitGroup* j1Movement::GetGroupByIndex(uint id) const
-{
-	list<UnitGroup*>::const_iterator it = unitGroups.begin();
-	UnitGroup* group = nullptr;
-
-	advance(it, id);
-	if (it != unitGroups.end())
-		group = *it;
-
-	return group;
-}
-
-UnitGroup* j1Movement::GetGroupByEntity(Entity* entity) const
+UnitGroup* j1Movement::GetGroupByUnit(Unit* unit) const
 {
 	list<UnitGroup*>::const_iterator groups;
 	list<SingleUnit*>::const_iterator units;
@@ -136,7 +126,7 @@ UnitGroup* j1Movement::GetGroupByEntity(Entity* entity) const
 
 	for (groups = unitGroups.begin(); groups != unitGroups.end(); ++groups) {
 		for (units = (*groups)->units.begin(); units != (*groups)->units.end(); ++units) {
-			if ((Entity*)(*units)->unit == entity) {
+			if ((*units)->unit == unit) {
 				group = *groups;
 				break;
 			}
@@ -146,25 +136,25 @@ UnitGroup* j1Movement::GetGroupByEntity(Entity* entity) const
 	return group;
 }
 
-UnitGroup* j1Movement::GetGroupByEntities(list<Entity*> entities) const 
+UnitGroup* j1Movement::GetGroupByUnits(list<Unit*> units) const
 {
-	list<Entity*>::const_iterator it;
+	list<Unit*>::const_iterator it;
 	list<UnitGroup*>::const_iterator groups;
-	list<SingleUnit*>::const_iterator units;
+	list<SingleUnit*>::const_iterator singleUnits;
 	uint size = 0;
 
 	for (groups = unitGroups.begin(); groups != unitGroups.end(); ++groups) {
 
-		for (units = (*groups)->units.begin(); units != (*groups)->units.end(); ++units) {
+		for (singleUnits = (*groups)->units.begin(); singleUnits != (*groups)->units.end(); ++singleUnits) {
 
-			for (it = entities.begin(); it != entities.end(); ++it) {
+			for (it = units.begin(); it != units.end(); ++it) {
 
-				if ((Entity*)(*units)->unit == *it)
+				if ((*singleUnits)->unit == *it)
 					size++;
 			}
 		}
 
-		if (size == entities.size() && size == (*groups)->GetSize())
+		if (size == units.size() && size == (*groups)->GetSize())
 			return *groups;
 
 		size = 0;
@@ -173,27 +163,26 @@ UnitGroup* j1Movement::GetGroupByEntities(list<Entity*> entities) const
 	return nullptr;
 }
 
-MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
+MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 {
 	MovementState ret = MovementState_NoState;
 
-	UnitGroup* g = GetGroupByEntity(entity);
+	UnitGroup* g = GetGroupByUnit(unit);
 
 	if (g == nullptr)
 		return MovementState_NoState;
 
-	SingleUnit* u = g->GetUnitByEntity(entity);
+	SingleUnit* u = unit->GetSingleUnit();
 
 	if (u == nullptr)
 		return MovementState_NoState;
 
 	ret = u->movementState;
 
-	u->currTile = App->map->WorldToMap(u->unit->entityInfo.pos.x, u->unit->entityInfo.pos.y); // unit current pos in map coords
+	//u->currTile = App->map->WorldToMap(u->unit->entityInfo.pos.x, u->unit->entityInfo.pos.y); // unit current pos in map coords
 	iPoint nextPos = App->map->MapToWorld(u->nextTile.x, u->nextTile.y); // unit nextPos in map coords
-	
+
 	fPoint movePos, endPos;
-	iPoint newTile;
 
 	float m;
 	CollisionType coll;
@@ -203,23 +192,20 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 
 	case MovementState_WaitForPath:
 
-		if (u->goal.x != -1 && u->goal.y != -1) {
+		// Check if the goal is valid. Valid means that it isn't the goal of another unit and that it isn't { -1,-1 }
+		if (!IsValidTile(u, u->goal, false, false, true))
 
-			// Check if the goal is valid
-			if (!IsValidTile(u, u->goal, false, false, true))
+			// If the goal is not valid, find a new goal
+			u->goal = u->newGoal = FindNewValidGoal(u);
 
-				// If the goal is not valid, find a new goal
-				u->goal = u->newGoal = FindNewValidGoal(u);
+		// Check if the new goal is valid. Valid means that it isn't { -1,-1 }
+		if (IsValidTile(nullptr, u->goal))
 
-			// Check if the goal is valid (the new valid goal could not be valid)
-			if (u->goal.x != -1 && u->goal.y != -1)
+			// If the goal is valid, find a path
+			if (u->CreatePath(u->currTile))
 
-				// If the goal is valid, find a path
-				if (u->CreatePath(u->currTile))
-
-					// Set state to IncreaseWaypoint, in order to start following the path
-					u->movementState = MovementState_IncreaseWaypoint;
-		}
+				// Set state to IncreaseWaypoint, in order to start following the path
+				u->movementState = MovementState_IncreaseWaypoint;
 
 		break;
 
@@ -250,87 +236,88 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 		// COLLISION CALCULATION
 		// ---------------------------------------------------------------------
 
-		// Check if there would be a collision if the unit reached nextTile during this move
-		coll = CheckForFutureCollision(u);
+		CheckForFutureCollision(u);
+
+		/*
+		// If the nextTile was going to be the goal tile:
+		if (u->nextTile == u->goal) {
+
+		// Stop the unit when it reaches its new nextTile
+		u->path.clear();
+		u->nextTile = newTile;
+		u->goal = u->newGoal = newTile;
+
+		break;
+		*/
 
 		// Treat the collision
-		if (coll != CollisionType_NoCollision) {
+		if (u->collision != CollisionType_NoCollision) {
 
-			if (coll == CollisionType_ItsCell || coll == CollisionType_SameCell) {
+			// If the waitTile is the waitUnit's goal, the tile will never be available (unless the waitUnit changes its goal)
+			// In this case, find a new, valid nextTile
 
-				if (coll == CollisionType_ItsCell)
-					// Find a new, valid nextTile to move
-					newTile = FindNewValidTile(u, true);
-				else if (coll == CollisionType_SameCell)
-					// Find a new, valid nextTile to move
-					newTile = FindNewValidTile(u);
+			if (u->waitUnit != nullptr) {
+				if (u->waitTile == u->waitUnit->goal && u->waitUnit->currTile == u->waitUnit->goal) {
 
-				if (newTile.x != -1 && newTile.y != -1) {
+					if (ChangeNextTile(u))
+						LOG("%s: FOUND NEW TILE. IT WAS ITS GOAL", u->unit->GetColorName().data());
+					else
+						// WHAT TO DO IF NO TILE HAS BEEN FOUND? STOP THE UNIT!
+						LOG("%s: COULDN'T FIND NEW TILE. IT WAS ITS GOAL", u->unit->GetColorName().data());
 
-					// If the nextTile was going to be the goal tile:
-					if (u->nextTile == u->goal) {
-
-						// Stop the unit when it reaches its new nextTile
-						u->path.clear();
-						u->nextTile = newTile;
-						u->goal = u->newGoal = newTile;
-
-						break;
-					}
-
-					// Update the unit's nextTile
-					u->nextTile = newTile;
-
-					// Recalculate the path
-					u->CreatePath(u->nextTile);
+					break;
 				}
-				else if (newTile.x == -1 && newTile.y == -1) {
+			}
 
-					u->unit->SetUnitDirection(UnitDirection_Idle);
+			if (u->collision == CollisionType_ItsCell) {
 
-					/// Timer!!!
-					u->timer += 1 * dt;
+				if (u->waitUnit != nullptr)
+					if (u->waitUnit->currTile != u->waitTile) {
 
-					if (u->timer >= 3) {
-						// Stop the unit when it reaches its new nextTile
-						u->path.clear();
-						u->nextTile = u->currTile;
-						u->goal = u->newGoal = u->currTile;
+						u->collision = CollisionType_NoCollision;
+						u->wait = false;
 
-						u->timer = 0;
+						LOG("%s: RESOLVED ITS CELL", u->unit->GetColorName().data());
 					}
-
-					// If the goal has been changed:
-					/// We only want to update the goal when the unit has reached nextTile. That's why we do it here
-					if (u->goal != u->newGoal) {
-						u->goal = u->newGoal;
-						u->movementState = MovementState_WaitForPath;
-						break;
-					}
-
-				}
 
 				break;
 			}
-			else if (coll == CollisionType_DiagonalCrossing) {
+			else if (u->collision == CollisionType_SameCell) {
 
-				// One of the units must stop and let the other one pass
-				u->wait = true;
+				if (u->waitUnit != nullptr)
+					if (u->waitUnit->nextTile != u->waitTile) {
+
+						u->collision = CollisionType_NoCollision;
+						u->wait = false;
+
+						LOG("%s: RESOLVED SAME CELL", u->unit->GetColorName().data());
+					}
 			}
-		}
+			else if (u->collision == CollisionType_DiagonalCrossing) {
 
-		u->timer = 0;
+				if (u->waitUnit != nullptr)
+					if (u->waitUnit->currTile == u->waitTile) {
 
-		if (u->wait) {
+						u->collision = CollisionType_NoCollision;
+						u->wait = false;
 
-			// The other unit must notificate to the waiting unit when it has finished its movement
-			/// We check that by simply checking if the other unit's nextTile is different from the collision tile
-			if (u->waitUnit->nextTile != u->waitTile || u->waitUnit->nextTile == u->waitUnit->currTile) {
-				u->wait = false;
-				u->waitUnit = nullptr;
+						LOG("%s: RESOLVED CROSSING", u->unit->GetColorName().data());
+
+						break;
+					}
 			}
-			else
-				break;
+			else if (u->collision == CollisionType_TowardsCell) {
+
+				// Units get stuck. Find a new, valid nextTile for one of them
+
+				if (ChangeNextTile(u))
+					LOG("%s: RESOLVED TOWARDS", u->unit->GetColorName().data());
+				else
+					// WHAT TO DO IF NO TILE HAS BEEN FOUND? STOP THE UNIT!
+					LOG("%s: Couldn't find newTile", u->unit->GetColorName().data());
+			}
+
+			break;
 		}
 
 		// ---------------------------------------------------------------------
@@ -343,10 +330,12 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 		// Check if the unit would reach the nextTile during this move
 		/// We check with an offset, in order to avoid the unit to miss the nextTile
 		if (u->IsTileReached(nextPos, endPos)) {
-		
+
 			// If the unit's going to reach the nextTile during this move:
 			u->unit->entityInfo.pos.x = nextPos.x;
 			u->unit->entityInfo.pos.y = nextPos.y;
+
+			u->currTile = u->nextTile;
 			u->movementState = MovementState_IncreaseWaypoint;
 			break;
 		}
@@ -400,7 +389,50 @@ MovementState j1Movement::MoveEntity(Entity* entity, float dt) const
 	return ret;
 }
 
-CollisionType j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
+bool j1Movement::ChangeNextTile(SingleUnit* singleUnit) const
+{
+	bool ret = false;
+
+	// 1. Check only tiles in front of the unit (3)
+	iPoint newTile = FindNewValidTile(singleUnit, true);
+
+	if (newTile.x != -1 && newTile.y != -1) {
+
+		// Update the unit's nextTile
+		singleUnit->nextTile = newTile;
+
+		// Recalculate the path
+		singleUnit->CreatePath(singleUnit->nextTile);
+
+		singleUnit->collision = CollisionType_NoCollision;
+		singleUnit->wait = false;
+
+		ret = true;
+	}
+	else {
+
+		// 2. Check all possible tiles (8)
+		newTile = FindNewValidTile(singleUnit);
+
+		if (newTile.x != -1 && newTile.y != -1) {
+
+			// Update the unit's nextTile
+			singleUnit->nextTile = newTile;
+
+			// Recalculate the path
+			singleUnit->CreatePath(singleUnit->nextTile);
+
+			singleUnit->collision = CollisionType_NoCollision;
+			singleUnit->wait = false;
+
+			ret = true;
+		}
+	}
+
+	return ret;
+}
+
+void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 {
 	/// We don't check the walkability of the tile since the A* algorithm already did it for us
 
@@ -412,75 +444,181 @@ CollisionType j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 
 			if ((*units) != singleUnit) {
 
-				if (singleUnit->nextTile == (*units)->currTile) {
-					// A reaches B's tile
-					return CollisionType_ItsCell;
-				}
-				else if (singleUnit->nextTile == (*units)->nextTile) {
-					// A and B reach the same tile
-					return CollisionType_SameCell;
-				}
+				// TOWARDS COLLISION
+				if (singleUnit->nextTile == (*units)->currTile && (*units)->nextTile == singleUnit->currTile && (*units)->collision != CollisionType_TowardsCell) {
 
-				// Diagonal crossing: even though the units don't reach the same tile, we want to avoid this situation
-				iPoint up = { (*units)->currTile.x, (*units)->currTile.y - 1 };
-				iPoint down = { (*units)->currTile.x, (*units)->currTile.y + 1 };
-				iPoint left = { (*units)->currTile.x - 1, (*units)->currTile.y };
-				iPoint right = { (*units)->currTile.x + 1, (*units)->currTile.y };
-
-				iPoint myUp = { singleUnit->currTile.x, singleUnit->currTile.y - 1 };
-				iPoint myDown = { singleUnit->currTile.x, singleUnit->currTile.y + 1 };
-				iPoint myLeft = { singleUnit->currTile.x - 1, singleUnit->currTile.y };
-				iPoint myRight = { singleUnit->currTile.x + 1, singleUnit->currTile.y };
-
-				if (singleUnit->nextTile == up) {
-					if ((*units)->nextTile == myUp && !(*units)->wait) {
+					if (IsOppositeDirection(singleUnit, (*units))) {
 
 						// Decide which unit waits (depending on its priority value)
 						singleUnit->waitUnit = *units;
-						singleUnit->waitTile = myUp;
+						singleUnit->waitTile = singleUnit->nextTile;
 
-						return CollisionType_DiagonalCrossing;
+						/// DRAWING A: Here we don't check if the unit is already waiting. The unit can be waiting because of a previous check with another unit
+						/// But the important collision, above any else, is this. So if in a previous check with another unit, the unit has been detected
+						/// another kind of collision, it should have wait in true. We don't care and we subscribe the collision:)
+						/// We delete the check if (!singleUnit->wait)
+
+						singleUnit->collision = CollisionType_TowardsCell;
+						singleUnit->wait = true;
+
+						LOG("%s: TOWARDS", singleUnit->unit->GetColorName().data());
 					}
 				}
-				else if (singleUnit->nextTile == down) {
-					if ((*units)->nextTile == myDown && !(*units)->wait) {
 
-						// Decide which unit waits (depending on its priority value)
+				if (singleUnit->collision != CollisionType_TowardsCell && (*units)->collision != CollisionType_TowardsCell) {
+
+					// ITS CELL
+					if (singleUnit->nextTile == (*units)->currTile) {
+
+						// A reaches B's tile
 						singleUnit->waitUnit = *units;
-						singleUnit->waitTile = myDown;
+						singleUnit->waitTile = singleUnit->nextTile;
 
-						return CollisionType_DiagonalCrossing;
+						if (!singleUnit->wait) {
+							singleUnit->collision = CollisionType_ItsCell;
+							singleUnit->wait = true;
+
+							LOG("%s: ITS CELL", singleUnit->unit->GetColorName().data());
+						}
 					}
-				}
-				else if (singleUnit->nextTile == left) {
-					if ((*units)->nextTile == myLeft && !(*units)->wait) {
 
-						// Decide which unit waits (depending on its priority value)
+					// SAME CELL
+					else if (singleUnit->nextTile == (*units)->nextTile && !(*units)->wait) {
+
+						// A and B reach the same tile
+						UnitDirection dirA = singleUnit->unit->GetUnitDirection();
+						UnitDirection dirB = (*units)->unit->GetUnitDirection();
+
 						singleUnit->waitUnit = *units;
-						singleUnit->waitTile = myLeft;
+						singleUnit->waitTile = singleUnit->nextTile;
 
-						return CollisionType_DiagonalCrossing;
+						// The agent that is already inside the tile has the priority. If none of them are, choose one randomly
+						SDL_Rect posA = { (int)singleUnit->unit->entityInfo.pos.x, (int)singleUnit->unit->entityInfo.pos.y, App->map->data.tile_width, App->map->data.tile_height };
+						SDL_Rect posB = { (int)(*units)->unit->entityInfo.pos.x, (int)(*units)->unit->entityInfo.pos.y,  App->map->data.tile_width, App->map->data.tile_height };
+						iPoint tilePos = App->map->MapToWorld(singleUnit->nextTile.x, singleUnit->nextTile.y);
+						SDL_Rect tile = { tilePos.x, tilePos.y, App->map->data.tile_width, App->map->data.tile_height };
+						SDL_Rect resultA, resultB;
+
+						SDL_IntersectRect(&posA, &tile, &resultA);
+						SDL_IntersectRect(&posB, &tile, &resultB);
+
+						// Compare the areas of the two intersections
+						int areaA = resultA.w * resultA.h;
+						int areaB = resultB.w * resultB.h;
+
+						// Decide which unit waits
+						// The unit who has the smaller area waits
+						if (areaA <= areaB) {
+							if (!singleUnit->wait) {
+								singleUnit->collision = CollisionType_SameCell;
+								singleUnit->wait = true;
+
+								LOG("%s: SAME CELL", singleUnit->unit->GetColorName().data());
+							}
+						}
+						else {
+							(*units)->collision = CollisionType_SameCell;
+							(*units)->wait = true;
+
+							LOG("%s: SAME CELL", (*units)->unit->GetColorName().data());
+						}
 					}
-				}
-				else if (singleUnit->nextTile == right) {
-					if ((*units)->nextTile == myRight && !(*units)->wait) {
 
-						// Decide which unit waits (depending on its priority value)
-						singleUnit->waitUnit = *units;
-						singleUnit->waitTile = myRight;
+					// DIAGONAL CROSSING
+					else {
 
-						return CollisionType_DiagonalCrossing;
+						// Diagonal crossing: even though the units don't reach the same tile, we want to avoid this situation
+						iPoint up = { (*units)->currTile.x, (*units)->currTile.y - 1 };
+						iPoint down = { (*units)->currTile.x, (*units)->currTile.y + 1 };
+						iPoint left = { (*units)->currTile.x - 1, (*units)->currTile.y };
+						iPoint right = { (*units)->currTile.x + 1, (*units)->currTile.y };
+
+						iPoint myUp = { singleUnit->currTile.x, singleUnit->currTile.y - 1 };
+						iPoint myDown = { singleUnit->currTile.x, singleUnit->currTile.y + 1 };
+						iPoint myLeft = { singleUnit->currTile.x - 1, singleUnit->currTile.y };
+						iPoint myRight = { singleUnit->currTile.x + 1, singleUnit->currTile.y };
+
+						if (singleUnit->nextTile == up) {
+
+							// We are sure than nextTile of this unit is valid, but what about the other unit's nextTile? We haven't check it yet
+							/// DRAWING B: IsValidTile(nullptr, (*units)->nextTile, true) we need it because the other unit may not be waiting yet (update order),
+							/// but will wait when it is its turn this update. Its nextTile may be occupied, whereas the current unit nextTile is not.
+							/// If this is the case, when checking for collisions for the other unit, it would give us an ItsCell or SameCell collision, probably...
+
+							if ((*units)->nextTile == myUp && !(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
+
+								// Decide which unit waits (depending on its priority value)
+								singleUnit->waitUnit = *units;
+								singleUnit->waitTile = myUp;
+
+								if (!singleUnit->wait) {
+									singleUnit->collision = CollisionType_DiagonalCrossing;
+									singleUnit->wait = true;
+
+									LOG("%s: CROSSING", singleUnit->unit->GetColorName().data());
+								}
+							}
+						}
+						else if (singleUnit->nextTile == down) {
+							if ((*units)->nextTile == myDown && !(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
+
+								// Decide which unit waits (depending on its priority value)
+								singleUnit->waitUnit = *units;
+								singleUnit->waitTile = myDown;
+
+								if (!singleUnit->wait) {
+									singleUnit->collision = CollisionType_DiagonalCrossing;
+									singleUnit->wait = true;
+
+									LOG("%s: CROSSING", singleUnit->unit->GetColorName().data());
+								}
+							}
+						}
+						else if (singleUnit->nextTile == left) {
+							if ((*units)->nextTile == myLeft && !(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
+
+								// Decide which unit waits (depending on its priority value)
+								singleUnit->waitUnit = *units;
+								singleUnit->waitTile = myLeft;
+
+								if (!singleUnit->wait) {
+									singleUnit->collision = CollisionType_DiagonalCrossing;
+									singleUnit->wait = true;
+
+									LOG("%s: CROSSING", singleUnit->unit->GetColorName().data());
+								}
+							}
+						}
+						else if (singleUnit->nextTile == right) {
+							if ((*units)->nextTile == myRight && !(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
+
+								// Decide which unit waits (depending on its priority value)
+								singleUnit->waitUnit = *units;
+								singleUnit->waitTile = myRight;
+
+								if (!singleUnit->wait) {
+									singleUnit->collision = CollisionType_DiagonalCrossing;
+									singleUnit->wait = true;
+
+									LOG("%s: CROSSING", singleUnit->unit->GetColorName().data());
+								}
+							}
+						}
 					}
 				}
 			}
 		}
 	}
-
-	return CollisionType_NoCollision;
 }
 
 bool j1Movement::IsValidTile(SingleUnit* singleUnit, iPoint tile, bool currTile, bool nextTile, bool goalTile) const
 {
+	if (tile.x == -1 && tile.y == -1)
+		return false;
+
+	if (!currTile && !nextTile && !goalTile)
+		return true;
+
 	list<UnitGroup*>::const_iterator groups;
 	list<SingleUnit*>::const_iterator units;
 
@@ -514,7 +652,7 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront)
 		return { -1,-1 };
 
 	// 1. Units can only move in 8 directions from their current tile (the search only expands to 8 possible tiles)
-	iPoint neighbors[8] = { {-1,-1},{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 } };
+	iPoint neighbors[8] = { { -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 } };
 
 	if (checkOnlyFront) {
 
@@ -522,7 +660,7 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront)
 		/// This way, the unit can only move forward in its direction
 
 		switch (singleUnit->unit->GetUnitDirection()) {
-		
+
 		case UnitDirection_Idle:
 
 			neighbors[0].create(singleUnit->currTile.x + 1, singleUnit->currTile.y + 0); // Right
@@ -624,7 +762,7 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront)
 		priorityNeighbors.priority = neighbors[i].DistanceManhattan(singleUnit->goal); /// TODO: we could use the path size to track the priority, but it's too heavy...
 		queue.push(priorityNeighbors);
 	}
-	
+
 	iPointPriority curr;
 	while (queue.size() > 0) {
 
@@ -637,7 +775,7 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront)
 			//if (curr.point.DistanceManhattan(unit->goal) < unit->currTile.DistanceManhattan(unit->goal))
 			return curr.point;
 			//else
-				//return unit->currTile;
+			//return unit->currTile;
 		}
 	}
 
@@ -680,7 +818,7 @@ iPoint j1Movement::FindNewValidGoal(SingleUnit* singleUnit) const
 		for (uint i = 0; i < 8; ++i)
 		{
 			if (find(visited.begin(), visited.end(), neighbors[i]) == visited.end()) {
-				
+
 				iPointPriority priorityNeighbors;
 				priorityNeighbors.point = neighbors[i];
 				priorityNeighbors.priority = neighbors[i].DistanceManhattan(singleUnit->group->goal);
@@ -694,53 +832,133 @@ iPoint j1Movement::FindNewValidGoal(SingleUnit* singleUnit) const
 	return { -1,-1 };
 }
 
-// UnitGroup struct ---------------------------------------------------------------------------------
-
-UnitGroup::UnitGroup(Entity* entity) 
+bool j1Movement::IsOppositeDirection(SingleUnit* singleUnitA, SingleUnit* singleUnitB) const
 {
-	AddUnit(entity);
-}
+	UnitDirection dirA = singleUnitA->unit->GetUnitDirection();
+	UnitDirection dirB = singleUnitB->unit->GetUnitDirection();
 
-UnitGroup::UnitGroup(list<Entity*> entities)
-{
-	list<Entity*>::const_iterator it = entities.begin();
+	switch (dirA) {
 
-	while (it != entities.end()) {
+	case UnitDirection_Up:
 
-		AddUnit(*it);
-		it++;
+		if (dirB == UnitDirection_Down)
+			return true;
+
+		break;
+
+	case UnitDirection_Down:
+
+		if (dirB == UnitDirection_Up)
+			return true;
+
+		break;
+
+	case UnitDirection_Left:
+
+		if (dirB == UnitDirection_Right)
+			return true;
+
+		break;
+
+	case UnitDirection_Right:
+
+		if (dirB == UnitDirection_Left)
+			return true;
+
+		break;
+
+	case UnitDirection_UpLeft:
+
+		if (dirB == UnitDirection_DownRight)
+			return true;
+
+		break;
+
+	case UnitDirection_UpRight:
+
+		if (dirB == UnitDirection_DownLeft)
+			return true;
+
+		break;
+
+	case UnitDirection_DownLeft:
+
+		if (dirB == UnitDirection_UpRight)
+			return true;
+
+		break;
+
+	case UnitDirection_DownRight:
+
+		if (dirB == UnitDirection_UpLeft)
+			return true;
+
+		break;
 	}
 }
 
-SingleUnit* UnitGroup::AddUnit(Entity* entity)
+// UnitGroup struct ---------------------------------------------------------------------------------
+
+UnitGroup::UnitGroup(Unit* unit)
 {
-	// If an the entity belongs to an existing unit, first delete the unit
-	SingleUnit* unit = GetUnitByEntity(entity);
-
-	if (unit != nullptr)
-		units.remove(unit);
-	unit = nullptr;
-
-	unit = new SingleUnit((Unit*)entity, this);
-	units.push_back(unit);
-
-	return unit;
+	AddUnit(unit->GetSingleUnit());
 }
 
-bool UnitGroup::RemoveUnit(Entity* entity)
+UnitGroup::UnitGroup(list<Unit*> units)
 {
-	bool ret = false;
-
-	list<SingleUnit*>::const_iterator it = units.begin();
+	list<Unit*>::const_iterator it = units.begin();
 
 	while (it != units.end()) {
 
-		if ((Entity*)(*it)->unit == entity) {
-			units.remove(*it);
-			ret = true;
-		}
+		AddUnit((*it)->GetSingleUnit());
 		it++;
 	}
+}
+
+bool UnitGroup::AddUnit(SingleUnit* singleUnit)
+{
+	bool ret = false;
+
+	ret = IsUnitInGroup(singleUnit);
+
+	// If the unit is not in the group, add it
+	if (!ret) {
+
+		singleUnit->group = this;
+
+		units.push_back(singleUnit);
+
+		ret = true;
+	}
+
+	return ret;
+}
+
+bool UnitGroup::RemoveUnit(SingleUnit* singleUnit)
+{
+	bool ret = false;
+
+	list<SingleUnit*>::const_iterator it = find(units.begin(), units.end(), singleUnit);
+
+	if (it != units.end()) {
+
+		// Set the unit group to nullptr
+		singleUnit->group = nullptr;
+
+		// Remove the unit from the group
+		units.remove(*it);
+		ret = true;
+	}
+
+	return ret;
+}
+
+bool UnitGroup::IsUnitInGroup(SingleUnit* singleUnit) const
+{
+	bool ret = false;
+
+	if (find(units.begin(), units.end(), singleUnit) != units.end())
+		ret = true;
 
 	return ret;
 }
@@ -748,31 +966,6 @@ bool UnitGroup::RemoveUnit(Entity* entity)
 uint UnitGroup::GetSize() const
 {
 	return units.size();
-}
-
-SingleUnit* UnitGroup::GetUnitByIndex(uint id)
-{
-	list<SingleUnit*>::const_iterator it = units.begin();
-
-	advance(it, id);
-	if (it != units.end())
-		return *it;
-
-	return nullptr;
-}
-
-SingleUnit* UnitGroup::GetUnitByEntity(Entity* entity) const
-{
-	list<SingleUnit*>::const_iterator it = units.begin();
-
-	while (it != units.end()) {
-		if ((Entity*)(*it)->unit == entity)
-			return *it;
-
-		it++;
-	}
-
-	return nullptr;
 }
 
 bool UnitGroup::SetGoal(iPoint goal)
@@ -787,17 +980,14 @@ bool UnitGroup::SetGoal(iPoint goal)
 		list<SingleUnit*>::const_iterator it = units.begin();
 
 		while (it != units.end()) {
-			(*it)->newGoal = goal;
 
-			// If the unit didn't have a goal defined, update also its goal
-			if ((*it)->goal.x == -1 && (*it)->goal.y == -1)
-				(*it)->goal = goal;
+			(*it)->newGoal = goal;
 
 			it++;
 		}
 
 		ret = true;
-	}	
+	}
 
 	return ret;
 }
@@ -816,33 +1006,29 @@ float UnitGroup::GetMaxSpeed() const
 
 SingleUnit::SingleUnit(Unit* unit, UnitGroup* group) :unit(unit), group(group)
 {
-	currTile = App->map->WorldToMap(this->unit->entityInfo.pos.x, this->unit->entityInfo.pos.y);
+	currTile = goal = App->map->WorldToMap(this->unit->entityInfo.pos.x, this->unit->entityInfo.pos.y);
 	speed = this->unit->entityInfo.speed;
 	speed *= 50.0f; // MYTODO: delete this 50.0f magic number!!!
 
-	goal = group->goal;
+	priority = unit->unitInfo.priority;
 }
 
 bool SingleUnit::CreatePath(iPoint startPos)
 {
 	bool ret = true;
 
-	// If there is a valid goal:
-	if (goal.x != -1 && goal.y != -1) {
+	// Find a path
+	if (App->pathfinding->CreatePath(startPos, goal, DISTANCE_MANHATTAN) == -1)
+		ret = false;
 
-		// Find a path
-		if (App->pathfinding->CreatePath(startPos, goal, DISTANCE_MANHATTAN) == -1)
-			ret = false;
-
-		// Save the path found
-		if (ret)
-			path = *App->pathfinding->GetLastPath();
-	}
+	// Save the path found
+	if (ret)
+		path = *App->pathfinding->GetLastPath();
 
 	return ret;
 }
 
-bool SingleUnit::IsTileReached(iPoint nextPos, fPoint endPos) const 
+bool SingleUnit::IsTileReached(iPoint nextPos, fPoint endPos) const
 {
 	bool ret = false;
 

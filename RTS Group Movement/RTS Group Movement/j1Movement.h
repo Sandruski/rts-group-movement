@@ -24,13 +24,9 @@ enum MovementState {
 enum CollisionType {
 	CollisionType_NoCollision,
 	CollisionType_SameCell,
+	CollisionType_TowardsCell,
 	CollisionType_ItsCell,
 	CollisionType_DiagonalCrossing
-};
-
-enum CollisionBehaviour {
-	CollisionBehaviour_FindNewCell,
-	CollisionBehaviour_Wait
 };
 
 // forward declaration
@@ -53,30 +49,28 @@ public:
 	// Called before quitting
 	bool CleanUp();
 
-	// Creates a group from a list of entities
-	UnitGroup* CreateGroupFromList(list<Entity*> entities);
+	// Creates a group from a list of units
+	UnitGroup* CreateGroupFromUnits(list<Unit*> units);
 
-	// Creates a group from a single entity
-	UnitGroup* CreateGroupFromEntity(Entity* entity);
+	// Creates a group from a single unit
+	UnitGroup* CreateGroupFromUnit(Unit* unit);
 
 	// Returns the last group created or nullptr
 	UnitGroup* GetLastGroup() const;
 
-	// Returns an existing group by its ID or nullptr
-	UnitGroup* GetGroupByIndex(uint id) const;
-
 	// Returns an existing group by a pointer to one of its units or nullptr
-	UnitGroup* GetGroupByEntity(Entity* entity) const;
+	UnitGroup* GetGroupByUnit(Unit* unit) const;
 
-	// Returns an existing group by the list of all of its entities or nullptr
-	UnitGroup* GetGroupByEntities(list<Entity*> entities) const;
+	UnitGroup* GetGroupByUnits(list<Unit*> units) const;
 
 	// Moves an entity (if it is member of a group, through group movement). Returns the state of the movement
 	/// Call this method from any entity's update if you want to move the entity
-	MovementState MoveEntity(Entity* entity, float dt) const;
+	MovementState MoveUnit(Unit* unit, float dt) const;
+
+	// -----
 
 	// Returns the type of collision that there would be between the unit and another unit or CollisionType_NoCollision
-	CollisionType CheckForFutureCollision(SingleUnit* singleUnit) const;
+	void CheckForFutureCollision(SingleUnit* singleUnit) const;
 
 	// Returns true if the tile passed isn't and won't be occupied by a unit
 	bool IsValidTile(SingleUnit* singleUnit, iPoint tile, bool currTile = false, bool nextTile = false, bool goalTile = false) const;
@@ -85,6 +79,10 @@ public:
 	iPoint FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront = false) const;
 
 	iPoint FindNewValidGoal(SingleUnit* singleUnit) const;
+
+	bool ChangeNextTile(SingleUnit* singleUnit) const;
+
+	bool IsOppositeDirection(SingleUnit* singleUnitA, SingleUnit* singleUnitB) const;
 
 private:
 
@@ -97,21 +95,17 @@ private:
 
 struct UnitGroup
 {
-	UnitGroup(Entity* entity);
+	UnitGroup(Unit* unit);
 
-	UnitGroup(list<Entity*> entities);
+	UnitGroup(list<Unit*> units);
 
 	// Adds an entity to the group. Returns the ID of the entity or -1
-	SingleUnit* AddUnit(Entity* entity);
+	bool AddUnit(SingleUnit* singleUnit);
 
 	// Removes an entity from the group. Returns true if success or false
-	bool RemoveUnit(Entity* entity);
+	bool RemoveUnit(SingleUnit* singleUnit);
 
-	// Returns an existing unit in the group by its ID or nullptr
-	SingleUnit* GetUnitByIndex(uint id);
-
-	// Returns an existing unit in the group by a pointer to its entity or nullptr
-	SingleUnit* GetUnitByEntity(Entity* entity) const;
+	bool IsUnitInGroup(SingleUnit* singleUnit) const;
 
 	// Returns the size of the group (the number of entities in the group)
 	uint GetSize() const;
@@ -130,7 +124,7 @@ struct UnitGroup
 	//fPoint GetCentroid() const;
 
 	// -----
-	
+
 	list<SingleUnit*> units; // contains all the units of a given group
 	iPoint goal = { -1,-1 }; // current goal of the group
 
@@ -172,8 +166,7 @@ struct SingleUnit
 	bool wait = false;
 	iPoint waitTile = { -1,-1 };
 	SingleUnit* waitUnit = nullptr;
-
-	float timer = 0;
+	CollisionType collision = CollisionType_NoCollision;
 };
 
 class iPointPriority

@@ -41,7 +41,8 @@ Unit::Unit(EntityInfo entityInfo, uint priority) : Entity(entityInfo)
 	downRightSpeed = u.downRight.speed;
 	idleSpeed = u.idle.speed;
 
-	App->movement->CreateGroupFromEntity(this);
+	singleUnit = new SingleUnit(this, nullptr);
+	App->movement->CreateGroupFromUnit(this);
 }
 
 void Unit::Move(float dt)
@@ -65,7 +66,7 @@ void Unit::Move(float dt)
 	ChangeAnimation();
 }
 
-void Unit::UpdateAnimationsSpeed(float dt) 
+void Unit::UpdateAnimationsSpeed(float dt)
 {
 	unitInfo.up.speed = upSpeed * dt;
 	unitInfo.down.speed = downSpeed * dt;
@@ -78,7 +79,7 @@ void Unit::UpdateAnimationsSpeed(float dt)
 	unitInfo.idle.speed = idleSpeed * dt;
 }
 
-void Unit::ChangeAnimation() 
+void Unit::ChangeAnimation()
 {
 	switch (GetUnitDirection()) {
 
@@ -140,27 +141,8 @@ void Unit::Draw(SDL_Texture* sprites)
 		DebugDrawSelected();
 }
 
-void Unit::DebugDrawSelected() 
+void Unit::DebugDrawSelected()
 {
-	SDL_Color color;
-
-	switch (unitInfo.priority) {
-	case 1:
-		color.r = 255;
-		color.g = 0;
-		color.b = 0;
-	break;
-	case 2:
-		color.r = 0;
-		color.g = 0;
-		color.b = 255;
-	break;
-	default:
-		color.r = 255;
-		color.g = 255;
-		color.b = 255;
-	}
-
 	const SDL_Rect entitySize = { entityInfo.pos.x, entityInfo.pos.y, entityInfo.size.x, entityInfo.size.y };
 	App->render->DrawQuad(entitySize, color.r, color.g, color.b, 255, false);
 }
@@ -179,7 +161,7 @@ void Unit::UnitStateMachine(float dt) {
 
 	case UnitState_Walk:
 
-		App->movement->MoveEntity(this, dt);
+		App->movement->MoveUnit(this, dt);
 
 		break;
 	}
@@ -195,10 +177,10 @@ UnitState Unit::GetUnitState() const
 	return unitState;
 }
 
-void Unit::SetUnitDirection(UnitDirection unitDirection) 
+void Unit::SetUnitDirection(UnitDirection unitDirection)
 {
 	switch (unitDirection) {
-	
+
 	case UnitDirection_Idle:
 
 		direction.x = 0.0f;
@@ -255,7 +237,7 @@ void Unit::SetUnitDirection(UnitDirection unitDirection)
 	}
 }
 
-UnitDirection Unit::GetUnitDirection() const 
+UnitDirection Unit::GetUnitDirection() const
 {
 	if (direction.x > 0.0f) {
 
@@ -294,14 +276,35 @@ UnitDirection Unit::GetUnitDirection() const
 	return UnitDirection_Idle;
 }
 
-void Unit::SetUnitDirectionByValue(fPoint unitDirection) 
+void Unit::SetUnitDirectionByValue(fPoint unitDirection)
 {
 	direction = unitDirection;
 }
 
-fPoint Unit::GetUnitDirectionByValue() const 
+fPoint Unit::GetUnitDirectionByValue() const
 {
 	return direction;
+}
+
+SingleUnit* Unit::GetSingleUnit() const
+{
+	return singleUnit;
+}
+
+void Unit::SetColor(SDL_Color color, string colorName)
+{
+	this->color = color;
+	this->colorName = colorName;
+}
+
+SDL_Color Unit::GetColor() const
+{
+	return color;
+}
+
+string Unit::GetColorName() const
+{
+	return colorName;
 }
 
 // -------------------------------------------------------------

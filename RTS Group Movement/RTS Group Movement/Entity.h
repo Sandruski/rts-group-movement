@@ -20,11 +20,6 @@ struct EntityInfo
 	iPoint size = { 0,0 };
 
 	float speed = 1.0f;
-
-	// -----
-
-
-
 };
 
 class Entity

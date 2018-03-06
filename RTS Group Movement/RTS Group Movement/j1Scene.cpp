@@ -39,7 +39,6 @@ bool j1Scene::Awake(pugi::xml_node& config)
 
 	orthogonalMap = maps.child("orthogonal").attribute("name").as_string();
 	orthogonalActive = maps.child("orthogonal").attribute("active").as_bool();
-	orthogonalTexName = maps.child("orthogonal").attribute("tex").as_string();
 
 	isometricMap = maps.child("isometric").attribute("name").as_string();
 	isometricActive = maps.child("isometric").attribute("active").as_bool();
@@ -47,7 +46,7 @@ bool j1Scene::Awake(pugi::xml_node& config)
 
 	warcraftMap = maps.child("warcraft").attribute("name").as_string();
 	warcraftActive = maps.child("warcraft").attribute("active").as_bool();
-	warcraftTexName = maps.child("warcraft").attribute("tex").as_string();
+	warcraftTexName = orthogonalTexName = maps.child("warcraft").attribute("tex").as_string();
 
 	return ret;
 }
@@ -76,6 +75,7 @@ bool j1Scene::Start()
 	}
 
 	// Create walkability map
+
 	if (ret)
 	{
 		int w, h;
@@ -108,11 +108,11 @@ bool j1Scene::PreUpdate()
 	entityInfo.size = { 32,32 };
 
 	// 1: spawn a unit with priority 1
-	if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN)
+	if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN && !App->entities->IsUnitOnTile(mouseTile))
 		App->entities->AddUnit(entityInfo, 1);
 
 	// 2: spawn a unit with priority 2
-	if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
+	if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN && !App->entities->IsUnitOnTile(mouseTile))
 		App->entities->AddUnit(entityInfo, 2);
 
 	return ret;
@@ -137,11 +137,11 @@ bool j1Scene::Update(float dt)
 	App->entities->Draw(); // entities
 	App->render->Blit(debugTex, mouseTilePos.x, mouseTilePos.y); // tile under the mouse pointer
 
-	// Select units by mouse click
+																 // Select units by mouse click
 	if (App->input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_DOWN) {
 		startRectangle = mousePos;
 
-		App->entities->SelectEntity(mouseTile);
+		App->entities->SelectUnit(mouseTile);
 	}
 
 	int width = mousePos.x - startRectangle.x;
@@ -164,22 +164,19 @@ bool j1Scene::Update(float dt)
 			mouseRect.h *= -1;
 		}
 
-		App->entities->SelectEntitiesWithinRectangle(mouseRect);
+		App->entities->SelectUnitsWithinRectangle(mouseRect);
 	}
 
 	// Mouse left click: select a new goal for the selected units
 	if (App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) {
 
-		if (App->movement->GetGroupByEntities(App->entities->GetLastEntitiesSelected()) == nullptr)
+		if (App->movement->GetGroupByUnits(App->entities->GetLastUnitsSelected()) == nullptr)
 
 			// Selected units will now behave as a group
-			App->movement->CreateGroupFromList(App->entities->GetLastEntitiesSelected());
+			App->movement->CreateGroupFromUnits(App->entities->GetLastUnitsSelected());
 
-		App->movement->GetGroupByEntities(App->entities->GetLastEntitiesSelected())->SetGoal(mouseTile);
+		App->movement->GetGroupByUnits(App->entities->GetLastUnitsSelected())->SetGoal(mouseTile);
 	}
-
-	// F1, F2, F3, F4, F5, F6, +, -
-	DebugKeys();
 
 	return ret;
 }
@@ -210,87 +207,6 @@ bool j1Scene::CleanUp()
 
 	return ret;
 }
-
-// Debug keys
-void j1Scene::DebugKeys()
-{
-	// F1: start from the beginning of the first level
-	if (App->input->GetKey(SDL_SCANCODE_F1) == KEY_DOWN) {
-		/*
-		if (index == 0)
-			App->entities->playerData->position = App->entities->playerData->start_pos;
-		else
-			index = 0;
-
-		App->fade->FadeToBlack(this, this, FADE_LESS_SECONDS, fades::slider_fade);
-		*/
-	}
-
-	// F2: start from the beginning of the current level
-	if (App->input->GetKey(SDL_SCANCODE_F2) == KEY_DOWN) {
-		/*
-		App->fade->FadeToBlack(this, this, FADE_LESS_SECONDS, fades::slider_fade);
-		*/
-	}
-
-	// F4: change between maps
-	if (App->input->GetKey(SDL_SCANCODE_F4) == KEY_DOWN) {
-		/*
-		if (index == 0)
-			index = 1;
-		else
-			index = 0;
-
-		App->fade->FadeToBlack(this, this, FADE_LESS_SECONDS, fades::slider_fade);
-		*/
-	}
-
-	// F5: save the current state
-	if (App->input->GetKey(SDL_SCANCODE_F5) == KEY_DOWN) {
-		App->SaveGame();
-	}
-
-	// F6: load the previous state
-	if (App->input->GetKey(SDL_SCANCODE_F6) == KEY_DOWN) {
-		App->LoadGame();
-	}
-
-	// F7: fullscreen
-	if (App->input->GetKey(SDL_SCANCODE_F7) == KEY_DOWN) {
-		if (App->win->fullscreen) {
-			App->win->fullscreen = false;
-			SDL_SetWindowFullscreen(App->win->window, SDL_WINDOW_SHOWN);
-		}
-		else {
-			App->win->fullscreen = true;
-			SDL_SetWindowFullscreen(App->win->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-		}
-	}
-}
-
-/*
-void j1Scene::OnUIEvent(UIElement* UIelem, UIEvents UIevent)
-{
-	switch (UIevent)
-	{
-	case UIEvents::MOUSE_ENTER_:
-
-		break;
-
-	case UIEvents::MOUSE_LEAVE_:
-
-		break;
-
-	case UIEvents::MOUSE_LEFT_CLICK_:
-
-		break;
-
-	case UIEvents::MOUSE_LEFT_UP_:
-
-		break;
-	}
-}
-*/
 
 // -------------------------------------------------------------
 // -------------------------------------------------------------

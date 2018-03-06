@@ -6,9 +6,11 @@
 #include "SDL\include\SDL.h"
 
 #include <vector>
+#include <string>
 using namespace std;
 
 struct SDL_Color;
+struct SingleUnit;
 
 struct UnitInfo {
 
@@ -64,6 +66,12 @@ public:
 	void SetUnitDirectionByValue(fPoint unitDirection);
 	fPoint GetUnitDirectionByValue() const;
 
+	SingleUnit* GetSingleUnit() const;
+
+	void SetColor(SDL_Color color, string colorName);
+	SDL_Color GetColor() const;
+	string GetColorName() const;
+
 public:
 
 	UnitInfo unitInfo;
@@ -73,10 +81,15 @@ private:
 	UnitState unitState = UnitState_Idle;
 	fPoint direction = { 0.0f,0.0f };
 
+	SDL_Color color = ColorWhite;
+	string colorName;
+
+	SingleUnit* singleUnit = nullptr;
+
 	// Animations speed
 	float upSpeed, downSpeed, leftSpeed, rightSpeed;
 	float upLeftSpeed, upRightSpeed, downLeftSpeed, downRightSpeed;
 	float idleSpeed;
 };
 
-#endif //__Entity_H__
+#endif //__Unit_H__

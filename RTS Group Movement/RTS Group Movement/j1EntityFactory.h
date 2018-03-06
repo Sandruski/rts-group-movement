@@ -6,10 +6,11 @@
 
 #include "p2Point.h"
 
+#include <string>
 #include <algorithm>
 using namespace std;
 
-#define MAX_ENTITIES_SELECTED 8
+#define MAX_UNITS_SELECTED 8
 
 struct SDL_Texture;
 struct SDL_Rect;
@@ -36,14 +37,20 @@ public:
 
 	Unit* AddUnit(const EntityInfo& entityInfo, uint priority);
 
-	// Selects the entity within the tile
-	void SelectEntity(iPoint tile);
+	Unit* GetUnitByEntity(Entity* entity);
 
-	// Selects the entities within the rectangle
-	void SelectEntitiesWithinRectangle(SDL_Rect rectangleRect);
+	bool IsUnitOnTile(iPoint tile) const;
 
-	// Returns a list with the last units selection
-	list<Entity*> GetLastEntitiesSelected() const;
+	// Selects the unit within the tile
+	Unit* SelectUnit(iPoint tile);
+
+	// Selects the units within the rectangle
+	void SelectUnitsWithinRectangle(SDL_Rect rectangleRect);
+
+	void SetUnitsSelectedColor();
+
+	// Returns a list with the last units selected
+	list<Unit*> GetLastUnitsSelected() const;
 
 	// Get entities info
 	UnitInfo& GetUnitInfo();
@@ -55,7 +62,7 @@ private:
 
 	list<Entity*> activeEntities;
 	list<Entity*> toSpawnEntities;
-	list<Entity*> unitsSelected;
+	list<Unit*> unitsSelected;
 
 	// Entities textures
 	string archerTexName;
