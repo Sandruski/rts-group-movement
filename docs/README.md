@@ -1,6 +1,6 @@
 # RTS Group Movement
 
-I am <https://www.linkedin.com/in/sandra-alvarez-45453215b/>(Sandra Alvarez), student of the <https://www.citm.upc.edu/ing/estudis/graus-videojocs/>(Bachelor’s Degree in Video Games by UPC at CITM). This content is generated for the second year’s subject Project 2, under supervision of lecturer <https://es.linkedin.com/in/ricardpillosu>(Ricard Pillosu)
+I am <a href="https://www.linkedin.com/in/sandra-alvarez-45453215b/">Sandra Alvarez</a>, student of the <https://www.citm.upc.edu/ing/estudis/graus-videojocs/>(Bachelor’s Degree in Video Games by UPC at CITM). This content is generated for the second year’s subject Project 2, under supervision of lecturer <https://es.linkedin.com/in/ricardpillosu>(Ricard Pillosu)
 
 NOTE: although this research focuses mainly on real-time strategy (RTS) games, the methods described can easily be applied to games from other genres.
 
