@@ -60,7 +60,6 @@ bool j1Scene::Start()
 	}
 
 	// Create walkability map
-
 	if (ret)
 	{
 		int w, h;
@@ -93,11 +92,11 @@ bool j1Scene::PreUpdate()
 	entityInfo.size = { 32,32 };
 
 	// 1: spawn a unit with priority 1
-	if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN && !App->entities->IsUnitOnTile(mouseTile))
+	if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN && !App->entities->IsUnitOnTile(mouseTile) && App->pathfinding->IsWalkable(mouseTile))
 		App->entities->AddUnit(entityInfo, 1);
 
 	// 2: spawn a unit with priority 2
-	if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN && !App->entities->IsUnitOnTile(mouseTile))
+	if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN && !App->entities->IsUnitOnTile(mouseTile) && App->pathfinding->IsWalkable(mouseTile))
 		App->entities->AddUnit(entityInfo, 2);
 
 	return ret;

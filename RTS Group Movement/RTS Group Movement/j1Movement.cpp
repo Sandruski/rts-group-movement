@@ -273,7 +273,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 				if (u->nextTile == u->waitUnit->goal && u->waitUnit->goal == u->waitUnit->newGoal
 					&& u->waitUnit->currTile == u->waitUnit->goal) {
 
-					// Unit politely asks the other unit to move	
+					// Unit politely asks the other unit to move
 					changedGoal = u->waitUnit->goal;
 
 					u->waitUnit->goal = u->waitUnit->newGoal = u->goal;
@@ -342,7 +342,6 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 						LOG("%s: RESOLVED TOWARDS", u->unit->GetColorName().data());
 					}
 					else
-						// WHAT TO DO IF NO TILE HAS BEEN FOUND? STOP THE UNIT!
 						LOG("%s: Couldn't find newTile", u->unit->GetColorName().data());
 				}
 			}
