@@ -37,16 +37,9 @@ bool j1Scene::Awake(pugi::xml_node& config)
 	// Load maps
 	pugi::xml_node maps = config.child("maps");
 
-	orthogonalMap = maps.child("orthogonal").attribute("name").as_string();
-	orthogonalActive = maps.child("orthogonal").attribute("active").as_bool();
-
-	isometricMap = maps.child("isometric").attribute("name").as_string();
-	isometricActive = maps.child("isometric").attribute("active").as_bool();
-	isometricTexName = maps.child("isometric").attribute("tex").as_string();
-
 	warcraftMap = maps.child("warcraft").attribute("name").as_string();
 	warcraftActive = maps.child("warcraft").attribute("active").as_bool();
-	warcraftTexName = orthogonalTexName = maps.child("warcraft").attribute("tex").as_string();
+	warcraftTexName = maps.child("warcraft").attribute("tex").as_string();
 
 	return ret;
 }
@@ -60,16 +53,8 @@ bool j1Scene::Start()
 	App->win->GetWindowSize(width, height);
 	scale = App->win->GetScale();
 
-	// Load an orthogonal, isometric or warcraft-based map
-	if (orthogonalActive) {
-		ret = App->map->Load(orthogonalMap.data());
-		debugTex = App->tex->Load(orthogonalTexName.data());
-	}
-	else if (isometricActive) {
-		ret = App->map->Load(isometricMap.data());
-		debugTex = App->tex->Load(isometricTexName.data());
-	}
-	else if (warcraftActive) {
+	// Load a warcraft-based map
+	if (warcraftActive) {
 		ret = App->map->Load(warcraftMap.data());
 		debugTex = App->tex->Load(warcraftTexName.data());
 	}
@@ -122,6 +107,15 @@ bool j1Scene::PreUpdate()
 bool j1Scene::Update(float dt)
 {
 	bool ret = true;
+
+	if (App->input->GetKey(SDL_SCANCODE_F1) == KEY_DOWN)
+		debugDrawMovement = !debugDrawMovement;
+
+	if (App->input->GetKey(SDL_SCANCODE_F2) == KEY_DOWN)
+		debugDrawPath = !debugDrawPath;
+
+	if (App->input->GetKey(SDL_SCANCODE_F3) == KEY_DOWN)
+		debugDrawMap = !debugDrawMap;
 
 	// Save mouse position (world and map coords)
 	int x, y;

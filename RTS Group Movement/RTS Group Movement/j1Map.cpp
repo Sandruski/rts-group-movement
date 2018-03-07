@@ -47,26 +47,23 @@ void j1Map::Draw()
 	// TODO 5: Prepare the loop to draw all tilesets + Blit
 	for (list<MapLayer*>::const_iterator layer = data.layers.begin(); layer != data.layers.end(); ++layer) {
 
-		if ((*layer)->properties.GetProperty("Draw", false) == false)
+		if ((*layer)->properties.GetProperty("Draw", false) == false && !App->scene->debugDrawMap)
 			continue;
 
-		if ((*layer)->index != ABOVE) {
+		for (int i = 0; i < (*layer)->width; ++i) {
+			for (int j = 0; j < (*layer)->height; ++j) {
 
-			for (int i = 0; i < (*layer)->width; ++i) {
-				for (int j = 0; j < (*layer)->height; ++j) {
+				int tile_id = (*layer)->Get(i, j);
+				if (tile_id > 0) {
 
-					int tile_id = (*layer)->Get(i, j);
-					if (tile_id > 0) {
+					TileSet* tileset = GetTilesetFromTileId(tile_id);
 
-						TileSet* tileset = GetTilesetFromTileId(tile_id);
+					SDL_Rect rect = tileset->GetTileRect(tile_id);
 
-						SDL_Rect rect = tileset->GetTileRect(tile_id);
+					SDL_Rect* section = &rect;
+					iPoint world = MapToWorld(i, j);
 
-						SDL_Rect* section = &rect;
-						iPoint world = MapToWorld(i, j);
-
-						App->render->Blit(tileset->texture, world.x, world.y, section, (*layer)->speed);
-					}
+					App->render->Blit(tileset->texture, world.x, world.y, section, (*layer)->speed);
 				}//for
 			}//for
 		}
@@ -553,20 +550,6 @@ bool j1Map::LoadLayer(pugi::xml_node& node, MapLayer* layer)
 	bool ret = true;
 
 	layer->name = node.attribute("name").as_string();
-
-	// Set layer index
-	if (layer->name == "Collision") {
-		collisionLayer = layer;
-		layer->index = COLLISION;
-	}
-	else if (layer->name == "Above") {
-		aboveLayer = layer;
-		layer->index = ABOVE;
-	}
-	else if (layer->name == "Parallax") {
-		layer->index = PARALLAX;
-	}
-
 	layer->width = node.attribute("width").as_uint();
 	layer->height = node.attribute("height").as_uint();
 	LoadProperties(node, layer->properties);

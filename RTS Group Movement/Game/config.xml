@@ -24,14 +24,8 @@
     <folder>data/assets/textures/maps/</folder>
   </map>
 
-  <gui>
-    <atlas file="Assets/Sprites/atlas.png"/>
-  </gui>
-
   <scene>
     <maps>
-      <orthogonal name="orthogonal_walk.tmx" active="0"/>
-      <isometric name="iso_walk.tmx" active="0" tex="data/assets/textures/maps/isometricDebugTex.png"/>
       <warcraft name="warcraft_walk.tmx" active="1" tex="data/assets/textures/maps/warcraftDebugTex.png"/>
     </maps>
   </scene>
@@ -104,11 +98,4 @@
       </archer>
     </animations>
   </entities>
-  
-  <particles>
-     <spritesheets>
-      <spritesheet name="Assets/Sprites/Textures/Sparkle.png"/>
-    </spritesheets>
-  </particles>
-
 </config>

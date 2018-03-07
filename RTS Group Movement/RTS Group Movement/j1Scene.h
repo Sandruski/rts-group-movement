@@ -12,6 +12,7 @@ struct SDL_Texture;
 class j1Scene : public j1Module
 {
 public:
+
 	j1Scene();
 
 	// Destructor
@@ -42,6 +43,7 @@ public:
 	bool Load(pugi::xml_node&);
 
 public:
+
 	// Camera
 	float up = false, down = false, left = false, right = false;
 	uint width = 0;
@@ -49,15 +51,20 @@ public:
 	uint scale = 0;
 
 private:
-	string orthogonalMap, isometricMap, warcraftMap;
-	string orthogonalTexName, isometricTexName, warcraftTexName;
-	bool orthogonalActive, isometricActive, warcraftActive;
 
-	// Draw a rectangle
+	// Map
+	string warcraftMap, warcraftTexName;
+	bool warcraftActive;
+	SDL_Texture* debugTex = nullptr;
+
+	// Draw rectangle
 	iPoint startRectangle = { 0,0 };
 
 public:
-	SDL_Texture* debugTex = nullptr;
+
+	bool debugDrawMovement = true;
+	bool debugDrawPath = false;
+	bool debugDrawMap = false;
 };
 
 #endif //__j1SCENE1_H__

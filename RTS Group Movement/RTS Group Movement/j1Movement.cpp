@@ -7,6 +7,7 @@
 #include "Entity.h"
 #include "j1Map.h"
 #include "j1Render.h"
+#include "j1Scene.h"
 
 #include"Brofiler\Brofiler.h"
 
@@ -20,7 +21,10 @@ bool j1Movement::Update(float dt)
 {
 	bool ret = true;
 
-	DebugDraw();
+	pathsCreated = 0;
+
+	if (App->scene->debugDrawMovement)
+		DebugDraw();
 
 	return ret;
 }
@@ -39,20 +43,22 @@ void j1Movement::DebugDraw() const
 				App->render->DrawLine((*unit)->unit->entityInfo.pos.x + offset.x, (*unit)->unit->entityInfo.pos.y + offset.y, nextPos.x + offset.x, nextPos.y + offset.y, 255, 255, 255, 255);
 				App->render->DrawCircle(nextPos.x + offset.x, nextPos.y + offset.y, 10, 255, 255, 255, 255);
 
-				// Draw unit's path
-				/*
-				for (uint i = 0; i < (*unit)->path.size(); ++i)
-				{
-				iPoint pos = App->map->MapToWorld((*unit)->path.at(i).x, (*unit)->path.at(i).y);
-				SDL_Rect rect = { pos.x, pos.y, App->map->data.tile_width, App->map->data.tile_height };
-				App->render->DrawQuad(rect, 0, 255, 0, 50);
-				}
-				*/
+				SDL_Color col = (*unit)->unit->GetColor();
 
-				// Draw unit's goal (in a different color than the path)
+				// Draw unit's path
+				if (App->scene->debugDrawPath) {
+
+					for (uint i = 0; i < (*unit)->path.size(); ++i)
+					{
+						iPoint pos = App->map->MapToWorld((*unit)->path.at(i).x, (*unit)->path.at(i).y);
+						SDL_Rect rect = { pos.x, pos.y, App->map->data.tile_width, App->map->data.tile_height };
+						App->render->DrawQuad(rect, col.r, col.g, col.b, 50);
+					}
+				}
+
+				// Draw unit's goal
 				iPoint pos = App->map->MapToWorld((*unit)->goal.x, (*unit)->goal.y);
 				SDL_Rect rect = { pos.x, pos.y, App->map->data.tile_width, App->map->data.tile_height };
-				SDL_Color col = (*unit)->unit->GetColor();
 				App->render->DrawQuad(rect, col.r, col.g, col.b, 200);
 			}
 		}
@@ -163,7 +169,7 @@ UnitGroup* j1Movement::GetGroupByUnits(list<Unit*> units) const
 	return nullptr;
 }
 
-MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
+MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 {
 	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
 
@@ -192,20 +198,24 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 
 	case MovementState_WaitForPath:
 
-		// Check if the goal is valid. Valid means that it isn't the goal of another unit and that it isn't { -1,-1 }
-		if (!IsValidTile(u, u->goal, false, false, true))
+		if (pathsCreated < MAX_PATHS_CREATED) {
 
-			// If the goal is not valid, find a new goal
-			u->goal = u->newGoal = FindNewValidGoal(u);
+			// Check if the goal is valid. Valid means that it isn't the goal of another unit and that it isn't { -1,-1 }
+			if (!IsValidTile(u, u->goal, false, false, true))
 
-		// Check if the new goal is valid. Valid means that it isn't { -1,-1 }
-		if (IsValidTile(nullptr, u->goal))
+				// If the goal is not valid, find a new goal
+				u->goal = u->newGoal = FindNewValidGoal(u);
 
-			// If the goal is valid, find a path
-			if (u->CreatePath(u->currTile))
+			// In case of execution FindNewValidGoal: this method returns { -1,-1 } if it doesn't find a valid goal 
+			// The pathfinding module will detect it isn't a valid goal, so we don't need to check it again
+			if (u->CreatePath(u->currTile)) {
 
 				// Set state to IncreaseWaypoint, in order to start following the path
 				u->movementState = MovementState_IncreaseWaypoint;
+
+				pathsCreated++;
+			}
+		}
 
 		break;
 
@@ -238,6 +248,13 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 
 		CheckForFutureCollision(u);
 
+		/*
+		if (u->wait && u->goal != u->newGoal) {
+			u->movementState = MovementState_IncreaseWaypoint;
+			u->collision = CollisionType_NoCollision;
+			u->wait = false;
+		}*/
+
 		// Treat the collision
 		if (u->collision != CollisionType_NoCollision) {
 
@@ -247,21 +264,16 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 			// In this case, find a new, valid nextTile
 
 			if (u->waitUnit != nullptr) {
-				if (u->nextTile == u->waitUnit->goal && u->waitUnit->currTile == u->waitUnit->goal) {
 
-					// Unit politely asks the other unit to move
+				// DRAWING C: we do also need to check 'u->waitUnit->goal == u->waitUnit->newGoal', because when units are idle, its currTile matches its goal
+				// If a unit has this unit in front of it and is going towards its goal, it will change goals with this unit. But this unit's goal
+				// hasn't been updated yet (because of the order of the updates), and it has only changed its newGoal (which is changed automatically for
+				// all the units of the same group when clicking a certain tile)!
 
-					// If the unit wants to go on the other unit's goal tile
-					/*
-					if (u->goal == u->waitUnit->goal)
+				if (u->nextTile == u->waitUnit->goal && u->waitUnit->goal == u->waitUnit->newGoal
+					&& u->waitUnit->currTile == u->waitUnit->goal) {
 
-						// The other unit must find a new goal to go
-						u->waitUnit->newGoal = FindNewValidGoal(u->waitUnit);
-					else
-					*/
-
-					LOG("CHANGED GOALS!");
-					
+					// Unit politely asks the other unit to move	
 					changedGoal = u->waitUnit->goal;
 
 					u->waitUnit->goal = u->waitUnit->newGoal = u->goal;
@@ -272,6 +284,11 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 
 					if (!u->waitUnit->wakeUp)
 						u->waitUnit->wakeUp = true;
+
+					u->collision = CollisionType_NoCollision;
+					u->wait = false;
+
+					LOG("%s: CHANGED GOALS WITH %s", u->unit->GetColorName().data(), u->waitUnit->unit->GetColorName().data());
 					
 					break;
 				}
@@ -313,12 +330,21 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 			else if (u->collision == CollisionType_TowardsCell) {
 
 				// Units get stuck. Find a new, valid nextTile for one of them
+				// ChangeNextTile uses the CreatePath method, so first we need to check if we can create a new path on this update
 
-				if (ChangeNextTile(u))
-					LOG("%s: RESOLVED TOWARDS", u->unit->GetColorName().data());
-				else
-					// WHAT TO DO IF NO TILE HAS BEEN FOUND? STOP THE UNIT!
-					LOG("%s: Couldn't find newTile", u->unit->GetColorName().data());
+				if (pathsCreated < MAX_PATHS_CREATED) {
+
+					if (ChangeNextTile(u)) {
+
+						u->collision = CollisionType_NoCollision;
+						u->wait = false;
+
+						LOG("%s: RESOLVED TOWARDS", u->unit->GetColorName().data());
+					}
+					else
+						// WHAT TO DO IF NO TILE HAS BEEN FOUND? STOP THE UNIT!
+						LOG("%s: Couldn't find newTile", u->unit->GetColorName().data());
+				}
 			}
 
 			break;
@@ -395,7 +421,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt) const
 	return ret;
 }
 
-bool j1Movement::ChangeNextTile(SingleUnit* singleUnit) const
+bool j1Movement::ChangeNextTile(SingleUnit* singleUnit)
 {
 	bool ret = false;
 
@@ -410,8 +436,7 @@ bool j1Movement::ChangeNextTile(SingleUnit* singleUnit) const
 		// Recalculate the path
 		singleUnit->CreatePath(singleUnit->nextTile);
 
-		singleUnit->collision = CollisionType_NoCollision;
-		singleUnit->wait = false;
+		pathsCreated++;
 
 		ret = true;
 	}
@@ -428,8 +453,7 @@ bool j1Movement::ChangeNextTile(SingleUnit* singleUnit) const
 			// Recalculate the path
 			singleUnit->CreatePath(singleUnit->nextTile);
 
-			singleUnit->collision = CollisionType_NoCollision;
-			singleUnit->wait = false;
+			pathsCreated++;
 
 			ret = true;
 		}

@@ -73,17 +73,9 @@ struct Properties
 // TODO 1: Create a struct for the map layer
 // ----------------------------------------------------
 
-enum layerType {
-	NONE,
-	COLLISION,
-	ABOVE,
-	PARALLAX
-};
-
 struct MapLayer {
 
 	string name;
-	layerType index = NONE;
 
 	uint width = 0; //number of tiles in the x axis
 	uint height = 0; //number of tiles in the y axis

@@ -11,6 +11,8 @@
 #include <vector>
 using namespace std;
 
+#define MAX_PATHS_CREATED 1
+
 class Entity;
 
 enum MovementState {
@@ -65,7 +67,8 @@ public:
 
 	// Moves an entity (if it is member of a group, through group movement). Returns the state of the movement
 	/// Call this method from any entity's update if you want to move the entity
-	MovementState MoveUnit(Unit* unit, float dt) const;
+	/// It is not a const method because it needs to keep track of the number of paths created in this update
+	MovementState MoveUnit(Unit* unit, float dt);
 
 	// -----
 
@@ -80,12 +83,13 @@ public:
 
 	iPoint FindNewValidGoal(SingleUnit* singleUnit) const;
 
-	bool ChangeNextTile(SingleUnit* singleUnit) const;
+	/// It is not a const method because it needs to keep track of the number of paths created in this update
+	bool ChangeNextTile(SingleUnit* singleUnit);
 
 	bool IsOppositeDirection(SingleUnit* singleUnitA, SingleUnit* singleUnitB) const;
 
 private:
-
+	int pathsCreated = 0;
 	list<UnitGroup*> unitGroups; // contains all the existing groups
 };
 
