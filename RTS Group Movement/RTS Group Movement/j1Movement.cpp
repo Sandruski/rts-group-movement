@@ -204,7 +204,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 			if (!IsValidTile(u, u->goal, false, false, true))
 
 				// If the goal is not valid, find a new goal
-				u->goal = u->newGoal = FindNewValidGoal(u);
+				u->goal = u->newGoal = FindNewValidGoal(u, u->group->goal);
 
 			// In case of execution FindNewValidGoal: this method returns { -1,-1 } if it doesn't find a valid goal 
 			// The pathfinding module will detect it isn't a valid goal, so we don't need to check it again
@@ -265,22 +265,12 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 			if (u->waitUnit != nullptr) {
 
-				// DRAWING C: we do also need to check 'u->waitUnit->goal == u->waitUnit->newGoal', because when units are idle, its currTile matches its goal
-				// If a unit has this unit in front of it and is going towards its goal, it will change goals with this unit. But this unit's goal
-				// hasn't been updated yet (because of the order of the updates), and it has only changed its newGoal (which is changed automatically for
-				// all the units of the same group when clicking a certain tile)!
-
 				if (u->nextTile == u->waitUnit->goal && u->waitUnit->goal == u->waitUnit->newGoal
 					&& u->waitUnit->currTile == u->waitUnit->goal) {
 
-					// Unit politely asks the other unit to move
-					changedGoal = u->waitUnit->goal;
-
-					u->waitUnit->goal = u->waitUnit->newGoal = u->goal;
+					// Unit with the higher priority politely asks the other unit to move
+					u->waitUnit->newGoal = u->waitUnit->goal = FindNewValidGoal(nullptr, u->waitUnit->goal);
 					u->waitUnit->movementState = MovementState_WaitForPath;
-
-					u->goal = u->newGoal = changedGoal;
-					u->movementState = MovementState_WaitForPath;
 
 					if (!u->waitUnit->wakeUp)
 						u->waitUnit->wakeUp = true;
@@ -288,7 +278,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 					u->collision = CollisionType_NoCollision;
 					u->wait = false;
 
-					LOG("%s: CHANGED GOALS WITH %s", u->unit->GetColorName().data(), u->waitUnit->unit->GetColorName().data());
+					LOG("%s: MOVED AWAY %s", u->unit->GetColorName().data(), u->waitUnit->unit->GetColorName().data());
 					
 					break;
 				}
@@ -677,9 +667,6 @@ bool j1Movement::IsValidTile(SingleUnit* singleUnit, iPoint tile, bool currTile,
 
 iPoint j1Movement::FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront) const
 {
-	if (singleUnit == nullptr)
-		return { -1,-1 };
-
 	// 1. Units can only move in 8 directions from their current tile (the search only expands to 8 possible tiles)
 	iPoint neighbors[8] = { { -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 } };
 
@@ -811,19 +798,16 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront)
 	return { -1,-1 };
 }
 
-iPoint j1Movement::FindNewValidGoal(SingleUnit* singleUnit) const
+iPoint j1Movement::FindNewValidGoal(SingleUnit* singleUnit, iPoint goal)
 {
-	if (singleUnit == nullptr)
-		return { -1,-1 };
-
 	// 1. We use BFS to calculate a new goal for the unit (we want to expand the search to all the possible tiles)
 	// 2. PRIORITY: the neighbor closer to the group goal
 	priority_queue<iPointPriority, vector<iPointPriority>, Comparator> priorityQueue;
 	list<iPoint> visited;
 
 	iPointPriority curr;
-	curr.point = singleUnit->group->goal;
-	curr.priority = curr.point.DistanceManhattan(singleUnit->group->goal);
+	curr.point = goal;
+	curr.priority = curr.point.DistanceManhattan(goal);
 	priorityQueue.push(curr);
 
 	while (priorityQueue.size() > 0) {
@@ -850,7 +834,7 @@ iPoint j1Movement::FindNewValidGoal(SingleUnit* singleUnit) const
 
 				iPointPriority priorityNeighbors;
 				priorityNeighbors.point = neighbors[i];
-				priorityNeighbors.priority = neighbors[i].DistanceManhattan(singleUnit->group->goal);
+				priorityNeighbors.priority = neighbors[i].DistanceManhattan(goal);
 				priorityQueue.push(priorityNeighbors);
 
 				visited.push_back(neighbors[i]);

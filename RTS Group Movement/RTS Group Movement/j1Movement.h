@@ -81,7 +81,7 @@ public:
 	// Returns a valid tile for the unit (8 possibilities) or {-1,-1}
 	iPoint FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront = false) const;
 
-	iPoint FindNewValidGoal(SingleUnit* singleUnit) const;
+	iPoint FindNewValidGoal(SingleUnit* singleUnit, iPoint goal);
 
 	/// It is not a const method because it needs to keep track of the number of paths created in this update
 	bool ChangeNextTile(SingleUnit* singleUnit);
