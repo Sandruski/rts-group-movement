@@ -89,7 +89,8 @@ bool j1Scene::PreUpdate()
 
 	EntityInfo entityInfo;
 	entityInfo.pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
-	entityInfo.size = { 32,32 };
+	entityInfo.size = { App->map->data.tile_width,App->map->data.tile_height };
+	entityInfo.speed = 50.0f;
 
 	// 1: spawn a unit with priority 1
 	if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN && !App->entities->IsUnitOnTile(mouseTile) && App->pathfinding->IsWalkable(mouseTile))
@@ -107,15 +108,6 @@ bool j1Scene::Update(float dt)
 {
 	bool ret = true;
 
-	if (App->input->GetKey(SDL_SCANCODE_F1) == KEY_DOWN)
-		debugDrawMovement = !debugDrawMovement;
-
-	if (App->input->GetKey(SDL_SCANCODE_F2) == KEY_DOWN)
-		debugDrawPath = !debugDrawPath;
-
-	if (App->input->GetKey(SDL_SCANCODE_F3) == KEY_DOWN)
-		debugDrawMap = !debugDrawMap;
-
 	// Save mouse position (world and map coords)
 	int x, y;
 	App->input->GetMousePosition(x, y);
@@ -125,12 +117,21 @@ bool j1Scene::Update(float dt)
 
 	// ---------------------------------------------------------------------
 
+	if (App->input->GetKey(SDL_SCANCODE_F1) == KEY_DOWN)
+		debugDrawMovement = !debugDrawMovement;
+
+	if (App->input->GetKey(SDL_SCANCODE_F2) == KEY_DOWN)
+		debugDrawPath = !debugDrawPath;
+
+	if (App->input->GetKey(SDL_SCANCODE_F3) == KEY_DOWN)
+		debugDrawMap = !debugDrawMap;
+
 	// Draw
 	App->map->Draw(); // map
 	App->entities->Draw(); // entities
 	App->render->Blit(debugTex, mouseTilePos.x, mouseTilePos.y); // tile under the mouse pointer
 
-																 // Select units by mouse click
+	// Select units by mouse click
 	if (App->input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_DOWN) {
 		startRectangle = mousePos;
 
@@ -141,7 +142,7 @@ bool j1Scene::Update(float dt)
 	int height = mousePos.y - startRectangle.y;
 
 	// Select units by rectangle drawing
-	if (abs(width) >= 5 && abs(height) >= 5 && App->input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_REPEAT) {
+	if (abs(width) >= RECTANGLE_MIN_AREA && abs(height) >= RECTANGLE_MIN_AREA && App->input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_REPEAT) {
 
 		// Draw the rectangle
 		SDL_Rect mouseRect = { startRectangle.x, startRectangle.y, width, height };

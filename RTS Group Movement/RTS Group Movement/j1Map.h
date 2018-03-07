@@ -70,7 +70,6 @@ struct Properties
 	list<Property*>	properties;
 };
 
-// TODO 1: Create a struct for the map layer
 // ----------------------------------------------------
 
 struct MapLayer {
@@ -91,14 +90,14 @@ struct MapLayer {
 		RELEASE_ARRAY(data);
 	}
 
-	// TODO 6: Short function to get the value of x,y
+	// Short function to get the value of x,y
 	inline uint Get(int x, int y) const;
 };
 
 // ----------------------------------------------------
 struct TileSet
 {
-	// TODO 7: Create a method that receives a tile id and returns it's Rectfind the Rect associated with a specific tile id
+	// Method that receives a tile id and returns it's Rectfind the Rect associated with a specific tile id
 	SDL_Rect GetTileRect(int id) const;
 
 	string				name;
@@ -140,8 +139,6 @@ struct MapData
 	SDL_Color			background_color;
 	MapTypes			type = MAPTYPE_UNKNOWN;
 	list<TileSet*>		tilesets;
-
-	// TODO 2: Add a list/array of layers to the map!
 	list<MapLayer*>		layers;
 
 	list<ObjectGroup*> objectGroups;
@@ -178,7 +175,7 @@ public:
 	// Unload map
 	bool UnLoad();
 
-	// TODO 8: Create a method that translates x,y coordinates from map positions to world positions
+	// Method that translates x,y coordinates from map positions to world positions
 	iPoint MapToWorld(int x, int y) const;
 	iPoint WorldToMap(int x, int y) const;
 
@@ -190,7 +187,6 @@ private:
 	bool LoadTilesetDetails(pugi::xml_node& tileset_node, TileSet* set);
 	bool LoadTilesetImage(pugi::xml_node& tileset_node, TileSet* set);
 
-	// TODO 3: Create a method that loads a single layer
 	bool LoadLayer(pugi::xml_node& node, MapLayer* layer);
 	bool LoadProperties(pugi::xml_node& node, Properties& properties);
 

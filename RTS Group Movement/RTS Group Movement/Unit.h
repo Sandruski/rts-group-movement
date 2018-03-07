@@ -12,6 +12,8 @@ using namespace std;
 struct SDL_Color;
 struct SingleUnit;
 
+#define MAX_UNIT_PRIORITY 8
+
 struct UnitInfo {
 
 	UnitInfo();
@@ -48,10 +50,10 @@ class Unit : public Entity
 public:
 
 	Unit(EntityInfo entityInfo, uint priority);
-	void OnCollision(Collider* c1, Collider* c2);
 	void Move(float dt);
 	void Draw(SDL_Texture* sprites);
 	void DebugDrawSelected();
+	void OnCollision(Collider* c1, Collider* c2);
 
 	void UpdateAnimationsSpeed(float dt);
 	void ChangeAnimation();

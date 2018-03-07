@@ -141,11 +141,6 @@ bool j1EntityFactory::PreUpdate()
 	return ret;
 }
 
-UnitInfo& j1EntityFactory::GetUnitInfo()
-{
-	return unitInfo;
-}
-
 // Called before render is available
 bool j1EntityFactory::Update(float dt)
 {
@@ -159,181 +154,7 @@ bool j1EntityFactory::Update(float dt)
 		it++;
 	}
 
-	// TODO: redefine blit order
-
-	// Draw map
-	//App->map->Draw();
-
-	// Draw entities
-	/*
-	for (uint i = 0; i < MAX_ENTITIES; ++i)
-	if (entities[i] != nullptr) {
-
-	if (entities[i]->type == EntityType_Unit)
-	entities[i]->Draw(CatPeasantTex);
-
-	}
-	*/
-
-	// Draw above layer
-	//App->map->DrawAboveLayer();
-
 	return ret;
-}
-
-void j1EntityFactory::Draw()
-{
-	// Blit active entities
-	list<Entity*>::const_iterator it = activeEntities.begin();
-
-	while (it != activeEntities.end()) {
-
-		switch ((*it)->type) {
-
-		case EntityType_Unit:
-			(*it)->Draw(archerTex);
-			break;
-		}
-
-		it++;
-	}
-}
-
-Unit* j1EntityFactory::AddUnit(const EntityInfo& entityInfo, uint priority)
-{
-	Unit* unit = new Unit(entityInfo, priority);
-	toSpawnEntities.push_back(unit);
-
-	return unit;
-}
-
-Unit* j1EntityFactory::GetUnitByEntity(Entity* entity)
-{
-	Unit* u = (Unit*)(entity);
-
-	return u;
-}
-
-bool j1EntityFactory::IsUnitOnTile(iPoint tile) const
-{
-	list<Entity*>::const_iterator it = activeEntities.begin();
-
-	while (it != activeEntities.end()) {
-
-		// ONLY UNITS
-		if ((*it)->type == EntityType_Unit) {
-
-			iPoint entityTile = App->map->WorldToMap((*it)->entityInfo.pos.x, (*it)->entityInfo.pos.y);
-
-			if (tile.x == entityTile.x && tile.y == entityTile.y)
-				return true;
-		}
-
-		it++;
-	}
-
-	return false;
-}
-
-Unit* j1EntityFactory::SelectUnit(iPoint tile)
-{
-	if (!IsUnitOnTile(tile))
-		return nullptr;
-
-	list<Entity*>::const_iterator it = activeEntities.begin();
-
-	while (it != activeEntities.end()) {
-
-		// ONLY UNITS
-		if ((*it)->type == EntityType_Unit) {
-
-			iPoint entityTile = App->map->WorldToMap((*it)->entityInfo.pos.x, (*it)->entityInfo.pos.y);
-
-			if (tile.x == entityTile.x && tile.y == entityTile.y) {
-
-				// If the unit isn't in the unitsSelected list, add it
-				if (find(unitsSelected.begin(), unitsSelected.end(), *it) == unitsSelected.end()) {
-
-					Unit* u = GetUnitByEntity(*it);
-					unitsSelected.push_back(u);
-					(*it)->isSelected = true;
-
-					return u;
-				}
-			}
-			else {
-
-				// If the unit is in the unitsSelected list, remove it
-				if (find(unitsSelected.begin(), unitsSelected.end(), *it) != unitsSelected.end()) {
-					unitsSelected.remove(GetUnitByEntity(*it));
-					(*it)->isSelected = false;
-				}
-			}
-			it++;
-		}
-	}
-
-	SetUnitsSelectedColor();
-}
-
-void j1EntityFactory::SelectUnitsWithinRectangle(SDL_Rect rectangleRect)
-{
-	list<Entity*>::const_iterator it = activeEntities.begin();
-
-	while (it != activeEntities.end()) {
-
-		// ONLY UNITS
-		if ((*it)->type == EntityType_Unit) {
-
-			SDL_Rect entityRect = { (*it)->entityInfo.pos.x, (*it)->entityInfo.pos.y, (*it)->entityInfo.size.x, (*it)->entityInfo.size.y };
-
-			// If the unit is within the selection:
-			if (SDL_HasIntersection(&entityRect, &rectangleRect)) {
-
-				// It there are less units than MAX_UNITS_SELECTED selected:
-				if (unitsSelected.size() < MAX_UNITS_SELECTED) {
-
-					// If the unit isn't in the unitsSelected list, add it
-					if (find(unitsSelected.begin(), unitsSelected.end(), *it) == unitsSelected.end()) {
-						unitsSelected.push_back(GetUnitByEntity(*it));
-						(*it)->isSelected = true;
-					}
-				}
-			}
-			else {
-
-				// If the unit is in the unitsSelected list, remove it
-				if (find(unitsSelected.begin(), unitsSelected.end(), *it) != unitsSelected.end()) {
-					unitsSelected.remove(GetUnitByEntity(*it));
-					(*it)->isSelected = false;
-				}
-			}
-			it++;
-		}
-	}
-
-	SetUnitsSelectedColor();
-}
-
-void j1EntityFactory::SetUnitsSelectedColor()
-{
-	SDL_Color colors[8] = { ColorYellow, ColorDarkGreen, ColorBrightBlue, ColorOrange, ColorPink, ColorPurple, ColorGrey, ColorBlack };
-	string colorNames[8] = { "Yellow", "DarkGreen", "BrightBlue", "Orange", "Pink", "Purple", "Grey", "Black" };
-
-	list<Unit*>::const_iterator it = unitsSelected.begin();
-	uint i = 0;
-
-	while (it != unitsSelected.end())
-	{
-		(*it)->SetColor(colors[i], colorNames[i]);
-		it++;
-		i++;
-	}
-}
-
-list<Unit*> j1EntityFactory::GetLastUnitsSelected() const
-{
-	return unitsSelected;
 }
 
 bool j1EntityFactory::PostUpdate()
@@ -398,6 +219,174 @@ void j1EntityFactory::OnCollision(Collider* c1, Collider* c2)
 	}
 }
 
+void j1EntityFactory::Draw()
+{
+	// Blit active entities
+	list<Entity*>::const_iterator it = activeEntities.begin();
+
+	while (it != activeEntities.end()) {
+
+		switch ((*it)->type) {
+
+		case EntityType_Unit:
+			(*it)->Draw(archerTex);
+			break;
+		}
+
+		it++;
+	}
+}
+
+// Adds a unit to the toSpawnEntities list
+Unit* j1EntityFactory::AddUnit(const EntityInfo& entityInfo, uint priority)
+{
+	Unit* unit = new Unit(entityInfo, priority);
+	toSpawnEntities.push_back(unit);
+
+	return unit;
+}
+
+// Returns a pointer to the unit by its entity
+Unit* j1EntityFactory::GetUnitByEntity(Entity* entity)
+{
+	Unit* u = (Unit*)(entity);
+
+	return u;
+}
+
+// Returns true if there is a unit on the tile
+bool j1EntityFactory::IsUnitOnTile(iPoint tile) const
+{
+	list<Entity*>::const_iterator it = activeEntities.begin();
+
+	while (it != activeEntities.end()) {
+
+		// ONLY UNITS
+		if ((*it)->type == EntityType_Unit) {
+
+			iPoint entityTile = App->map->WorldToMap((*it)->entityInfo.pos.x, (*it)->entityInfo.pos.y);
+
+			if (tile.x == entityTile.x && tile.y == entityTile.y)
+				return true;
+		}
+
+		it++;
+	}
+
+	return false;
+}
+
+// Selects the unit within the tile
+Unit* j1EntityFactory::SelectUnit(iPoint tile)
+{
+	if (!IsUnitOnTile(tile))
+		return nullptr;
+
+	list<Entity*>::const_iterator it = activeEntities.begin();
+
+	while (it != activeEntities.end()) {
+
+		// ONLY UNITS
+		if ((*it)->type == EntityType_Unit) {
+
+			iPoint entityTile = App->map->WorldToMap((*it)->entityInfo.pos.x, (*it)->entityInfo.pos.y);
+
+			if (tile.x == entityTile.x && tile.y == entityTile.y) {
+
+				// If the unit isn't in the unitsSelected list, add it
+				if (find(unitsSelected.begin(), unitsSelected.end(), *it) == unitsSelected.end()) {
+
+					Unit* u = GetUnitByEntity(*it);
+					unitsSelected.push_back(u);
+					(*it)->isSelected = true;
+
+					return u;
+				}
+			}
+			else {
+
+				// If the unit is in the unitsSelected list, remove it
+				if (find(unitsSelected.begin(), unitsSelected.end(), *it) != unitsSelected.end()) {
+					unitsSelected.remove(GetUnitByEntity(*it));
+					(*it)->isSelected = false;
+				}
+			}
+			it++;
+		}
+	}
+
+	SetUnitsSelectedColor();
+}
+
+// Selects the units within the rectangle
+void j1EntityFactory::SelectUnitsWithinRectangle(SDL_Rect rectangleRect)
+{
+	list<Entity*>::const_iterator it = activeEntities.begin();
+
+	while (it != activeEntities.end()) {
+
+		// ONLY UNITS
+		if ((*it)->type == EntityType_Unit) {
+
+			SDL_Rect entityRect = { (*it)->entityInfo.pos.x, (*it)->entityInfo.pos.y, (*it)->entityInfo.size.x, (*it)->entityInfo.size.y };
+
+			// If the unit is within the selection:
+			if (SDL_HasIntersection(&entityRect, &rectangleRect)) {
+
+				// It there are less units than MAX_UNITS_SELECTED selected:
+				if (unitsSelected.size() < MAX_UNITS_SELECTED) {
+
+					// If the unit isn't in the unitsSelected list, add it
+					if (find(unitsSelected.begin(), unitsSelected.end(), *it) == unitsSelected.end()) {
+						unitsSelected.push_back(GetUnitByEntity(*it));
+						(*it)->isSelected = true;
+					}
+				}
+			}
+			else {
+
+				// If the unit is in the unitsSelected list, remove it
+				if (find(unitsSelected.begin(), unitsSelected.end(), *it) != unitsSelected.end()) {
+					unitsSelected.remove(GetUnitByEntity(*it));
+					(*it)->isSelected = false;
+				}
+			}
+			it++;
+		}
+	}
+
+	SetUnitsSelectedColor();
+}
+
+// Returns a list with the last units selected
+list<Unit*> j1EntityFactory::GetLastUnitsSelected() const
+{
+	return unitsSelected;
+}
+
+// Changes the debug color of the units selected
+void j1EntityFactory::SetUnitsSelectedColor()
+{
+	SDL_Color colors[8] = { ColorYellow, ColorDarkGreen, ColorBrightBlue, ColorOrange, ColorPink, ColorPurple, ColorGrey, ColorBlack };
+	string colorNames[8] = { "Yellow", "DarkGreen", "BrightBlue", "Orange", "Pink", "Purple", "Grey", "Black" };
+
+	list<Unit*>::const_iterator it = unitsSelected.begin();
+	uint i = 0;
+
+	while (it != unitsSelected.end())
+	{
+		(*it)->SetColor(colors[i], colorNames[i]);
+		it++;
+		i++;
+	}
+}
+
+// Returns the unitInfo (normally read from the config file)
+UnitInfo& j1EntityFactory::GetUnitInfo()
+{
+	return unitInfo;
+}
+
 // -------------------------------------------------------------
 // -------------------------------------------------------------
 
@@ -410,7 +399,7 @@ bool j1EntityFactory::Load(pugi::xml_node& save)
 	list<Entity*>::const_iterator it = activeEntities.begin();
 
 	while (it != activeEntities.end()) {
-		// MYTODO: Add some code here
+		// Load the entities
 		it++;
 	}
 
@@ -426,7 +415,7 @@ bool j1EntityFactory::Save(pugi::xml_node& save) const
 	list<Entity*>::const_iterator it = activeEntities.begin();
 
 	while (it != activeEntities.end()) {
-		// MYTODO: Add some code here
+		// Save the entities
 		it++;
 	}
 

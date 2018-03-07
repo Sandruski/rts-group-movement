@@ -35,10 +35,13 @@ public:
 	void OnCollision(Collider* c1, Collider* c2);
 	void Draw();
 
+	// Adds a unit to the toSpawnEntities list
 	Unit* AddUnit(const EntityInfo& entityInfo, uint priority);
 
+	// Returns a pointer to the unit by its entity
 	Unit* GetUnitByEntity(Entity* entity);
 
+	// Returns true if there is a unit on the tile
 	bool IsUnitOnTile(iPoint tile) const;
 
 	// Selects the unit within the tile
@@ -47,12 +50,13 @@ public:
 	// Selects the units within the rectangle
 	void SelectUnitsWithinRectangle(SDL_Rect rectangleRect);
 
-	void SetUnitsSelectedColor();
-
 	// Returns a list with the last units selected
 	list<Unit*> GetLastUnitsSelected() const;
 
-	// Get entities info
+	// Changes the debug color of the units selected
+	void SetUnitsSelectedColor();
+
+	// Returns the unitInfo (normally read from the config file)
 	UnitInfo& GetUnitInfo();
 
 	bool Save(pugi::xml_node& save) const;

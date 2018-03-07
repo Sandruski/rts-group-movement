@@ -35,7 +35,6 @@ protected:
 
 	Collider* collider = nullptr;
 	Animation* animation = nullptr;
-	bool up = false, down = false, left = false, right = false;
 
 public:
 

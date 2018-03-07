@@ -200,12 +200,12 @@ int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, D
 	last_path.clear();
 	int ret = 0;
 
-	// TODO 1: if origin or destination are not walkable, return -1
+	// If origin or destination are not walkable, return -1
 	if (!IsWalkable(origin) || !IsWalkable(destination))
 		ret = -1;
 	else {
 
-		// TODO 2: Create two lists: open, close
+		// Create two lists: open, close
 		PathList open;
 		PathList close;
 
@@ -216,7 +216,7 @@ int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, D
 		// Iterate while we have tile in the open list
 		while (open.pathNodeList.size() > 0) {
 
-			// TODO 3: Move the lowest score cell from open list to the closed list
+			// Move the lowest score cell from open list to the closed list
 			PathNode* curr = (PathNode*)open.GetNodeLowestScore();
 
 			close.pathNodeList.push_back(*curr);
@@ -232,7 +232,7 @@ int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, D
 			open.pathNodeList.erase(it);
 			// Erase element from list -----
 
-			// TODO 4: If we just added the destination, we are done!
+			// If we just added the destination, we are done!
 			// Backtrack to create the final path
 			if (close.pathNodeList.back().pos == destination) {
 				
@@ -253,11 +253,11 @@ int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, D
 				
 			}
 			else {
-				// TODO 5: Fill a list of all adjancent nodes
+				// Fill a list of all adjancent nodes
 				PathList neighbors;
 				close.pathNodeList.back().FindWalkableAdjacents(neighbors);
 
-				// TODO 6: Iterate adjancent nodes:
+				// Iterate adjancent nodes:
 				list<PathNode>::iterator iterator = neighbors.pathNodeList.begin();
 
 				while (iterator != neighbors.pathNodeList.end()) {

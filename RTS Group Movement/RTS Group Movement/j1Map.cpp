@@ -44,7 +44,6 @@ void j1Map::Draw()
 	if (map_loaded == false)
 		return;
 
-	// TODO 5: Prepare the loop to draw all tilesets + Blit
 	for (list<MapLayer*>::const_iterator layer = data.layers.begin(); layer != data.layers.end(); ++layer) {
 
 		if ((*layer)->properties.GetProperty("Draw", false) == false && !App->scene->debugDrawMap)
@@ -406,7 +405,6 @@ bool j1Map::Load(const char* file_name)
 		data.tilesets.push_back(set);
 	}
 
-	// TODO 4: Iterate all layers and load each of them
 	// Load layer info ----------------------------------------------
 	pugi::xml_node layer;
 	for (layer = map_file.child("map").child("layer"); layer && ret; layer = layer.next_sibling("layer"))
@@ -467,8 +465,6 @@ bool j1Map::Load(const char* file_name)
 			item++;
 		}
 
-		// TODO 4: Add info here about your loaded layers
-		// Adapt this vcode with your own variables
 		list<MapLayer*>::const_iterator item_layer = data.layers.begin();
 		while (item_layer != data.layers.end())
 		{
@@ -544,7 +540,6 @@ bool j1Map::LoadTilesetImage(pugi::xml_node& tileset_node, TileSet* set)
 	return ret;
 }
 
-// TODO 3: Create the definition for a function that loads a single layer
 bool j1Map::LoadLayer(pugi::xml_node& node, MapLayer* layer)
 {
 	bool ret = true;

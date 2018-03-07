@@ -16,7 +16,9 @@
 Unit::Unit(EntityInfo entityInfo, uint priority) : Entity(entityInfo)
 {
 	type = EntityType_Unit;
-	unitInfo.priority = priority;
+
+	if (priority <= MAX_UNIT_PRIORITY)
+		unitInfo.priority = priority;
 
 	UnitInfo u;
 	u = App->entities->GetUnitInfo();
@@ -68,6 +70,32 @@ void Unit::Move(float dt)
 	// Update animations
 	UpdateAnimationsSpeed(dt);
 	ChangeAnimation();
+}
+
+void Unit::Draw(SDL_Texture* sprites)
+{
+	fPoint offset = { animation->GetCurrentFrame().w / 4.0f, animation->GetCurrentFrame().h / 2.0f };
+
+	if (animation != nullptr)
+		App->render->Blit(sprites, entityInfo.pos.x - offset.x, entityInfo.pos.y - offset.y, &(animation->GetCurrentFrame()));
+
+	if (isSelected)
+		DebugDrawSelected();
+}
+
+void Unit::DebugDrawSelected()
+{
+	const SDL_Rect entitySize = { entityInfo.pos.x, entityInfo.pos.y, entityInfo.size.x, entityInfo.size.y };
+	App->render->DrawQuad(entitySize, color.r, color.g, color.b, 255, false);
+
+	for (uint i = 0; i < unitInfo.priority; ++i) {
+		const SDL_Rect entitySize = { entityInfo.pos.x + 2 * i, entityInfo.pos.y + 2 * i, entityInfo.size.x - 4 * i, entityInfo.size.y - 4 * i };
+		App->render->DrawQuad(entitySize, color.r, color.g, color.b, 255, false);
+	}
+}
+
+void Unit::OnCollision(Collider* c1, Collider* c2)
+{
 }
 
 void Unit::UpdateAnimationsSpeed(float dt)
@@ -134,29 +162,8 @@ void Unit::ChangeAnimation()
 	}
 }
 
-void Unit::Draw(SDL_Texture* sprites)
+void Unit::UnitStateMachine(float dt) 
 {
-	fPoint offset = { 60.0f / 4.0f, 75.0f / 2.0f };
-
-	if (animation != nullptr)
-		App->render->Blit(sprites, entityInfo.pos.x - offset.x, entityInfo.pos.y - offset.y, &(animation->GetCurrentFrame()));
-
-	if (isSelected)
-		DebugDrawSelected();
-}
-
-void Unit::DebugDrawSelected()
-{
-	const SDL_Rect entitySize = { entityInfo.pos.x, entityInfo.pos.y, entityInfo.size.x, entityInfo.size.y };
-	App->render->DrawQuad(entitySize, color.r, color.g, color.b, 255, false);
-}
-
-void Unit::OnCollision(Collider* c1, Collider* c2)
-{
-}
-
-void Unit::UnitStateMachine(float dt) {
-
 	BROFILER_CATEGORY("UnitStateMachine", Profiler::Color::Orchid);
 
 	switch (unitState) {

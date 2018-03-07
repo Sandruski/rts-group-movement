@@ -7,6 +7,8 @@
 #include <string>
 using namespace std;
 
+#define RECTANGLE_MIN_AREA 5
+
 struct SDL_Texture;
 
 class j1Scene : public j1Module
@@ -45,7 +47,6 @@ public:
 public:
 
 	// Camera
-	float up = false, down = false, left = false, right = false;
 	uint width = 0;
 	uint height = 0;
 	uint scale = 0;
@@ -54,7 +55,7 @@ private:
 
 	// Map
 	string warcraftMap, warcraftTexName;
-	bool warcraftActive;
+	bool warcraftActive = true;
 	SDL_Texture* debugTex = nullptr;
 
 	// Draw rectangle
