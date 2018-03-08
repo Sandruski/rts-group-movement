@@ -206,6 +206,8 @@ The behavior in the next frame of each unit depends on the type of collision pre
 
 5. The unit keeps moving until it reaches its goal.
 
+## Performance of the implemented system
+
 ## Links to more documentation
 
 ## TODOs
