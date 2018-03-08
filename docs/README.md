@@ -45,7 +45,7 @@ However, some tiles seem passable but actually are not. For example, the barrack
 - Units do not walk on top of each other, even if this means taking longer to get from point A to point B. Consequently, units remain visually separated.
 - Harvesting units (Terran SVC, Zerg drone, Protoss probe) would get jammed up trying to harvest crystals or vespene gas (hereafter "minerals") and they would grind to a halt, because they are constantly running headlong into other harvesters traveling in the opposite direction. To avoid this situation, they ignore collisions with other units, so they can operate efficiently.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/AGtd0KkOvG4?start=400" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/0oJPPCaQeD4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
   
 <I>StarCraft</I> was built on the <I>Warcraft</I> engine (orthogonal perspective), but along the way the development team switched to isometric artwork to make the game more visually attractive. However, the terrain engine was not re-engineered to use isometric tiles. In order for pathfinding to work properly it was necessary to increase the resolution of the pathfinding map. Now, each 8x8 tile was either passable or unpassable. The increase in the size of the pathfinding map by a factor of 16 involved more computational effort when searching for a path. In addition, diagonal edges drawn in the artwork split many of the square tiles unevenly, making it hard to determine whether a tile should be passable or not.
 
@@ -59,13 +59,13 @@ Because the project was always two months from launch, there was no time to re-e
 - Units of all sizes find their way to destinations, without overlapping each other and without stopping.
 - Smooth flow of the units.
 
-<iframe width="740" height="590" src="https://www.youtube.com/watch?v=LztRm_bXGcc" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/LztRm_bXGcc" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 ### Supreme Commander 2 (2010)
 
 The same annotations than in <I>StarCraft II: Wings of Liberty</I>.
 
-<iframe width="740" height="590" src="https://www.youtube.com/watch?v=bovlsENv1g4" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/bovlsENv1g4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 ## Methods to approach it (used by the previous games)
 
