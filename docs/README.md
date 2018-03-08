@@ -72,21 +72,25 @@ The same annotations than in <I>StarCraft II: Wings of Liberty</I>.
 ### Tile-based algorithm A* (A-Star)
 
 ###### Pathfinding technique: A*
+
 The games <I>Command & Conquer: Tiberian Dawn</I>, <I>Warcraft I: Orcs & Humans</I>, <I>Warcraft II: Tides of Darkness</I>, and <I>StarCraft</I> base their group movement on the tile-based algorithm A* (A-Star). The primitive A* is the most common pathfinding algorithm used by the first RTS games such as the named, which had to deal with much lower processing power. 
 
 ###### Movement behavior: set of rules
+
 Since the pathfinding algorithm A* only takes into account the terrain (and, if modified, the objects of the map), it has to be complemented by a set of rules, which vary depending on the game and its needs. For example, in <I>Warcraft II</I>, a rule says that if a unit runs into other units and cannot slide past them, it will repath an alternate route. This works fine for a samll number of units, but when trying to navigate a large number of units through a narrow passage, a few will inevitably run into the units ahead of them and find another path.
   
-As seen, those rules are very limited. In some situations, they force the games to sacrify more natural behaviors to make the whole system work. From the limitations behind the tile-based algorithm A* when dealing with group movement, it came out the Flocking System with Flow Fields.
+As seen, those rules are very limited. In some situations, they force games to sacrify more natural behaviors to make the whole system work. A true shortest path algorithm can be immensely annoying to gameplay, due to human perception. That is a pitfall the game designer must take into consideration when picking an algorithm. From the limitations behind the tile-based algorithm A* when dealing with group movement, it came out the Flocking System with Flow Fields.
 
 ### Flow Fields + Flocking (or Swarm) Behavior
 
 The games <I>StarCraft II: Wings of Liberty</I> and <I>Supreme Commander 2</I>, and the great majority of modern RTS games use a Flocking System with Flow Fields to maintain fluid control of large groups of units. A local dynamic Flow Field is generated around each unit. The Flow Fields of the units are combined together before adjusting the units' movements.
 
 ###### Pathfinding technique: Flow Fields
+
 Flow Fields are an alternate way of doing pathfinding which works better for larger groups of units. A Flow Field is a grid where each grid square has a directional vector. This vector should be pointed in the direction of the most efficient way to get to the destination, while avoiding static obstacles.
 
 ###### Movement behavior: Flocking (or Swarm)
+
 The flocking model was defined by Craig Reynolds, an artificial life and computer graphics expert. Flocks, by definition, are a group of birds traveling together. Reynolds called the generic simulated flocking entities "boids", creating the Boids artificial life simulation (1986). The basic flocking model consists of three simple steering behaviors (separation, alignment and cohesion) which describe how an individual boid moves based on the positions and velocities of its nearby flockmates. As a result, entities in a flock (or boids) travel at roughly the same speed and form a cohesive group without strict arrangement.
 
 The algorithm finds the fewest amount of waypoints and allows autonomous steering behaviour for units to smoothly hug their way around obstacles and its immediate neighbors. Logically, every unit has sensors which, when colliding with another unit, notify the first unit to turn in an appropriate direction to avoid the other unit.
@@ -102,20 +106,60 @@ Since the first one, the Pathfinding module, will be already implemented, we wil
 
 ### Simple Movement Algorithm
 
-Units can avoid colliding by using steering behavior to hug their way around the small radius of another unit, while in StarCraft units are constrained by the fact that they are competing for waypoints. This is the main reason why you get much better surround in Starcraft 2 than in Starcraft, but also the reason why units have to spread out so much to move around.
+<I>StarCraft</I> relies almost solely on the pathfinding algorithm A* to move units from one point to another, mapping every single node that the unit needs to traverse over. In <I>StarCraft II</I>, a lot of the pathfinding is lef up to the unit, and waypoints are kept to minimum.
 
-The difference is that Starcraft relies almost solely on A* to get units to move from one point to another, mapping every single node the unit needs to traverse over. In S2, a lot of the pathfinding is lef up to the unit individual, and waypoints are kept to minimum.
+###### Implementation
 
-### Collision Determination System
+1. When a unit is issued a command, the parameters of that command (the current location and the destination in the grid) are run through the pathfinding algorithm, which spits out an array of path coordinates (waypoints). The unit stores the path found, which is free of static obstacles (known as unwalkable tiles).
 
-Collision avoidance is also much more primitive in S1 as well. Units avoid collision by stopping to give-way while another unit moves around it or calculates a new path, this is probably one of the first things you learn about dealing with collision avoidance between units.
+**PROBLEM 1. Shared destination.** If the unit is in a bigger group, only the first unit of the group calculates the path to the goal set by the user. The rest of the units' destinations are offset from that point and calculated after, one at a frame. This prevents the units to finish the path all to the same spot. Besides that, if every unit has its own path to its own unique destination, the whole movement of the group looks more natural, because paths tend to have less waypoints in common. This minimizes the chance of collision between the units along the path.
 
-In Starcraft 2, units will avoid obstacles and other units (but also flock together) using steering behaviour.
-This allows units to weave in and out without calculating a whole new path or losing momentum, in a worst case scenario the units can ignore the collision radius, allowing for more fluid movement and higher movement efficiency overall.
+2. The unit moves along the path, but it only goes 1 square at a time, due to the need of local collision determination. Before making the move, the unit just asks the path which direction it's supposed to go next. After that, it tries to move there.
+
+**When is the path recalculated?**
+- When a new move command is issued while the unit is en route. This behaviour has given rise to SPAM-CLICKING. The path is literally re-calculated each time you click, so technically a unit is finding the most efficient path at the point of time closest to the click.
+- When the next node of the path is occupied by another unit and the treatment of the collision found requires to (the unit is stuck).
+
+**Why do not automatically recalculate the path?**
+If the path is the most accurate when it is newly created, why do not automatically recalculate it instead of only doing it on click or when a certain type of collision is found? Because the pathfinding algorithm calculations are expensive, even by modern computing standards. Depending on the size of the grid, calculating hundreds of paths for hundreds of units adds up.
+
+Movement is strictly limited to cardinal direction (N, S, E, W, NE, NW, SE, and SW), and units cannot move forward 1 degrees, back 2 degrees, left 3 degrees, etc. This is why the <I>StarCraft</I> movement feels so blocky sometimes. If units moved outside the grid, like in <I>StarCraft II</I>, they would not be able to ask the question “is the node I am walking to occupied?”, which is the core of the local avoidance algorithm that we are going to implement next.
+
+### Collision System
+
+The A* algorithm takes into account only static obstacles. This means that dynamic obstacles like units are ignored when calculating the path. It is in the units' hands to avoid the dynamic obstacles, then. This is achieved with the Collision System, which is made of two smaller systems, the Collision Prediction System (which is run first) and the Collision Avoidance Sytem (which is run only if the Collision Prediction System determines a collision).
+
+In <I>StarCraft</I>, units are constrained by the fact that they are competing for waypoints. They are constantly stopping and moving because each time they travel to a new node they ask "is the next node that I want to walk to occupied?" to the Collision Prediction System. If the answer is "no", they keep moving along the path. If the answer is "yes", the Collision Avoidance System processes the collision and gives orders to the unit to execute specified commands. Those commands may involve the creation of a new path.
+
+In <I>Starcraft II</I>, units avoid obstacles and other units (but also flock together) using steering behaviour. This allows units to weave in and out without calculating a whole new path or losing momentum. In a worst case scenario, the units can even ignore the collision radius, allowing for more fluid movement and higher movement efficiency overall.
+
+**PROBLEM 2. Dealing with dynamic obstacles (moving and still units)**
+
+3. Before getting to the next position, units must process the collision prediction to avoid collision with the other units in the environment.
+
+###### Collision Prediction System
+In each frame of the simulation, each unit needs to check for future collisions with all other units in the scene. This is done by processing the next tile the unit wants to go to through the collision prediction system. The possible situations of collision are:
+
+1. Two agents reach the same cell (_SameCell_).
+2. Two agents reach the cell of each other (_TowardsCell_): occurs if the agents are walking towards each other (in opposite directions).
+3. An agent reaches the cell of another agent (_ItsCell_).
+4. Two agents cross diagonally, reaching the cell in front of each other (_DiagonalCrossing_).
+
+###### Collision Avoidance System
+If a collision is predicted, one of the two units involved must act consequently, so it avoids the collision before it happens. The responses to the different situations of collision are:
+
+1. _SameCell_:
+2. _TowardsCell_:
+3. _ItsCell_:
+4. _DiagonalCrossing_:
+
+The behavior in the next frame of each unit depends on the type of collision prediction and the type of collision avoidance.
+
+
+
 
 
 How do we avoid them lining up?
-How do they finish the path? (avoid all to the same spot)
 
 ## Links to more documentation
 
@@ -126,7 +170,7 @@ How do they finish the path? (avoid all to the same spot)
 If this research caught your eye and you want to keep practising, I suggest you to try to add one or all of the following improvements to the group movement system.
 
 1.
-2. Formations.
+2. Formations. Generate formations around the clicked location.
 Check out how <I>Rise of Nations</I> (2003) does formations! When you click on your destination, if you hold the mouse button down and drag, small circles are drawn on the tiles, showing the formation that the selected units would made.
 PLUS: it also has smart systems where the melee is in front, the ranged behind, with artillery behind them.
 
