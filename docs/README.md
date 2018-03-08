@@ -36,7 +36,7 @@ The shortest distance is determined with algebra, not calculus. Consequently, th
 
 However, some tiles seem passable but actually are not. For example, the barracks building artwork does not fill completely the 96x96 area it sits on, and it leaves two tiles that seem passable but actually are not.
 
-<img src="Images/Warcraft2.jpg" width="400"><br><br>
+<img src="Images/Warcraft2.jpg" width="400"><br>
 _Warcraft II map with 32x32 tiles. The two tiles that seem passable but actually are not are drawn in red_
 
 ### StarCraft (1998)
@@ -51,7 +51,7 @@ _Warcraft II map with 32x32 tiles. The two tiles that seem passable but actually
 
 Because the project was always two months from launch, there was no time to re-engine the terrain engine, so the pathfinding code had to be made to work. The pathfinding code, then, turned into a gigantic state-machine which handled all the tricky edge-cases.
 
-<img src="Images/StarCraft.jpg" width="400"><br><br>
+<img src="Images/StarCraft.jpg" width="400"><br>
 _StarCraft map with 8x8 cells. The red line cuts each 8x8 cell into an irregular shape_
 
 ### StarCraft II: Wings of Liberty (2010)
@@ -106,17 +106,17 @@ Since the first one, the Pathfinding module, will be already implemented, we wil
 
 ### Groups and Units
 
-<img src="Images/unitGroup.PNG" width="400"><br><br>
+<img src="Images/unitGroup.PNG" width="400"><br>
 _Struct for a group of units_
 
-<img src="Images/singleUnit.PNG" width="400"><br><br>
+<img src="Images/singleUnit.PNG" width="400"><br>
 _Struct for a single unit_
 
 ### Simple Movement Algorithm
 
 <I>StarCraft</I> relies almost solely on the pathfinding algorithm A* to move units from one point to another, mapping every single node that the unit needs to traverse over. In <I>StarCraft II</I>, a lot of the pathfinding is lef up to the unit, and waypoints are kept to minimum.
 
-<img src="Images/movementState.PNG" width="400"><br><br>
+<img src="Images/movementState.PNG" width="400"><br>
 _Enum with all of the possible states of a unit's movement_
 
 ###### Implementation
@@ -157,12 +157,12 @@ In <I>Starcraft II</I>, units avoid obstacles and other units (but also flock to
 
 In each frame of the simulation, each unit needs to check for future collisions with all other units in the scene. This is done by processing the next tile the unit wants to go to through the collision prediction system. The possible situations of collision are:
 
-**1. Two agents reach the same cell (_SameCell_).**
-**2. Two agents reach the cell of each other (_TowardsCell_):** occurs if the agents are walking towards each other (in opposite directions).
-**3. An agent reaches the cell of another agent (_ItsCell_).**
+**1. Two agents reach the same cell (_SameCell_).**<br>
+**2. Two agents reach the cell of each other (_TowardsCell_):** occurs if the agents are walking towards each other (in opposite directions).<br>
+**3. An agent reaches the cell of another agent (_ItsCell_).**<br>
 **4. Two agents cross diagonally, reaching the cell in front of each other (_DiagonalCrossing_).**
 
-<img src="Images/collisionType.PNG" width="400"><br><br>
+<img src="Images/collisionType.PNG" width="400"><br>
 _Enum with all of the possible types of collision_
 
 ###### Collision Avoidance System
@@ -171,11 +171,11 @@ Collision avoidance between units can involve some problems that only appear whe
 
 If a collision is predicted, one of the two units involved must act consequently, so it avoids the collision before it happens. Each unit has a priority and several ones could have the same priority, so the unit with the lower priority will always have to let the unit with the higher priority pass. The responses to the different situations of collision are:
 
-**1. _SameCell_ (conflict cell: the tile both units want to go to):** the unit waits until the other unit has reached the conflict cell and has updated its next position with the next waypoint of its path.
-**2. _TowardsCell_ (conflict cell: any of the two tiles):** since units get stuck, the unit has to find a new next tile to go to and then recalculate its path.
-**3. _ItsCell_ (conflict cell: the tile of the other unit):** the unit waits until the other unit is no longer on the conflict cell.
-**4. _DiagonalCrossing_ (conflict cell: the tile where the other unit wants to move to):** the unit waits until the other unit has reached the conflict cell.
-**5. One of the units is still (conflict cell: the tile of the unit that is still, which is the next tile of the other unit):** if the unit with the higher priority is the unit that is still, it has to find a new goal and start walking towards it. If the unit with the higher priority is the other unit, the one that is walking, it has to find a new next tile to go to and then recalculate its path.
+**1. _SameCell_ (conflict cell: the tile both units want to go to):** the unit waits until the other unit has reached the conflict cell and has updated its next position with the next waypoint of its path.<br>
+**2. _TowardsCell_ (conflict cell: any of the two tiles):** since units get stuck, the unit has to find a new next tile to go to and then recalculate its path.<br>
+**3. _ItsCell_ (conflict cell: the tile of the other unit):** the unit waits until the other unit is no longer on the conflict cell.<br>
+**4. _DiagonalCrossing_ (conflict cell: the tile where the other unit wants to move to):** the unit waits until the other unit has reached the conflict cell.<br>
+**5. One of the units is still (conflict cell: the tile of the unit that is still, which is the next tile of the other unit):** if the unit with the higher priority is the unit that is still, it has to find a new goal and start walking towards it. If the unit with the higher priority is the other unit, the one that is walking, it has to find a new next tile to go to and then recalculate its path.<br>
 
 The behavior in the next frame of each unit depends on the type of collision prediction and the type of collision avoidance.
 
