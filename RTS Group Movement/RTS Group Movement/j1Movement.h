@@ -173,7 +173,7 @@ struct SingleUnit
 
 	float speed = 1.0f; // movement speed
 	uint priority = 0; // priority of the unit in relation to the rest of the units of the group
-	bool reversePriority = false; // if true, the priority of the unit is not taken in account
+	bool reversePriority = false; // if true, the priority of the unit is not taken into account
 
 	// Collision avoidance
 	bool wait = false;
