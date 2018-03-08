@@ -202,7 +202,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 	ret = u->movementState;
 
-	iPoint nextPos = App->map->MapToWorld(u->nextTile.x, u->nextTile.y); // unit nextPos in map coords
+	iPoint nextPos = App->map->MapToWorld(u->nextTile.x, u->nextTile.y);
 	fPoint movePos, endPos;
 	float m;
 	iPoint newGoal;
@@ -268,8 +268,6 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 			u->StopUnit();
 
 			// If the waitTile is the waitUnit's goal, the tile will never be available (unless the waitUnit changes its goal)
-			// In this case, find a new, valid nextTile
-
 			if (u->waitUnit != nullptr) {
 
 				if (u->nextTile == u->waitUnit->goal && u->waitUnit->goal == u->waitUnit->newGoal
