@@ -215,7 +215,32 @@ E.g.: when a unit needs to find a new, valid tile to move to, the possible, vali
 
 ###### Movement module performance
 
-## Links to more documentation
+After a session of profiling, these are the results of the implemented Movement module:
+
+- For 8 units, the Movement module consumes from 0.6 ms to 4 ms (when a unit creates a path).
+- For 16 units, the Movement module can have peaks of 20 ms (when a unit creates a path), though it is not noticed at plain sight.
+- For 24 units, the Movement module may have peaks of 200 ms (when a unit creates a path), which is completely unacceptable.
+
+To sum up, the Movement module should be used for 8 to 16 units. While it is ideal for 8 units, for 16 units can sometimes consume too much, but still works fine. The main problem that needs to be solved is the pathfinding, because the Movement module collapses only when a unit creates a new path. A solution to this could be to optimize the Pathfinding module, since it is the one causing trouble.
+
+## References
+
+### Websites
+<a href="https://www.gamasutra.com/view/feature/131720/coordinated_unit_movement.php">Gamasutra - Coordinated Unit Movement</a><br>
+<a href="https://www.gamasutra.com/view/feature/131721/implementing_coordinated_movement.php">Gamasutra - Implementing Coordinated Movement</a><br>
+<a href="https://pdfs.semanticscholar.org/3cb8/5d6c5db83af451637607c01b4c9190decf61.pdf">Pathfinding and Collision Avoidance in Crowd Simulation</a><br>
+<a href="http://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter20_Hierarchical_Architecture_for_Group_Navigation_Behaviors.pdf">Game AI Pro 2 - Hierarchical Architecture for Group Navigation Behaviors</a><br>
+<a href="https://www.red3d.com/cwr/boids/">Boids</a><br>
+<a href="https://gamedevelopment.tutsplus.com/tutorials/3-simple-rules-of-flocking-behaviors-alignment-cohesion-and-separation--gamedev-3444">3 Simple Rules of Flocking Behaviors</a><br>
+<a href="http://www.teamliquid.net/forum/starcraft-2/132171-the-mechanics-of-sc2-part-1">Team Liquid - The Mechanics of Starcraft 2</a><br>
+<a href="https://striketactics.net/devblog/starcraft-1-pathfinding-technical-analysis">Strike Tactics - Starcraft 1 Pathfinding: A Technical Analysis</a><br>
+<a href="https://www.codeofhonor.com/blog/tough-times-on-the-road-to-starcraft#path-finding">Code of Honor - Tough Times on the Road to StarCraft</a><br>
+<a href="https://www.codeofhonor.com/blog/the-starcraft-path-finding-hack">Code of Honor - The StarCraft pathfinding hack</a>
+  
+### Forums
+<a href="https://www.gamedev.net/forums/topic/563819-whats-starcraft2s-pathfinding-tech/">GameDev - StarCraft 2 Pathfinding</a><br>
+<a href="https://www.gamedev.net/forums/topic/672751-formations-in-rts-a-pathfinding/">GameDev - Formations in RTS</a><br>
+<a href="https://answers.unity.com/questions/790857/unit-local-avoidance-in-rts-type-games.html">Unity - Unit Local Avoidance in RTS</a>
 
 ## TODOs
 
