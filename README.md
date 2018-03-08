@@ -1,5 +1,16 @@
 # RTS Group Movement
 
+
+I am Sandra Alvarez, student of the Bachelor’s Degree in Video Games by UPC at CITM. 
+This content is generated for the second year’s subject Project 2, under supervision of lecturer Ricard Pillosu.
+
+•	My GitHub account: [Sandruski](https://github.com/Sandruski)
+
+## About the Research
+
+•	Website: [RTS Group Movement Website](https://sandruski.github.io/RTS-Group-Movement/)
+•	GitHub repository: [RTS Group Movement Repository](https://github.com/Sandruski/RTS-Group-Movement)
+
 ## Inputs
 
 ### Keyboard
@@ -17,4 +28,27 @@ ESC: close the application
 
 Left click on a unit: select the unit
 Left click and drag: draw a rectangle. Units within the rectangle will be selected
+Left click on a tile without a unit on it: unselect all the selected units
 Right click: if units selected, set their group goal
+
+## Tools
+
+- IDE: Microsoft Visual Studio 2017 (language C++)
+- SDL 2.0, STL, pugixml 1.8
+- Profiler: Brofiler
+- Map edition: Tiled
+- Graphics edition: Adobe Photoshop
+
+## Assets
+
+All the sprites used belong to the game <I>Warcraft II: Tides of Darkness</I>, hence are property of Blizzard Entertainment.
+
+## Known Bugs
+
+<b>BUG 1.</b> When the user sets a new goal to a group of units, each unit searches for its own goal, which is found by running
+a BFS algorithm. Since BFS only expands from a given node (tile), the new tile found may be located on the other side of a
+wall. This leads to moving half of the group of units towards the side of the wall the user has clicked and one or two 
+units to the opposite side.
+<b>BUG 1 PENDING TO SOLVE.</b> The BFS search algorithm will be repalced for a Dijkstra algorithm, which also considers
+the cost of the nodes, preferring the low cost nodes. This way, Dijkstra will prefer to expand on the side of the wall the 
+user has clicked and avoid jumping on the opposite side.
