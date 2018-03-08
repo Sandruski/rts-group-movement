@@ -215,6 +215,14 @@ E.g.: when a unit needs to find a new, valid tile to move to, the possible, vali
 
 ###### Movement module performance
 
+After a session of profiling, these are the results of the implemented Movement module:
+
+- For 8 units, the Movement module consumes from 0.6 ms to 4 ms (when a unit creates a path).
+- For 16 units, the Movement module can have peaks of 20 ms (when a unit creates a path), though it is not noticed at plain sight.
+- For 24 units, the Movement module may have peaks of 200 ms (when a unit creates a path), which is completely unacceptable.
+
+To sum up, the Movement module should be used for 8 to 16 units. While it is ideal for 8 units, for 16 units can sometimes consume too much, but still works fine. The main problem that needs to be solved is the pathfinding, because the Movement module collapses only when a unit creates a new path. A solution to this could be to optimize the Pathfinding module, since it is the one causing trouble.
+
 ## References
 
 ### Websites
