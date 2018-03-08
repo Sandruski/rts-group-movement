@@ -21,7 +21,7 @@ Before we start to implement our coordinated movement system, we should understa
 - Units always calculate the shortest route possible, even if this means getting through an enemy's trap. Thus, if units are shot while moving, they don't fire back.
 - When a harvester attempts to return to the base while another harvester is going out to collect resources, if their routes share the same narrow path, the two of them will sometimes meet. If they do, they will turn twice (each time continuing to block each other's progress), center their orientation, and finally move right through each other.
 
-<iframe width="740" height="590" src="http://www.youtube.com/watch?v=AGtd0KkOvG4&t=6m40s" frameborder="0" allowfullscreen></iframe>
+<iframe width="740" height="590" src="https://youtu.be/AGtd0KkOvG4?t=6m40s" frameborder="0" allowfullscreen></iframe>
 
 The shortest distance is determined with algebra, not calculus. Consequently, the resulting path only takes into account the distance from point A to point B, ignoring any obstacles. This makes units overlap each other when they move, but if they do overlap, they will spread out again when reaching their destination.
 
@@ -57,12 +57,13 @@ Because the project was always two months from launch, there was no time to re-e
 ### StarCraft II: Wings of Liberty (2010)
 
 - Units of all sizes find their way to destinations, without overlapping each other and without stopping.
+- Smooth flow of the units.
 
 <iframe width="740" height="590" src="https://www.youtube.com/watch?v=LztRm_bXGcc" frameborder="0" allowfullscreen></iframe>
 
 ### Supreme Commander 2 (2010)
 
-- Smooth flow of the units.
+The same annotations than in <I>StarCraft II: Wings of Liberty</I>.
 
 <iframe width="740" height="590" src="https://www.youtube.com/watch?v=bovlsENv1g4" frameborder="0" allowfullscreen></iframe>
 
@@ -70,10 +71,10 @@ Because the project was always two months from launch, there was no time to re-e
 
 ### Tile-based algorithm A* (A-Star)
 
-**Pathfinding technique:** A*<br><br>
+###### Pathfinding technique: A*<br><br>
 The games <I>Command & Conquer: Tiberian Dawn</I>, <I>Warcraft I: Orcs & Humans</I>, <I>Warcraft II: Tides of Darkness</I>, and <I>StarCraft</I> base their group movement on the tile-based algorithm A* (A-Star). The primitive A* is the most common pathfinding algorithm used by the first RTS games such as the named, which had to deal with much lower processing power. 
 
-**Movement behavior:** set of rules<br><br>
+###### Movement behavior: set of rules<br><br>
 Since the pathfinding algorithm A* only takes into account the terrain (and, if modified, the objects of the map), it has to be complemented by a set of rules, which vary depending on the game and its needs. For example, in <I>Warcraft II</I>, a rule says that if a unit runs into other units and cannot slide past them, it will repath an alternate route. This works fine for a samll number of units, but when trying to navigate a large number of units through a narrow passage, a few will inevitably run into the units ahead of them and find another path.
   
 As seen, those rules are very limited. In some situations, they force the games to sacrify more natural behaviors to make the whole system work. From the limitations behind the tile-based algorithm A* when dealing with group movement, it came out the Flocking System with Flow Fields.
@@ -82,21 +83,36 @@ As seen, those rules are very limited. In some situations, they force the games 
 
 The games <I>StarCraft II: Wings of Liberty</I> and <I>Supreme Commander 2</I>, and the great majority of modern RTS games use a Flocking System with Flow Fields to maintain fluid control of large groups of units. A local dynamic Flow Field is generated around each unit. The Flow Fields of the units are combined together before adjusting the units' movements.
 
-**Pathfinding technique:** Flow Fields<br><br>
+###### Pathfinding technique: Flow Fields<br><br>
 Flow Fields are an alternate way of doing pathfinding which works better for larger groups of units. A Flow Field is a grid where each grid square has a directional vector. This vector should be pointed in the direction of the most efficient way to get to the destination, while avoiding static obstacles.
 
-**Movement behavior:** Flocking (or Swarm)<br><br>
+###### Movement behavior: Flocking (or Swarm)<br><br>
 The flocking model was defined by Craig Reynolds, an artificial life and computer graphics expert. Flocks, by definition, are a group of birds traveling together. Reynolds called the generic simulated flocking entities "boids", creating the Boids artificial life simulation (1986). The basic flocking model consists of three simple steering behaviors (separation, alignment and cohesion) which describe how an individual boid moves based on the positions and velocities of its nearby flockmates. As a result, entities in a flock (or boids) travel at roughly the same speed and form a cohesive group without strict arrangement.
 
 The algorithm finds the fewest amount of waypoints and allows autonomous steering behaviour for units to smoothly hug their way around obstacles and its immediate neighbors. Logically, every unit has sensors which, when colliding with another unit, notify the first unit to turn in an appropriate direction to avoid the other unit.
 
 ## How we are going to approach it
 
-From the two methods described, we will follow the first one. That means that we are going to implement a set of rules which allows individual units to execute paths (already found by the A* pathfinding algorithm) while moving together as a group.
+From the two methods described, we will follow the first one. This means that we are going to implement a set of rules which allows individual units to execute paths (already found by the A* pathfinding algorithm) while moving together as a group. To do so, we will combine the functionalities of two different modules, which are independent from each other, one for each of the components of the group movement:
+
+**1. Pathfinding module.** _Already implemented_.
+**2. Movement module.** _Needs to be implemented_.
+
+Since the first one, the Pathfinding module, will be already implemented, we will focus on the implementation of the second one, the Movement module. The Movement module will be in charge of managing groups and units, and the execution of their individual paths (provided by the Pathfinding module).
 
 ### Simple Movement Algorithm
 
+Units can avoid colliding by using steering behavior to hug their way around the small radius of another unit, while in StarCraft units are constrained by the fact that they are competing for waypoints. This is the main reason why you get much better surround in Starcraft 2 than in Starcraft, but also the reason why units have to spread out so much to move around.
+
+The difference is that Starcraft relies almost solely on A* to get units to move from one point to another, mapping every single node the unit needs to traverse over. In S2, a lot of the pathfinding is lef up to the unit individual, and waypoints are kept to minimum.
+
 ### Collision Determination System
+
+Collision avoidance is also much more primitive in S1 as well. Units avoid collision by stopping to give-way while another unit moves around it or calculates a new path, this is probably one of the first things you learn about dealing with collision avoidance between units.
+
+In Starcraft 2, units will avoid obstacles and other units (but also flock together) using steering behaviour.
+This allows units to weave in and out without calculating a whole new path or losing momentum, in a worst case scenario the units can ignore the collision radius, allowing for more fluid movement and higher movement efficiency overall.
+
 
 How do we avoid them lining up?
 How do they finish the path? (avoid all to the same spot)
