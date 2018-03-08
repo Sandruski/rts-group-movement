@@ -36,7 +36,7 @@ The shortest distance is determined with algebra, not calculus. Consequently, th
 
 However, some tiles seem passable but actually are not. For example, the barracks building artwork does not fill completely the 96x96 area it sits on, and it leaves two tiles that seem passable but actually are not.
 
-<img src="Images/Warcraft2.jpg" width="400"><br>
+[](Images/Warcraft2.jpg)
 <I>Warcraft II map with 32x32 tiles. The two tiles that seem passable but actually are not are drawn in red</I>
 
 ### StarCraft (1998)
