@@ -100,6 +100,7 @@ private:
 
 	list<UnitGroup*> unitGroups; // contains all the existing groups
 	int pathsCreated = 0; // to keep track of the number of paths created at the current update and avoid saturating the program
+	int frames = 0;
 };
 
 // ---------------------------------------------------------------------

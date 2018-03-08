@@ -11,6 +11,8 @@ This application is the result of a research in how to implement group movement 
 It has been done following the tile-based algorithm A* (A-Star) and creating a collision determination and avoidance
 system.
 
+<I>It is not recommended to move simultaneously more than 16 units.</I>
+
 •	Website: [RTS Group Movement Website](https://sandruski.github.io/RTS-Group-Movement/)<br>
 •	GitHub repository: [RTS Group Movement Repository](https://github.com/Sandruski/RTS-Group-Movement)
 
