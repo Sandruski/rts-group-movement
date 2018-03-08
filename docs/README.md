@@ -104,6 +104,14 @@ From the two methods described, we will follow the first one. This means that we
 
 Since the first one, the Pathfinding module, will be already implemented, we will focus on the implementation of the second one, the Movement module. The Movement module will be in charge of managing groups and units, and the execution of their individual paths (provided by the Pathfinding module).
 
+### Groups and Units
+
+[](Images/unitGroup.PNG)
+<I>Struct for a group of units</I>
+
+[](Images/singleUnit.PNG)
+<I>Struct for a single unit</I>
+
 ### Simple Movement Algorithm
 
 <I>StarCraft</I> relies almost solely on the pathfinding algorithm A* to move units from one point to another, mapping every single node that the unit needs to traverse over. In <I>StarCraft II</I>, a lot of the pathfinding is lef up to the unit, and waypoints are kept to minimum.
@@ -118,6 +126,8 @@ Since the first one, the Pathfinding module, will be already implemented, we wil
 **PROBLEM 1. Shared destination.** If the unit is in a bigger group, only the first unit of the group calculates the path to the goal set by the user. The rest of the units' destinations are offset from that point and calculated after, one at a frame. This prevents the units to finish the path all to the same spot. Besides that, if every unit has its own path to its own unique destination, the whole movement of the group looks more natural, because paths tend to have less waypoints in common. This minimizes the chance of collision between the units along the path.
 
 2. The unit moves along the path, but it only goes 1 square at a time, due to the need of local collision determination. Before making the move, the unit just asks the path which direction it's supposed to go next. After that, it tries to move there.
+
+###### FAQ
 
 **When is the path recalculated?**
 - When a new move command is issued while the unit is en route. This behaviour has given rise to SPAM-CLICKING. The path is literally re-calculated each time you click, so technically a unit is finding the most efficient path at the point of time closest to the click.
@@ -136,12 +146,15 @@ In <I>StarCraft</I>, units are constrained by the fact that they are competing f
 
 In <I>Starcraft II</I>, units avoid obstacles and other units (but also flock together) using steering behaviour. This allows units to weave in and out without calculating a whole new path or losing momentum. In a worst case scenario, the units can even ignore the collision radius, allowing for more fluid movement and higher movement efficiency overall.
 
+###### Implementation
+
 **PROBLEM 2. Dealing with dynamic obstacles (moving and still units)**
 
 3. Before getting to the next position, units must process this next position through the Collision Prediction System, in order to predict collision with the other units in the environment.
 4. If a collision is found, the unit has to avoid (before it happens) it by following the rules of the Collision Avoidance System. If there is no collision, then the unit can go on its way.
 
 ###### Collision Prediction System
+
 In each frame of the simulation, each unit needs to check for future collisions with all other units in the scene. This is done by processing the next tile the unit wants to go to through the collision prediction system. The possible situations of collision are:
 
 **1. Two agents reach the same cell (_SameCell_).**
