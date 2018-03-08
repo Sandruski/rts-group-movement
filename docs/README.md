@@ -36,7 +36,7 @@ The shortest distance is determined with algebra, not calculus. Consequently, th
 
 However, some tiles seem passable but actually are not. For example, the barracks building artwork does not fill completely the 96x96 area it sits on, and it leaves two tiles that seem passable but actually are not.
 
-<img src="https://github.com/Sandruski/RTS-Group-Movement/blob/master/docs/Images/Warcraft2.jpg" width="400"><br>
+<img src="Images/Warcraft2.jpg" width="400"><br>
 <I>Warcraft II map with 32x32 tiles. The two tiles that seem passable but actually are not are drawn in red</I>
 
 ### StarCraft (1998)
@@ -51,7 +51,7 @@ However, some tiles seem passable but actually are not. For example, the barrack
 
 Because the project was always two months from launch, there was no time to re-engine the terrain engine, so the pathfinding code had to be made to work. The pathfinding code, then, turned into a gigantic state-machine which handled all the tricky edge-cases.
 
-<img src="https://github.com/Sandruski/RTS-Group-Movement/blob/master/docs/Images/StarCraft.jpg" width="400"><br><br>
+<img src="Images/StarCraft.jpg" width="400"><br><br>
 <I>StarCraft map with 8x8 cells. The red line cuts each 8x8 cell into an irregular shape</I>
 
 ### StarCraft II: Wings of Liberty (2010)
@@ -92,7 +92,7 @@ The algorithm finds the fewest amount of waypoints and allows autonomous steerin
 
 ## How we are going to approach it
 
-In the following article, we are going to focus on ways to execute a path that’s already been found.
+From the two methods described, we will follow the first one. That means that we are going to implement a set of rules which allows individual units to execute paths (already found by the A* pathfinding algorithm) while moving together as a group.
 
 ### Simple Movement Algorithm
 
