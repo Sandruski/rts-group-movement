@@ -197,6 +197,8 @@ float PathNode::CalculateF(const iPoint& destination, Distance distance_type)
 // ----------------------------------------------------------------------------------
 int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, Distance distance_type)
 {	
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	last_path.clear();
 	int ret = 0;
 
