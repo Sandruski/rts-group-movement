@@ -218,21 +218,21 @@ E.g.: when a unit needs to find a new, valid tile to move to, the possible, vali
 ## References
 
 ###### Websites
-<a href="https://www.gamasutra.com/view/feature/131720/coordinated_unit_movement.php">Gamasutra - Coordinated Unit Movement</a>
-<a href="https://www.gamasutra.com/view/feature/131721/implementing_coordinated_movement.php">Gamasutra - Implementing Coordinated Movement</a>
-<a href="https://pdfs.semanticscholar.org/3cb8/5d6c5db83af451637607c01b4c9190decf61.pdf">Pathfinding and Collision Avoidance in Crowd Simulation</a>
-<a href="http://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter20_Hierarchical_Architecture_for_Group_Navigation_Behaviors.pdf">Gamasutra - Game AI Pro 2 - Hierarchical Architecture for Group Navigation Behaviors</a>
-<a href="https://www.red3d.com/cwr/boids/">Boids</a>
-<a href="https://gamedevelopment.tutsplus.com/tutorials/3-simple-rules-of-flocking-behaviors-alignment-cohesion-and-separation--gamedev-3444">3 Simple Rules of Flocking Behaviors</a>
+<a href="https://www.gamasutra.com/view/feature/131720/coordinated_unit_movement.php">Gamasutra - Coordinated Unit Movement</a><br>
+<a href="https://www.gamasutra.com/view/feature/131721/implementing_coordinated_movement.php">Gamasutra - Implementing Coordinated Movement</a><br>
+<a href="https://pdfs.semanticscholar.org/3cb8/5d6c5db83af451637607c01b4c9190decf61.pdf">Pathfinding and Collision Avoidance in Crowd Simulation</a><br>
+<a href="http://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter20_Hierarchical_Architecture_for_Group_Navigation_Behaviors.pdf">Gamasutra - Game AI Pro 2 - Hierarchical Architecture for Group Navigation Behaviors</a><br>
+<a href="https://www.red3d.com/cwr/boids/">Boids</a><br>
+<a href="https://gamedevelopment.tutsplus.com/tutorials/3-simple-rules-of-flocking-behaviors-alignment-cohesion-and-separation--gamedev-3444">3 Simple Rules of Flocking Behaviors</a><br>
 
-<a href="http://www.teamliquid.net/forum/starcraft-2/132171-the-mechanics-of-sc2-part-1">Team Liquid - The Mechanics of Starcraft 2</a>
-<a href="https://striketactics.net/devblog/starcraft-1-pathfinding-technical-analysis">Strike Tactics - Starcraft 1 Pathfinding: A Technical Analysis</a>
-<a href="https://www.codeofhonor.com/blog/tough-times-on-the-road-to-starcraft#path-finding">Code of Honor - Tough Times on the Road to StarCraft</a>
+<a href="http://www.teamliquid.net/forum/starcraft-2/132171-the-mechanics-of-sc2-part-1">Team Liquid - The Mechanics of Starcraft 2</a><br>
+<a href="https://striketactics.net/devblog/starcraft-1-pathfinding-technical-analysis">Strike Tactics - Starcraft 1 Pathfinding: A Technical Analysis</a><br>
+<a href="https://www.codeofhonor.com/blog/tough-times-on-the-road-to-starcraft#path-finding">Code of Honor - Tough Times on the Road to StarCraft</a><br>
 <a href="https://www.codeofhonor.com/blog/the-starcraft-path-finding-hack">Code of Honor - The StarCraft pathfinding hack</a>
   
 ###### Forums
-<a href="https://www.gamedev.net/forums/topic/563819-whats-starcraft2s-pathfinding-tech/">GameDev - StarCraft 2 Pathfinding</a>
-<a href="https://www.gamedev.net/forums/topic/672751-formations-in-rts-a-pathfinding/">GameDev - Formations in RTS</a>
+<a href="https://www.gamedev.net/forums/topic/563819-whats-starcraft2s-pathfinding-tech/">GameDev - StarCraft 2 Pathfinding</a><br>
+<a href="https://www.gamedev.net/forums/topic/672751-formations-in-rts-a-pathfinding/">GameDev - Formations in RTS</a><br>
 <a href="https://answers.unity.com/questions/790857/unit-local-avoidance-in-rts-type-games.html">Unity - Unit Local Avoidance in RTS</a>
 
 ## TODOs
