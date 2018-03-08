@@ -36,9 +36,8 @@ The shortest distance is determined with algebra, not calculus. Consequently, th
 
 However, some tiles seem passable but actually are not. For example, the barracks building artwork does not fill completely the 96x96 area it sits on, and it leaves two tiles that seem passable but actually are not.
 
-
-<img src="Images/Warcraft2.jpg" width="400"><br><br>
-<I>Warcraft II map with 32x32 tiles. The two tiles that seem passable but actually are not are drawn in red</I>
+<img src="Images/Warcraft2.jpg" width="400">
+_Warcraft II map with 32x32 tiles. The two tiles that seem passable but actually are not are drawn in red_
 
 ### StarCraft (1998)
 
@@ -52,8 +51,8 @@ However, some tiles seem passable but actually are not. For example, the barrack
 
 Because the project was always two months from launch, there was no time to re-engine the terrain engine, so the pathfinding code had to be made to work. The pathfinding code, then, turned into a gigantic state-machine which handled all the tricky edge-cases.
 
-[](Images/StarCraft.jpg)
-<I>StarCraft map with 8x8 cells. The red line cuts each 8x8 cell into an irregular shape</I>
+<img src="Images/StarCraft.jpg" width="400">
+_StarCraft map with 8x8 cells. The red line cuts each 8x8 cell into an irregular shape_
 
 ### StarCraft II: Wings of Liberty (2010)
 
@@ -107,18 +106,18 @@ Since the first one, the Pathfinding module, will be already implemented, we wil
 
 ### Groups and Units
 
-[](Images/unitGroup.PNG)
-<I>Struct for a group of units</I>
+<img src="Images/unitGroup.PNG" width="400">
+_Struct for a group of units_
 
-[](Images/singleUnit.PNG)
-<I>Struct for a single unit</I>
+<img src="Images/singleUnit.PNG" width="400">
+_Struct for a single unit_
 
 ### Simple Movement Algorithm
 
 <I>StarCraft</I> relies almost solely on the pathfinding algorithm A* to move units from one point to another, mapping every single node that the unit needs to traverse over. In <I>StarCraft II</I>, a lot of the pathfinding is lef up to the unit, and waypoints are kept to minimum.
 
-[](Images/movementState.PNG)
-<I>Enum with all of the possible states of a unit's movement</I>
+<img src="Images/movementState.PNG" width="400">
+_Enum with all of the possible states of a unit's movement_
 
 ###### Implementation
 
@@ -163,8 +162,8 @@ In each frame of the simulation, each unit needs to check for future collisions 
 **3. An agent reaches the cell of another agent (_ItsCell_).**
 **4. Two agents cross diagonally, reaching the cell in front of each other (_DiagonalCrossing_).**
 
-[](Images/collisionType.PNG)
-<I>Enum with all of the possible types of collision</I>
+<img src="Images/collisionType.PNG" width="400">
+_Enum with all of the possible types of collision_
 
 ###### Collision Avoidance System
 
