@@ -14,50 +14,84 @@ Coordinated movement is the result of combining two processes. The first one is 
 
 ## How different games have approach it
 
-Before we start to implement our coordinated movement system, we should understand precisely how coordinated movement works. To do so, there is no better way than to take a look at some existing games that use it. For each game, first, we will analyse how it is felt from the player’s perspective, and then, we will dive deeper to investigate the method behind it.
+Before we start to implement our coordinated movement system, we should understand precisely how coordinated movement works. To do so, there is no better way than to take a look at some existing games that have it. First, we will analyse how it is felt in the game (from the player's perspective). Then, we will dive deeper to investigate the method/s behind it.
 
-### Command & Conquer: Tiberian Dawn
+### Command & Conquer: Tiberian Dawn (1995)
 
 - Units always calculate the shortest route possible, even if this means getting through an enemy's trap. Thus, if units are shot while moving, they don't fire back.
 - When a harvester attempts to return to the base while another harvester is going out to collect resources, if their routes share the same narrow path, the two of them will sometimes meet. If they do, they will turn twice (each time continuing to block each other's progress), center their orientation, and finally move right through each other.
 
 <iframe width="740" height="590" src="http://www.youtube.com/watch?v=AGtd0KkOvG4&t=6m40s" frameborder="0" allowfullscreen></iframe>
 
-<b>Method used:</b>
-The shortest distance is determined with algebra, not calculus. Consequently, the resulting path only takes into account the distance from point A to point B, ignoring any obstacles.
+The shortest distance is determined with algebra, not calculus. Consequently, the resulting path only takes into account the distance from point A to point B, ignoring any obstacles. This makes units overlap each other when they move, but if they do overlap, they will spread out again when reaching their destination.
 
-### Warcraft I and II
+### Warcraft I (1994) and II (1995)
 
 - Every time a group of defensive units (still units) is attacked, the individual units will move further and further away.
 - The armies head straight for their destination, going left or right when they hit something, then giving up after a while.
 - It can take a unit 45 seconds to go from one end of the map to the other. In that time, new structures may have been built, making the original path invalid, or trees may have been chopped down, making the original path a very poor choice.
 - Units often block each other. E.g.: peasants heading to the gold mine block peasants returning from it, because the only valid path for each group is blocked by the other group.
 
-<b>Method used:</b>A* search algorithm
-Warcraft engine is optimized to draw 32x32 pixel square tiles made of 16 8x8 pixel square cells. The camera perspective of Warcraft I and Warcraft II is almost top-down, so the edges of the objects (buildings, etc.) are either horizontal or vertical. This leads to easy pathfinding, because each 32x32 tile is either passable or un-passable. 
+Warcraft engine is optimized to draw 32x32 pixel square tiles made of 16 8x8 pixel square cells (orthogonal perspective). The camera perspective of Warcraft I and Warcraft II is almost top-down, so the edges of the objects (buildings, etc.) are either horizontal or vertical. This leads to easy pathfinding, because each 32x32 tile is either passable or un-passable.
 
 However, some tiles seem passable but actually are not. For example, the barracks building artwork does not fill completely the 96x96 area it sits on, and it leaves two tiles that seem passable but actually are not.
 
-### StarCraft
+<img src="https://github.com/Sandruski/RTS-Group-Movement/blob/master/docs/Images/Warcraft2.jpg" width="400"><br>
+<I>Warcraft II map with 32x32 tiles. The two tiles that seem passable but actually are not are drawn in red</I>
 
-In StarCraft, units stop when they detect an object in front and politely wait for the object to move before continuing along the path.
-Units never walk on top of each other, even if this means taking longer to get from point A to point B. Consequently, units remain visually separated. The harvesting units (Terran SVC, Zerg drone, Protoss probe) would get jammed up trying to harvest crystals or vespene gas (hereafter "minerals") and they would grind to a halt.
+### StarCraft (1998)
 
-<b>Method used:</b>A* search algorithm
-The A* search algorithm led some problems in leading with collision, since it only takes into account the terrain and the buildings. If it runs into other units and can't slide past them it will repath an alternate route. This works fine for a samll number of units, but if you try to navigate a large number of units through a narrow passage inevitably a few will run into the units ahead of them and find another path. Those harvesters are commuting between the minerals and their base so they're constantly running headlong into other harvesters traveling in the opposite direction. Given enough harvesters in a small space it's entirely possible that some get jammed in and are unable to move until the mineral deposit is mined out. This was resolved by making harvesters ignore collisions with other units, so harvesters operate efficiently.
+- Units stop when they detect an object in front and politely wait for the object to move before continuing along the path.
+- Units do not walk on top of each other, even if this means taking longer to get from point A to point B. Consequently, units remain visually separated.
+- Harvesting units (Terran SVC, Zerg drone, Protoss probe) would get jammed up trying to harvest crystals or vespene gas (hereafter "minerals") and they would grind to a halt, because they are constantly running headlong into other harvesters traveling in the opposite direction. To avoid this situation, they ignore collisions with other units, so they can operate efficiently.
 
-StarCraft was built on the Warcraft engine, but along the way the development team switched StarCraft to isometric artwork to make the game more visually attractive. However, the underlying terrain engine was not re-engineered to use isometric tiles, only the artwork was redrawn.
+<iframe width="740" height="590" src="https://www.youtube.com/watch?v=0oJPPCaQeD4" frameborder="0" allowfullscreen></iframe>
+  
+StarCraft was built on the Warcraft engine (orthogonal perspective), but along the way the development team switched to isometric artwork to make the game more visually attractive. However, the terrain engine was not re-engineered to use isometric tiles. In order for pathfinding to work properly it was necessary to increase the resolution of the pathfinding map. Now, each 8x8 tile was either passable or unpassable. The increase in the size of the pathfinding map by a factor of 16 involved more computational effort when searching for a path. In addition, diagonal edges drawn in the artwork split many of the square tiles unevenly, making it hard to determine whether a tile should be passable or not.
 
-The new camera perspective looked great but in order for pathfinding to work properly it was necessary to increase the resolutuon of the pathfinding map: now each 8x8 tile was either passable or unpassable, increasing the size of the pathfinding map by a factor of 16. While the finer resolution enabled more units to be squeezed onto the map, it also meant that searching for a path around the map would require substantially more computational effort to search the larger pathing space.
-Pathfinding was now more challenging because diagonal edges drawn in the artwork split many of the square tiles unevenly, making it hard tgo determine wheter a tile should be passable or not.
+Because the project was always two months from launch, there was no time to re-engine the terrain engine, so the pathfinding code had to be made to work. The pathfinding code, then, turned into a gigantic state-machine which handled all the tricky edge-cases.
 
-Because the project was always two months from launch, it was inconceivable that there was enough time to re-engineer the terrain enginge to make pathfinding easier, so the pathfinding code just had to be made to work. To handle all the tricky edge-cases, the pathinf code exploded into a gigantic state-machine which encoded all sorts of specialized "get me out of here" hacks.
+<img src="https://github.com/Sandruski/RTS-Group-Movement/blob/master/docs/Images/StarCraft.jpg" width="400"><br><br>
+<I>StarCraft map with 8x8 cells. The red line cuts each 8x8 cell into an irregular shape</I>
 
-### StarCraft II: Wings of Liberty
+### StarCraft II: Wings of Liberty (2010)
 
-<b>Method used:</b>
+- Units of all sizes find their way to destinations, without overlapping each other and without stopping.
+
+<iframe width="740" height="590" src="https://www.youtube.com/watch?v=LztRm_bXGcc" frameborder="0" allowfullscreen></iframe>
+
+### Supreme Commander 2 (2010)
+
+- Smooth flow of the units.
+
+<iframe width="740" height="590" src="https://www.youtube.com/watch?v=bovlsENv1g4" frameborder="0" allowfullscreen></iframe>
+
+## Methods to approach it (used by the previous games)
+
+### Tile-based algorithm A* (A-Star)
+
+<b>Pathfinding technique:</b> A*<br>
+The games <I>Command & Conquer: Tiberian Dawn</I>, <I>Warcraft I: Orcs & Humans</I>, <I>Warcraft II: Tides of Darkness</I>, and <I>StarCraft</I> base their group movement on the tile-based algorithm A* (A-Star). The primitive A* is the most common pathfinding algorithm used by the first RTS games such as the named, which had to deal with much lower processing power. 
+
+<b>Movement behavior:</b> set of rules<br>
+Since the pathfinding algorithm A* only takes into account the terrain (and, if modified, the objects of the map), it has to be complemented by a set of rules, which vary depending on the game and its needs. For example, in <I>Warcraft II</>, a roule says that if a unit runs into other units and cannot slide past them, it will repath an alternate route. This works fine for a samll number of units, but when trying to navigate a large number of units through a narrow passage, a few will inevitably run into the units ahead of them and find another path.
+  
+As seen, those rules are very limited. In some situations, they force the games to sacrify more natural behaviors to make the whole system work. From the limitations behind the tile-based algorithm A* when dealing with group movement, it came out the Flocking System with Flow Fields.
+
+### Flow Fields + Flocking (or Swarm) Behavior
+
+The games <I>StarCraft II: Wings of Liberty</I> and <I>Supreme Commander 2</I>, and the great majority of modern RTS games use a Flocking System with Flow Fields to maintain fluid control of large groups of units. A local dynamic Flow Field is generated around each unit. The Flow Fields of the units are combined together before adjusting the units' movements.
+
+<b>Pathfinding technique:</b> Flow Fields<br>
+Flow Fields are an alternate way of doing pathfinding which works better for larger groups of units. A Flow Field is a grid where each grid square has a directional vector. This vector should be pointed in the direction of the most efficient way to get to the destination, while avoiding static obstacles.
+
+<b>Movement behavior:</b> Flocking (or Swarm)<br>
+The flocking model was defined by Craig Reynolds, an artificial life and computer graphics expert. Flocks, by definition, are a group of birds traveling together. Reynolds called the generic simulated flocking entities "boids", creating the Boids artificial life simulation (1986). The basic flocking model consists of three simple steering behaviors (separation, alignment and cohesion) which describe how an individual boid moves based on the positions and velocities of its nearby flockmates. As a result, entities in a flock (or boids) travel at roughly the same speed and form a cohesive group without strict arrangement.
+
+The algorithm finds the fewest amount of waypoints and allows autonomous steering behaviour for units to smoothly hug their way around obstacles and its immediate neighbors. Logically, every unit has sensors which, when colliding with another unit, notify the first unit to turn in an appropriate direction to avoid the other unit.
 
 ## How we are going to approach it
+
 In the following article, we are going to focus on ways to execute a path that’s already been found.
 
 ### Simple Movement Algorithm
@@ -77,7 +111,7 @@ If this research caught your eye and you want to keep practising, I suggest you 
 
 1.
 2. Formations.
-Check out how <I>Rise of Nations</I> does formations! When you click on your destination, if you hold the mouse button down and drag, small circles are drawn on the tiles, showing the formation that the selected units would made.
+Check out how <I>Rise of Nations</I> (2003) does formations! When you click on your destination, if you hold the mouse button down and drag, small circles are drawn on the tiles, showing the formation that the selected units would made.
 PLUS: it also has smart systems where the melee is in front, the ranged behind, with artillery behind them.
 
 
