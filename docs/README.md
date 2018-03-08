@@ -108,6 +108,9 @@ Since the first one, the Pathfinding module, will be already implemented, we wil
 
 <I>StarCraft</I> relies almost solely on the pathfinding algorithm A* to move units from one point to another, mapping every single node that the unit needs to traverse over. In <I>StarCraft II</I>, a lot of the pathfinding is lef up to the unit, and waypoints are kept to minimum.
 
+[](Images/movementState.PNG)
+<I>Enum with all of the possible states of a unit's movement</I>
+
 ###### Implementation
 
 1. When a unit is issued a command, the parameters of that command (the current location and the destination in the grid) are run through the pathfinding algorithm, which spits out an array of path coordinates (waypoints). The unit stores the path found, which is free of static obstacles (known as unwalkable tiles).
@@ -135,23 +138,31 @@ In <I>Starcraft II</I>, units avoid obstacles and other units (but also flock to
 
 **PROBLEM 2. Dealing with dynamic obstacles (moving and still units)**
 
-3. Before getting to the next position, units must process the collision prediction to avoid collision with the other units in the environment.
+3. Before getting to the next position, units must process this next position through the Collision Prediction System, in order to predict collision with the other units in the environment.
+4. If a collision is found, the unit has to avoid (before it happens) it by following the rules of the Collision Avoidance System. If there is no collision, then the unit can go on its way.
 
 ###### Collision Prediction System
 In each frame of the simulation, each unit needs to check for future collisions with all other units in the scene. This is done by processing the next tile the unit wants to go to through the collision prediction system. The possible situations of collision are:
 
-1. Two agents reach the same cell (_SameCell_).
-2. Two agents reach the cell of each other (_TowardsCell_): occurs if the agents are walking towards each other (in opposite directions).
-3. An agent reaches the cell of another agent (_ItsCell_).
-4. Two agents cross diagonally, reaching the cell in front of each other (_DiagonalCrossing_).
+**1. Two agents reach the same cell (_SameCell_).**
+**2. Two agents reach the cell of each other (_TowardsCell_):** occurs if the agents are walking towards each other (in opposite directions).
+**3. An agent reaches the cell of another agent (_ItsCell_).**
+**4. Two agents cross diagonally, reaching the cell in front of each other (_DiagonalCrossing_).**
+
+[](Images/collisionType.PNG)
+<I>Enum with all of the possible types of collision</I>
 
 ###### Collision Avoidance System
-If a collision is predicted, one of the two units involved must act consequently, so it avoids the collision before it happens. The responses to the different situations of collision are:
 
-1. _SameCell_:
-2. _TowardsCell_:
-3. _ItsCell_:
-4. _DiagonalCrossing_:
+Collision avoidance between units can involve some problems that only appear when we deal with many units, so a method to avoid collision between individuals can be inefficient when we have several ones.
+
+If a collision is predicted, one of the two units involved must act consequently, so it avoids the collision before it happens. Each unit has a priority and several ones could have the same priority, so the unit with the lower priority will always have to let the unit with the higher priority pass. The responses to the different situations of collision are:
+
+**1. _SameCell_ (conflict cell: the tile both units want to go to):** the unit waits until the other unit has reached the conflict cell and has updated its next position with the next waypoint of its path.
+**2. _TowardsCell_ (conflict cell: any of the two tiles):** since units get stuck, the unit has to find a new next tile to go to and then recalculate its path.
+**3. _ItsCell_ (conflict cell: the tile of the other unit):** the unit waits until the other unit is no longer on the conflict cell.
+**4. _DiagonalCrossing_ (conflict cell: the tile where the other unit wants to move to):** the unit waits until the other unit has reached the conflict cell.
+**5. One of the units is still (conflict cell: the tile of the unit that is still, which is the next tile of the other unit):** if the unit with the higher priority is the unit that is still, it has to find a new goal and start walking towards it. If the unit with the higher priority is the other unit, the one that is walking, it has to find a new next tile to go to and then recalculate its path.
 
 The behavior in the next frame of each unit depends on the type of collision prediction and the type of collision avoidance.
 
