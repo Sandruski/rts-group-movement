@@ -112,6 +112,8 @@ struct UnitGroup
 
 	UnitGroup(list<Unit*> units);
 
+	~UnitGroup();
+
 	// Adds a singleUnit (unit) to the group. Returns false if the singleUnit was already in the group
 	bool AddUnit(SingleUnit* singleUnit);
 

@@ -198,6 +198,7 @@ bool j1EntityFactory::CleanUp()
 		it++;
 	}
 	toSpawnEntities.clear();
+	unitsSelected.clear();
 
 	// Free all textures
 	App->tex->UnLoad(archerTex);

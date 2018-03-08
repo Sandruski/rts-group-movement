@@ -69,6 +69,14 @@ bool j1Movement::CleanUp()
 {
 	bool ret = true;
 
+	list<UnitGroup*>::const_iterator it = unitGroups.begin();
+
+	while (it != unitGroups.end()) {
+		delete *it;
+		it++;
+	}
+	unitGroups.clear();
+
 	return ret;
 }
 
@@ -955,6 +963,17 @@ UnitGroup::UnitGroup(list<Unit*> units)
 		AddUnit((*it)->GetSingleUnit());
 		it++;
 	}
+}
+
+UnitGroup::~UnitGroup() 
+{
+	list<SingleUnit*>::const_iterator it = units.begin();
+
+	while (it != units.end()) {
+		delete *it;
+		it++;
+	}
+	units.clear();
 }
 
 // Adds a singleUnit (unit) to the group. Returns false if the singleUnit was already in the group

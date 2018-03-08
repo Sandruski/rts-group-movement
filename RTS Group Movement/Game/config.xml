@@ -36,63 +36,63 @@
     </spritesheets>
     <animations>
       <archer>
-        <up speed="10" loop="1">
+        <up speed="4" loop="1">
           <frame x="0" y="0" w="60" h="75"/>
           <frame x="0" y="75" w="60" h="75"/>
           <frame x="0" y="150" w="60" h="75"/>
           <frame x="0" y="225" w="60" h="75"/>
           <frame x="0" y="300" w="60" h="75"/>
         </up>
-        <upRight speed="10" loop="1">
+        <upRight speed="4" loop="1">
           <frame x="60" y="0" w="60" h="75"/>
           <frame x="60" y="75" w="60" h="75"/>
           <frame x="60" y="150" w="60" h="75"/>
           <frame x="60" y="225" w="60" h="75"/>
           <frame x="60" y="300" w="60" h="75"/>
         </upRight>
-        <upLeft speed="10" loop="1">
+        <upLeft speed="4" loop="1">
           <frame x="480" y="0" w="60" h="75"/>
           <frame x="480" y="75" w="60" h="75"/>
           <frame x="480" y="150" w="60" h="75"/>
           <frame x="480" y="225" w="60" h="75"/>
           <frame x="480" y="300" w="60" h="75"/>
         </upLeft>
-        <down speed="10" loop="1">
+        <down speed="4" loop="1">
           <frame x="240" y="0" w="60" h="75"/>
           <frame x="240" y="75" w="60" h="75"/>
           <frame x="240" y="150" w="60" h="75"/>
           <frame x="240" y="225" w="60" h="75"/>
           <frame x="240" y="300" w="60" h="75"/>
         </down>
-        <downRight speed="10" loop="1">
+        <downRight speed="4" loop="1">
           <frame x="180" y="0" w="60" h="75"/>
           <frame x="180" y="75" w="60" h="75"/>
           <frame x="180" y="150" w="60" h="75"/>
           <frame x="180" y="225" w="60" h="75"/>
           <frame x="180" y="300" w="60" h="75"/>
         </downRight>
-        <downLeft speed="10" loop="1">
+        <downLeft speed="4" loop="1">
           <frame x="360" y="0" w="60" h="75"/>
           <frame x="360" y="75" w="60" h="75"/>
           <frame x="360" y="150" w="60" h="75"/>
           <frame x="360" y="225" w="60" h="75"/>
           <frame x="360" y="300" w="60" h="75"/>
         </downLeft>
-        <left speed="10" loop="1">
+        <left speed="4" loop="1">
           <frame x="420" y="0" w="60" h="75"/>
           <frame x="420" y="75" w="60" h="75"/>
           <frame x="420" y="150" w="60" h="75"/>
           <frame x="420" y="225" w="60" h="75"/>
           <frame x="420" y="300" w="60" h="75"/>
         </left>
-        <right speed="10" loop="1">
+        <right speed="4" loop="1">
           <frame x="120" y="0" w="60" h="75"/>
           <frame x="120" y="75" w="60" h="75"/>
           <frame x="120" y="150" w="60" h="75"/>
           <frame x="120" y="225" w="60" h="75"/>
           <frame x="120" y="300" w="60" h="75"/>
         </right>
-        <idle speed="10" loop="1">
+        <idle speed="4" loop="1">
           <frame x="240" y="0" w="60" h="75"/>
         </idle>
       </archer>
