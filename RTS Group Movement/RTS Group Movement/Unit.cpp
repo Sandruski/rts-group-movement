@@ -51,8 +51,6 @@ Unit::Unit(EntityInfo entityInfo, uint priority) : Entity(entityInfo)
 
 void Unit::Move(float dt)
 {
-	BROFILER_CATEGORY("Move", Profiler::Color::Orchid);
-
 	// Save mouse position (world and map coords)
 	int x, y;
 	App->input->GetMousePosition(x, y);
@@ -164,8 +162,6 @@ void Unit::ChangeAnimation()
 
 void Unit::UnitStateMachine(float dt) 
 {
-	BROFILER_CATEGORY("UnitStateMachine", Profiler::Color::Orchid);
-
 	switch (unitState) {
 
 	case UnitState_Idle:

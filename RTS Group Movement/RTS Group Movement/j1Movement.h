@@ -88,7 +88,7 @@ public:
 
 	// Returns a new valid goal for the unit or { -1,-1 }
 	/// The new goal is searched using BFS from the goal tile passed as an argument
-	iPoint FindNewValidGoal(SingleUnit* singleUnit, iPoint goal);
+	iPoint FindNewValidGoal(SingleUnit* singleUnit, iPoint goal, bool checkEverything = false);
 
 	// Returns true if it succeeds in changing the next tile of the unit
 	bool ChangeNextTile(SingleUnit* singleUnit); /// Not const because it needs to keep track of the number of paths created at the current update

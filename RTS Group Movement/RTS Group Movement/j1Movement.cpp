@@ -9,7 +9,7 @@
 #include "j1Render.h"
 #include "j1Scene.h"
 
-#include"Brofiler\Brofiler.h"
+#include "Brofiler\Brofiler.h"
 
 #include <queue>
 
@@ -205,6 +205,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 	iPoint nextPos = App->map->MapToWorld(u->nextTile.x, u->nextTile.y); // unit nextPos in map coords
 	fPoint movePos, endPos;
 	float m;
+	iPoint newGoal;
 
 	/// For each step:
 	switch (u->movementState) {
@@ -280,12 +281,25 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 					// Unit with the higher priority politely asks the other unit to move
 					if (u->priority >= u->waitUnit->priority || u->reversePriority) {
 
-						u->waitUnit->newGoal = u->waitUnit->goal = FindNewValidGoal(nullptr, u->waitUnit->goal);
-						u->waitUnit->movementState = MovementState_WaitForPath;
+						newGoal = FindNewValidGoal(nullptr, u->waitUnit->goal, true);
 
-						u->coll = CollisionType_NoCollision;
-						u->wait = false;
-						u->reversePriority = false;
+						if (newGoal != u->waitUnit->newGoal) {
+
+							u->waitUnit->newGoal = u->waitUnit->goal = newGoal;
+							u->waitUnit->movementState = MovementState_WaitForPath;
+
+							u->coll = CollisionType_NoCollision;
+							u->wait = false;
+							u->reversePriority = false;
+						}
+						else {
+						
+							u->goal = u->newGoal = u->currTile;
+							u->movementState = MovementState_GoalReached;
+
+							u->coll = CollisionType_NoCollision;
+							u->wait = false;
+						}
 
 						LOG("%s: MOVED AWAY %s", u->unit->GetColorName().data(), u->waitUnit->unit->GetColorName().data());
 					}
@@ -792,7 +806,7 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront)
 
 // Returns a new valid goal for the unit or { -1,-1 }
 // - The new goal is searched using BFS from the goal tile passed as an argument
-iPoint j1Movement::FindNewValidGoal(SingleUnit* singleUnit, iPoint goal)
+iPoint j1Movement::FindNewValidGoal(SingleUnit* singleUnit, iPoint goal, bool checkEverything)
 {
 	// 1. We use BFS to calculate a new goal for the unit (we want to expand the search to all the possible tiles)
 	// 2. PRIORITY: the neighbor closer to the group goal
@@ -809,7 +823,7 @@ iPoint j1Movement::FindNewValidGoal(SingleUnit* singleUnit, iPoint goal)
 		curr = priorityQueue.top();
 		priorityQueue.pop();
 
-		if (App->pathfinding->IsWalkable(curr.point) && IsValidTile(singleUnit, curr.point, false, false, true))
+		if (App->pathfinding->IsWalkable(curr.point) && IsValidTile(singleUnit, curr.point, checkEverything, checkEverything, true))
 			return curr.point;
 
 		iPoint neighbors[8];
@@ -964,6 +978,7 @@ UnitGroup::UnitGroup(list<Unit*> units)
 		it++;
 	}
 }
+
 
 UnitGroup::~UnitGroup() 
 {

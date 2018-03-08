@@ -16,6 +16,8 @@
 #include "Entity.h"
 #include "Unit.h"
 
+#include "Brofiler\Brofiler.h"
+
 j1EntityFactory::j1EntityFactory()
 {
 	name.assign("entities");
@@ -280,6 +282,8 @@ bool j1EntityFactory::IsUnitOnTile(iPoint tile) const
 // Selects the unit within the tile
 Unit* j1EntityFactory::SelectUnit(iPoint tile)
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	if (!IsUnitOnTile(tile))
 		return nullptr;
 
@@ -322,6 +326,8 @@ Unit* j1EntityFactory::SelectUnit(iPoint tile)
 // Selects the units within the rectangle
 void j1EntityFactory::SelectUnitsWithinRectangle(SDL_Rect rectangleRect)
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	list<Entity*>::const_iterator it = activeEntities.begin();
 
 	while (it != activeEntities.end()) {

@@ -1,12 +1,15 @@
 ﻿# RTS Group Movement
 
-
 I am Sandra Alvarez, student of the Bachelor’s Degree in Video Games by UPC at CITM. 
 This content is generated for the second year’s subject Project 2, under supervision of lecturer Ricard Pillosu.
 
 •	My GitHub account: [Sandruski](https://github.com/Sandruski)
 
 ## About the Research
+
+This application is the result of a research in how to implement group movement for RTS games. 
+It has been done following the tile-based algorithm A* (A-Star) and creating a collision determination and avoidance
+system.
 
 •	Website: [RTS Group Movement Website](https://sandruski.github.io/RTS-Group-Movement/)<br>
 •	GitHub repository: [RTS Group Movement Repository](https://github.com/Sandruski/RTS-Group-Movement)
