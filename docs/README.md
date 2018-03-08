@@ -102,17 +102,40 @@ From the two methods described, we will follow the first one. This means that we
 **1. Pathfinding module.** _Already implemented_.<br>
 **2. Movement module.** _Needs to be implemented_.
 
-Since the first one, the Pathfinding module, will be already implemented, we will focus on the implementation of the second one, the Movement module. The Movement module will be in charge of managing groups and units, and the execution of their individual paths (provided by the Pathfinding module).
+Since the first one, the Pathfinding module, will be already implemented, we will focus on the implementation of the second one, the Movement module. The Movement module will be in charge of managing groups and units, plus the execution of their individual paths (provided by the Pathfinding module).
 
 ### Groups and Units
 
+Once created the Movement module, we have to build two structs, one for managing groups and the other one for managing units. These structs come in handy especially if the game handles groups of units of different types. One group may be the player units and the other one may be the enemy units, so when they cross, units from one grup can start attacking units from the other group.
+
+###### Groups
+
+The UnitGroup contains several units, although the group behaves as a single entity: 
+- The units within the group always have close goals.
+- There are internal collisions within the units of the group. If any space is left between some of the members of the group, a non-grouped unit can occupy it.
+
 <img src="Images/unitGroup.PNG" width="400"><br>
 _Struct for a group of units_
+
+Groups can also have the following properties:
+- Maximum speed at which the group can move while still keeping together: it is determined by the speed of the slowest unit, or the slowest unit moves a little faster when it is in a group or has a temporary speed boost in order to catch up.
+- Centroid of the group: reference point for the group.
+- Commander for the group: unit that does the pathfinding for the group and decides which route the group as a whole takes.
+
+###### Units
+
+The SingleUnit struct is contained by a unit. It handles all the necessary information regarding the unit's movement and keeps it updated. If the unit changes its group, a pointer to the new group will be saved in this struct.
 
 <img src="Images/singleUnit.PNG" width="400"><br>
 _Struct for a single unit_
 
 ### Simple Movement Algorithm
+
+When a unit is ordered to move, it runs through a state-based movement algorithm. The states of the unit's movement are:
+**1. Wait for path:** if the unit has a valid goal, a path is requested to the Pathfinding module.<br>
+**2. Follow path:** the unit moves from one waypoint of the path to the next one. This state also manages the collision prediction and avoidance for the unit.<br>
+**3. Goal reached:** when the unit reaches its goal, it goes to this state.<br>
+**4. Increase waypoint:** when the unit reaches its next tile, this state updates the next tile with the next waypoint of the path.
 
 <I>StarCraft</I> relies almost solely on the pathfinding algorithm A* to move units from one point to another, mapping every single node that the unit needs to traverse over. In <I>StarCraft II</I>, a lot of the pathfinding is lef up to the unit, and waypoints are kept to minimum.
 
@@ -140,7 +163,7 @@ Movement is strictly limited to cardinal direction (N, S, E, W, NE, NW, SE, and 
 
 ### Collision System
 
-The A* algorithm takes into account only static obstacles. This means that dynamic obstacles like units are ignored when calculating the path. It is in the units' hands to avoid the dynamic obstacles, then. This is achieved with the Collision System, which is made of two smaller systems, the Collision Prediction System (which is run first) and the Collision Avoidance Sytem (which is run only if the Collision Prediction System determines a collision).
+The A* algorithm takes into account only static obstacles. This means that dynamic obstacles like units are ignored when calculating the path. It is in the units' hands to avoid the dynamic obstacles, then. This is achieved with the Collision System, which is made of two smaller systems, the Collision Prediction System (which is run first) and the Collision Avoidance Sytem (which is run only if the Collision Prediction System determines a collision). The Collision System checks for future collisions (opposed to immediate collisions), which are collisions happening at a specific point in the future. It finds out if two units will collide and treats the collision adequately. If all of the future collisions are treated, the risk for immediate collisions is zero.
 
 In <I>StarCraft</I>, units are constrained by the fact that they are competing for waypoints. They are constantly stopping and moving because each time they travel to a new node they ask "is the next node that I want to walk to occupied?" to the Collision Prediction System. If the answer is "no", they keep moving along the path. If the answer is "yes", the Collision Avoidance System processes the collision and gives orders to the unit to execute specified commands. Those commands may involve the creation of a new path.
 
@@ -153,7 +176,7 @@ In <I>Starcraft II</I>, units avoid obstacles and other units (but also flock to
 3. Before getting to the next position, units must process this next position through the Collision Prediction System, in order to predict collision with the other units in the environment.
 4. If a collision is found, the unit has to avoid (before it happens) it by following the rules of the Collision Avoidance System. If there is no collision, then the unit can go on its way.
 
-###### Collision Prediction System
+###### Collision Prediction System (detecting collisions)
 
 In each frame of the simulation, each unit needs to check for future collisions with all other units in the scene. This is done by processing the next tile the unit wants to go to through the collision prediction system. The possible situations of collision are:
 
@@ -165,11 +188,13 @@ In each frame of the simulation, each unit needs to check for future collisions 
 <img src="Images/collisionType.PNG" width="400"><br>
 _Enum with all of the possible types of collision_
 
-###### Collision Avoidance System
+In most RTS, basic collision determination consists of treating all units as spheres (or circles in 2D) and doing a simple spherical collision check. However, we do treat units as points and do the collision check with their next tiles.
+
+###### Collision Avoidance System (resolving collisions)
 
 Collision avoidance between units can involve some problems that only appear when we deal with many units, so a method to avoid collision between individuals can be inefficient when we have several ones.
 
-If a collision is predicted, one of the two units involved must act consequently, so it avoids the collision before it happens. Each unit has a priority and several ones could have the same priority, so the unit with the lower priority will always have to let the unit with the higher priority pass. The responses to the different situations of collision are:
+If a collision is predicted, one of the two units involved must act consequently, so it avoids the collision before it happens. Each unit has a priority and several ones could have the same priority, so the unit with the lower priority will always have to let the unit with the higher priority pass. The priority system avoids units to do a merry-go-round dance. The responses to the different situations of collision are:
 
 **1. _SameCell_ (conflict cell: the tile both units want to go to):** the unit waits until the other unit has reached the conflict cell and has updated its next position with the next waypoint of its path.<br>
 **2. _TowardsCell_ (conflict cell: any of the two tiles):** since units get stuck, the unit has to find a new next tile to go to and then recalculate its path.<br>
@@ -179,11 +204,7 @@ If a collision is predicted, one of the two units involved must act consequently
 
 The behavior in the next frame of each unit depends on the type of collision prediction and the type of collision avoidance.
 
-
-
-
-
-How do we avoid them lining up?
+5. The unit keeps moving until it reaches its goal.
 
 ## Links to more documentation
 
@@ -194,7 +215,12 @@ How do we avoid them lining up?
 If this research caught your eye and you want to keep practising, I suggest you to try to add one or all of the following improvements to the group movement system.
 
 1.
-2. Formations. Generate formations around the clicked location.
+2. Formations:
+- In contrast to groups, there are no internal collisions within the formation. If any space is left between some units, a non-grouped unit cannot occupy it.
+- Rules can be implemented to allow formations to break and reform on the other side of an obstacle if no path around the obstacle can be found, and/or to reshape.
+
+
+Generate formations around the clicked location.
 Check out how <I>Rise of Nations</I> (2003) does formations! When you click on your destination, if you hold the mouse button down and drag, small circles are drawn on the tiles, showing the formation that the selected units would made.
 PLUS: it also has smart systems where the melee is in front, the ranged behind, with artillery behind them.
 
