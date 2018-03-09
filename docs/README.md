@@ -174,7 +174,7 @@ In _Starcraft II_, units avoid obstacles and other units (but also flock togethe
 
 **PROBLEM 2. Dealing with dynamic obstacles (moving and still units)**
 
-**THIRD STEP.** Before getting to the next position, units must process this next position through the Collision Prediction System, in order to predict collision with the other units in the environment.<br>
+**THIRD STEP.** Before getting to the next position, units must process this next position through the Collision Prediction System, in order to predict collision with the other units in the environment.<br><br>
 **FOURTH STEP.** If a collision is found, the unit has to avoid (before it happens) it by following the rules of the Collision Avoidance System. If there is no collision, then the unit can go on its way.
 
 #### Collision Prediction System (detecting collisions)<br><br>
