@@ -56,6 +56,6 @@ wall. This leads to moving half of the group of units towards the side of the wa
 units to the opposite side.<br>
 <b>BUG 1 PENDING TO SOLVE.</b> The BFS search algorithm will be repalced for a Dijkstra algorithm, which also considers
 the cost of the nodes, preferring the low cost nodes. This way, Dijkstra will prefer to expand on the side of the wall the 
-user has clicked and avoid jumping on the opposite side.
+user has clicked and avoid jumping on the opposite side.<br>
 <b>BUG 2.</b> If many groups are moving at the same time and the user spam-clicks new goals for the units, the application either
 slows down or stops for a fraction of second, due to the high computational demand.
