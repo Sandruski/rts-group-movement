@@ -24,7 +24,7 @@ Before we start to implement our coordinated movement system, we should understa
 - Units always calculate the shortest route possible, even if this means getting through an enemy's trap. Thus, if units are shot while moving, they don't fire back.
 - When a harvester attempts to return to the base while another harvester is going out to collect resources, if their routes share the same narrow path, the two of them will sometimes meet. If they do, they will turn twice (each time continuing to block each other's progress), center their orientation, and finally move right through each other.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/AGtd0KkOvG4?start=400" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><br><br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/AGtd0KkOvG4?start=400" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><br>
 
 The shortest distance is determined with algebra, not calculus. Consequently, the resulting path only takes into account the distance from point A to point B, ignoring any obstacles. This makes units overlap each other when they move, but if they do overlap, they will spread out again when reaching their destination.
 
@@ -48,7 +48,7 @@ _Warcraft II map with 32x32 tiles. The two tiles that seem passable but actually
 - Units do not walk on top of each other, even if this means taking longer to get from point A to point B. Consequently, units remain visually separated.
 - Harvesting units (Terran SVC, Zerg drone, Protoss probe) would get jammed up trying to harvest crystals or vespene gas (hereafter "minerals") and they would grind to a halt, because they are constantly running headlong into other harvesters traveling in the opposite direction. To avoid this situation, they ignore collisions with other units, so they can operate efficiently.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/0oJPPCaQeD4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><br><br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/0oJPPCaQeD4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><br>
   
 <I>StarCraft</I> was built on the <I>Warcraft</I> engine (orthogonal perspective), but along the way the development team switched to isometric artwork to make the game more visually attractive. However, the terrain engine was not re-engineered to use isometric tiles. In order for pathfinding to work properly it was necessary to increase the resolution of the pathfinding map. Now, each 8x8 tile was either passable or unpassable. The increase in the size of the pathfinding map by a factor of 16 involved more computational effort when searching for a path. In addition, diagonal edges drawn in the artwork split many of the square tiles unevenly, making it hard to determine whether a tile should be passable or not.
 
@@ -62,13 +62,13 @@ _StarCraft map with 8x8 cells. The red line cuts each 8x8 cell into an irregular
 - Units of all sizes find their way to destinations, without overlapping each other and without stopping.
 - Smooth flow of the units.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/LztRm_bXGcc" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><br><br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/LztRm_bXGcc" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><br>
 
 ### Supreme Commander 2 (2010)
 
 The same annotations than in <I>StarCraft II: Wings of Liberty</I>.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/bovlsENv1g4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><br><br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/bovlsENv1g4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><br>
 
 ## Methods to approach it (used by the previous games)
 
@@ -318,7 +318,7 @@ d) Diagonal crossing: check if the currTile of the other unit is the conflict ce
 #### What should happen after completing it (and having uncommented the bonus code)
 The units should move considering the other units. This means that units will collide between themselves and resolve this collisions by either waiting for the other unit to pass or repathing an alternate route.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/f2Z3AoSObHQ" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/f2Z3AoSObHQ" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><br>
 
 ### Homework (optional)
 
