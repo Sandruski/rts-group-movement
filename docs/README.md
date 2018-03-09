@@ -134,13 +134,13 @@ _Struct for a single unit_
 
 ### Simple Movement Algorithm
 
-When a unit is ordered to move, it runs through a state-based movement algorithm. The states of the unit's movement are:
+When a unit is ordered to move, it runs through a state-based movement algorithm. The states of the unit's movement are:<br><br>
 **1. Wait for path:** if the unit has a valid goal, a path is requested to the Pathfinding module.<br>
 **2. Follow path:** the unit moves from one waypoint of the path to the next one. This state also manages the collision prediction and avoidance for the unit.<br>
 **3. Goal reached:** when the unit reaches its goal, it goes to this state.<br>
 **4. Increase waypoint:** when the unit reaches its next tile, this state updates the next tile with the next waypoint of the path.
 
-<I>StarCraft</I> relies almost solely on the pathfinding algorithm A* to move units from one point to another, mapping every single node that the unit needs to traverse over. In <I>StarCraft II</I>, a lot of the pathfinding is lef up to the unit, and waypoints are kept to minimum.
+_StarCraft_ relies almost solely on the pathfinding algorithm A* to move units from one point to another, mapping every single node that the unit needs to traverse over. In _StarCraft II_, a lot of the pathfinding is lef up to the unit, and waypoints are kept to minimum.
 
 <img src="Images/movementState.PNG" width="400"><br>
 _Enum with all of the possible states of a unit's movement_
@@ -159,7 +159,7 @@ _Enum with all of the possible states of a unit's movement_
 - When a new move command is issued while the unit is en route. This behaviour has given rise to SPAM-CLICKING. The path is literally re-calculated each time you click, so technically a unit is finding the most efficient path at the point of time closest to the click.
 - When the next node of the path is occupied by another unit and the treatment of the collision found requires to (the unit is stuck).
 
-**Why do not automatically recalculate the path?**
+**Why do not automatically recalculate the path?**<br><br>
 If the path is the most accurate when it is newly created, why do not automatically recalculate it instead of only doing it on click or when a certain type of collision is found? Because the pathfinding algorithm calculations are expensive, even by modern computing standards. Depending on the size of the grid, calculating hundreds of paths for hundreds of units adds up.
 
 Movement is strictly limited to cardinal direction (N, S, E, W, NE, NW, SE, and SW), and units cannot move forward 1 degrees, back 2 degrees, left 3 degrees, etc. This is why the <I>StarCraft</I> movement feels so blocky sometimes. If units moved outside the grid, like in <I>StarCraft II</I>, they would not be able to ask the question “is the node I am walking to occupied?”, which is the core of the local avoidance algorithm that we are going to implement next.
@@ -168,18 +168,18 @@ Movement is strictly limited to cardinal direction (N, S, E, W, NE, NW, SE, and 
 
 The A* algorithm takes into account only static obstacles. This means that dynamic obstacles like units are ignored when calculating the path. It is in the units' hands to avoid the dynamic obstacles, then. This is achieved with the Collision System, which is made of two smaller systems, the Collision Prediction System (which is run first) and the Collision Avoidance Sytem (which is run only if the Collision Prediction System determines a collision). The Collision System checks for future collisions (opposed to immediate collisions), which are collisions happening at a specific point in the future. It finds out if two units will collide and treats the collision adequately. If all of the future collisions are treated, the risk for immediate collisions is zero.
 
-In <I>StarCraft</I>, units are constrained by the fact that they are competing for waypoints. They are constantly stopping and moving because each time they travel to a new node they ask "is the next node that I want to walk to occupied?" to the Collision Prediction System. If the answer is "no", they keep moving along the path. If the answer is "yes", the Collision Avoidance System processes the collision and gives orders to the unit to execute specified commands. Those commands may involve the creation of a new path.
+In _StarCraft<_, units are constrained by the fact that they are competing for waypoints. They are constantly stopping and moving because each time they travel to a new node they ask "is the next node that I want to walk to occupied?" to the Collision Prediction System. If the answer is "no", they keep moving along the path. If the answer is "yes", the Collision Avoidance System processes the collision and gives orders to the unit to execute specified commands. Those commands may involve the creation of a new path.
 
-In <I>Starcraft II</I>, units avoid obstacles and other units (but also flock together) using steering behaviour. This allows units to weave in and out without calculating a whole new path or losing momentum. In a worst case scenario, the units can even ignore the collision radius, allowing for more fluid movement and higher movement efficiency overall.
+In _Starcraft II_, units avoid obstacles and other units (but also flock together) using steering behaviour. This allows units to weave in and out without calculating a whole new path or losing momentum. In a worst case scenario, the units can even ignore the collision radius, allowing for more fluid movement and higher movement efficiency overall.
 
-#### Implementation
+#### Implementation<br><br>
 
 **PROBLEM 2. Dealing with dynamic obstacles (moving and still units)**
 
 3. Before getting to the next position, units must process this next position through the Collision Prediction System, in order to predict collision with the other units in the environment.
 4. If a collision is found, the unit has to avoid (before it happens) it by following the rules of the Collision Avoidance System. If there is no collision, then the unit can go on its way.
 
-#### Collision Prediction System (detecting collisions)
+#### Collision Prediction System (detecting collisions)<br><br>
 
 In each frame of the simulation, each unit needs to check for future collisions with all other units in the scene. This is done by processing the next tile the unit wants to go to through the collision prediction system. The possible situations of collision are:
 
@@ -193,7 +193,7 @@ _Enum with all of the possible types of collision_
 
 In most RTS, basic collision determination consists of treating all units as spheres (or circles in 2D) and doing a simple spherical collision check. However, we do treat units as points and do the collision check with their next tiles.
 
-#### Collision Avoidance System (resolving collisions)
+#### Collision Avoidance System (resolving collisions)<br><br>
 
 Collision avoidance between units can involve some problems that only appear when we deal with many units, so a method to avoid collision between individuals can be inefficient when we have several ones.
 
