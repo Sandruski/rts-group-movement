@@ -6,7 +6,7 @@ _NOTE: although this research focuses mainly on real-time strategy (RTS) games, 
 
 ## Intro to the subject
 
-“Game-unit pathfinding is something that most players never notice until it doesn’t work quite right, and then that minor issue becomes a rage-inducing, end-of-the-world problem” says Patrick Wyatt, a game programmer who worked on <I>StarCraft</I>.
+“Game-unit pathfinding is something that most players never notice until it doesn’t work quite right, and then that minor issue becomes a rage-inducing, end-of-the-world problem” says Patrick Wyatt, a game programmer who worked on _StarCraft_.
 
 Moving troops in groups via complex terrain is a challenge that many games have to deal with, specially real-time strategy games, where hundreds of units compete for the same destinations. The main question is, how do we make units cooperate with each other, so they move around without causing a terrible chaos? While the first part of the answer is pathfinding, the technique of finding paths from one location to another, the second part is movement. Without controlling the movement, units would behave individually, without taking in account the behaviors of the rest of the units. Here is, then, where coordinated movement comes in.
 
@@ -48,9 +48,9 @@ _Warcraft II map with 32x32 tiles. The two tiles that seem passable but actually
 - Units do not walk on top of each other, even if this means taking longer to get from point A to point B. Consequently, units remain visually separated.
 - Harvesting units (Terran SVC, Zerg drone, Protoss probe) would get jammed up trying to harvest crystals or vespene gas (hereafter "minerals") and they would grind to a halt, because they are constantly running headlong into other harvesters traveling in the opposite direction. To avoid this situation, they ignore collisions with other units, so they can operate efficiently.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/0oJPPCaQeD4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/0oJPPCaQeD4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
   
-<I>StarCraft</I> was built on the <I>Warcraft</I> engine (orthogonal perspective), but along the way the development team switched to isometric artwork to make the game more visually attractive. However, the terrain engine was not re-engineered to use isometric tiles. In order for pathfinding to work properly it was necessary to increase the resolution of the pathfinding map. Now, each 8x8 tile was either passable or unpassable. The increase in the size of the pathfinding map by a factor of 16 involved more computational effort when searching for a path. In addition, diagonal edges drawn in the artwork split many of the square tiles unevenly, making it hard to determine whether a tile should be passable or not.
+_StarCraft_ was built on the _Warcraft_ engine (orthogonal perspective), but along the way the development team switched to isometric artwork to make the game more visually attractive. However, the terrain engine was not re-engineered to use isometric tiles. In order for pathfinding to work properly it was necessary to increase the resolution of the pathfinding map. Now, each 8x8 tile was either passable or unpassable. The increase in the size of the pathfinding map by a factor of 16 involved more computational effort when searching for a path. In addition, diagonal edges drawn in the artwork split many of the square tiles unevenly, making it hard to determine whether a tile should be passable or not.
 
 Because the project was always two months from launch, there was no time to re-engine the terrain engine, so the pathfinding code had to be made to work. The pathfinding code, then, turned into a gigantic state-machine which handled all the tricky edge-cases.
 
@@ -66,27 +66,27 @@ _StarCraft map with 8x8 cells. The red line cuts each 8x8 cell into an irregular
 
 ### Supreme Commander 2 (2010)
 
-The same annotations than in <I>StarCraft II: Wings of Liberty</I>.
+The same annotations than in _StarCraft II: Wings of Liberty_.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/bovlsENv1g4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><br>
 
-## Methods to approach it (used by the previous games)
+## Methods to approach it (used by the previous games)<br>
 
 ### Tile-based algorithm A* (A-Star)
 
 #### Pathfinding technique: A*<br><br>
 
-The games <I>Command & Conquer: Tiberian Dawn</I>, <I>Warcraft I: Orcs & Humans</I>, <I>Warcraft II: Tides of Darkness</I>, and <I>StarCraft</I> base their group movement on the tile-based algorithm A* (A-Star). The primitive A* is the most common pathfinding algorithm used by the first RTS games such as the named, which had to deal with much lower processing power. 
+The games _Command & Conquer: Tiberian Dawn_, _Warcraft: Orcs & Humans_, _Warcraft II: Tides of Darkness_, and _StarCraft_ base their group movement on the tile-based algorithm A* (A-Star). The primitive A* is the most common pathfinding algorithm used by the first RTS games such as the named, which had to deal with much lower processing power. 
 
 #### Movement behavior: set of rules<br><br>
 
-Since the pathfinding algorithm A* only takes into account the terrain (and, if modified, the objects of the map), it has to be complemented by a set of rules, which vary depending on the game and its needs. For example, in <I>Warcraft II</I>, a rule says that if a unit runs into other units and cannot slide past them, it will repath an alternate route. This works fine for a samll number of units, but when trying to navigate a large number of units through a narrow passage, a few will inevitably run into the units ahead of them and find another path.
+Since the pathfinding algorithm A* only takes into account the terrain (and, if modified, the objects of the map), it has to be complemented by a set of rules, which vary depending on the game and its needs. For example, in _Warcraft II_, a rule says that if a unit runs into other units and cannot slide past them, it will repath an alternate route. This works fine for a samll number of units, but when trying to navigate a large number of units through a narrow passage, a few will inevitably run into the units ahead of them and find another path.
   
 As seen, those rules are very limited. In some situations, they force games to sacrify more natural behaviors to make the whole system work. A true shortest path algorithm can be immensely annoying to gameplay, due to human perception. That is a pitfall the game designer must take into consideration when picking an algorithm. From the limitations behind the tile-based algorithm A* when dealing with group movement, it came out the Flocking System with Flow Fields.
 
 ### Flow Fields + Flocking (or Swarm) Behavior
 
-The games <I>StarCraft II: Wings of Liberty</I> and <I>Supreme Commander 2</I>, and the great majority of modern RTS games use a Flocking System with Flow Fields to maintain fluid control of large groups of units. A local dynamic Flow Field is generated around each unit. The Flow Fields of the units are combined together before adjusting the units' movements.
+The games _StarCraft II: Wings of Liberty_ and _Supreme Commander 2_, and the great majority of modern RTS games use a Flocking System with Flow Fields to maintain fluid control of large groups of units. A local dynamic Flow Field is generated around each unit. The Flow Fields of the units are combined together before adjusting the units' movements.
 
 #### Pathfinding technique: Flow Fields<br><br>
 
@@ -111,7 +111,7 @@ Since the first one, the Pathfinding module, will be already implemented, we wil
 
 Once created the Movement module, we have to build two structs, one for managing groups and the other one for managing units. These structs come in handy especially if the game handles groups of units of different types. One group may be the player units and the other one may be the enemy units, so when they cross, units from one grup can start attacking units from the other group.
 
-#### Groups
+#### Groups<br>
 
 The UnitGroup contains several units, although the group behaves as a single entity: 
 - The units within the group always have close goals.
@@ -125,7 +125,7 @@ Groups can also have the following properties:
 - Centroid of the group: reference point for the group.
 - Commander for the group: unit that does the pathfinding for the group and decides which route the group as a whole takes.
 
-#### Units
+#### Units<br>
 
 The SingleUnit struct is contained by a unit. It handles all the necessary information regarding the unit's movement and keeps it updated. If the unit changes its group, a pointer to the new group will be saved in this struct.
 
@@ -153,8 +153,6 @@ _Enum with all of the possible states of a unit's movement_
 
 **SECOND STEP.** The unit moves along the path, but it only goes 1 square at a time, due to the need of local collision determination. Before making the move, the unit just asks the path which direction it's supposed to go next. After that, it tries to move there.
 
-#### FAQ
-
 **When is the path recalculated?**
 - When a new move command is issued while the unit is en route. This behaviour has given rise to SPAM-CLICKING. The path is literally re-calculated each time you click, so technically a unit is finding the most efficient path at the point of time closest to the click.
 - When the next node of the path is occupied by another unit and the treatment of the collision found requires to (the unit is stuck).
@@ -176,7 +174,7 @@ In _Starcraft II_, units avoid obstacles and other units (but also flock togethe
 
 **PROBLEM 2. Dealing with dynamic obstacles (moving and still units)**
 
-**THIRD STEP.** Before getting to the next position, units must process this next position through the Collision Prediction System, in order to predict collision with the other units in the environment.
+**THIRD STEP.** Before getting to the next position, units must process this next position through the Collision Prediction System, in order to predict collision with the other units in the environment.<br>
 **FOURTH STEP.** If a collision is found, the unit has to avoid (before it happens) it by following the rules of the Collision Avoidance System. If there is no collision, then the unit can go on its way.
 
 #### Collision Prediction System (detecting collisions)<br><br>
@@ -212,7 +210,7 @@ The behavior in the next frame of each unit depends on the type of collision pre
 ## Performance
 
 ### CPU usage
-CPU is not affected by moving a single unit, but the movement of multiple units needs to be extremely conservative in its CPU usage. This is why, before making any decision that may affect the performance of the system, we need to prioritize one of two things. **Minimize CPU usage or maximize the intelligence behind the movement?**
+CPU is not affected by moving a single unit, but the movement of multiple units needs to be extremely conservative in its CPU usage. This is why, before making any decision that may affect the performance of the system, we need to prioritize one of two things. Minimize CPU usage or maximize the intelligence behind the movement?
 
 E.g.: when a unit needs to find a new, valid tile to move to, the possible, valid tiles are checked taking in account its priority. We could calculate this priority as the number of waypoints that the new path would have (maximize the accuracy behind the movement: the new tile would be the accurest tile that could have been found) or as the distance from the new tile to the goal tile (minimize CPU usage: since the unwalkable tiles are ignored, the new tile could be the closest to the goal tile, but not the best option when creating the new path).
 
@@ -330,6 +328,6 @@ If this research caught your eye and you want to keep practising, I suggest you 
 - In contrast to groups, there are no internal collisions within the formation. If any space is left between some units, a non-grouped unit cannot occupy it.
 - Rules can be implemented to allow formations to break and reform on the other side of an obstacle if no path around the obstacle can be found, and/or to reshape.
 
-Check out how <I>Rise of Nations</I> (2003) does formations! When you click on your destination, if you hold the mouse button down and drag, small circles are drawn on the tiles, showing the formation that the selected units would made.
+Check out how _Rise of Nations_ (2003) does formations! When you click on your destination, if you hold the mouse button down and drag, small circles are drawn on the tiles, showing the formation that the selected units would made.
 
 **3. HARD:** if two groups of enemy units bump into each other while following their paths, make the units attack the units of the other group. Each of the units should choose another unit to attack. The other unit should have the same level or less than the unit that is attacking it. If a unit runs low in health, make it go away. When the battle is over, the remaining units (if any) should keep following their path to their initial destination.
