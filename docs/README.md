@@ -10,7 +10,10 @@ _NOTE: although this research focuses mainly on real-time strategy (RTS) games, 
 
 Moving troops in groups via complex terrain is a challenge that many games have to deal with, specially real-time strategy games, where hundreds of units compete for the same destinations. The main question is, how do we make units cooperate with each other, so they move around without causing a terrible chaos? While the first part of the answer is pathfinding, the technique of finding paths from one location to another, the second part is movement. Without controlling the movement, units would behave individually, without taking in account the behaviors of the rest of the units. Here is, then, where coordinated movement comes in.
 
-Coordinated movement is the result of combining two processes. The first one is pathfinding, while the second one is movement, the execution of a given path.
+Coordinated movement is the result of combining two processes. The first one is pathfinding, while the second one is movement, the execution of a given path. This is what is intented to achieve in this research.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/V5RyEadOXCY" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+_Final results of the research_
 
 ## How different games have approach it
 
