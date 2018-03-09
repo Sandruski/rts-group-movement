@@ -74,11 +74,11 @@ The same annotations than in <I>StarCraft II: Wings of Liberty</I>.
 
 ### Tile-based algorithm A* (A-Star)
 
-###### Pathfinding technique: A*
+#### Pathfinding technique: A*
 
 The games <I>Command & Conquer: Tiberian Dawn</I>, <I>Warcraft I: Orcs & Humans</I>, <I>Warcraft II: Tides of Darkness</I>, and <I>StarCraft</I> base their group movement on the tile-based algorithm A* (A-Star). The primitive A* is the most common pathfinding algorithm used by the first RTS games such as the named, which had to deal with much lower processing power. 
 
-###### Movement behavior: set of rules
+#### Movement behavior: set of rules
 
 Since the pathfinding algorithm A* only takes into account the terrain (and, if modified, the objects of the map), it has to be complemented by a set of rules, which vary depending on the game and its needs. For example, in <I>Warcraft II</I>, a rule says that if a unit runs into other units and cannot slide past them, it will repath an alternate route. This works fine for a samll number of units, but when trying to navigate a large number of units through a narrow passage, a few will inevitably run into the units ahead of them and find another path.
   
@@ -88,11 +88,11 @@ As seen, those rules are very limited. In some situations, they force games to s
 
 The games <I>StarCraft II: Wings of Liberty</I> and <I>Supreme Commander 2</I>, and the great majority of modern RTS games use a Flocking System with Flow Fields to maintain fluid control of large groups of units. A local dynamic Flow Field is generated around each unit. The Flow Fields of the units are combined together before adjusting the units' movements.
 
-###### Pathfinding technique: Flow Fields
+#### Pathfinding technique: Flow Fields
 
 Flow Fields are an alternate way of doing pathfinding which works better for larger groups of units. A Flow Field is a grid where each grid square has a directional vector. This vector should be pointed in the direction of the most efficient way to get to the destination, while avoiding static obstacles.
 
-###### Movement behavior: Flocking (or Swarm)
+#### Movement behavior: Flocking (or Swarm)
 
 The flocking model was defined by Craig Reynolds, an artificial life and computer graphics expert. Flocks, by definition, are a group of birds traveling together. Reynolds called the generic simulated flocking entities "boids", creating the Boids artificial life simulation (1986). The basic flocking model consists of three simple steering behaviors (separation, alignment and cohesion) which describe how an individual boid moves based on the positions and velocities of its nearby flockmates. As a result, entities in a flock (or boids) travel at roughly the same speed and form a cohesive group without strict arrangement.
 
@@ -111,7 +111,7 @@ Since the first one, the Pathfinding module, will be already implemented, we wil
 
 Once created the Movement module, we have to build two structs, one for managing groups and the other one for managing units. These structs come in handy especially if the game handles groups of units of different types. One group may be the player units and the other one may be the enemy units, so when they cross, units from one grup can start attacking units from the other group.
 
-###### Groups
+#### Groups
 
 The UnitGroup contains several units, although the group behaves as a single entity: 
 - The units within the group always have close goals.
@@ -125,7 +125,7 @@ Groups can also have the following properties:
 - Centroid of the group: reference point for the group.
 - Commander for the group: unit that does the pathfinding for the group and decides which route the group as a whole takes.
 
-###### Units
+#### Units
 
 The SingleUnit struct is contained by a unit. It handles all the necessary information regarding the unit's movement and keeps it updated. If the unit changes its group, a pointer to the new group will be saved in this struct.
 
@@ -145,7 +145,7 @@ When a unit is ordered to move, it runs through a state-based movement algorithm
 <img src="Images/movementState.PNG" width="400"><br>
 _Enum with all of the possible states of a unit's movement_
 
-###### Implementation
+#### Implementation
 
 1. When a unit is issued a command, the parameters of that command (the current location and the destination in the grid) are run through the pathfinding algorithm, which spits out an array of path coordinates (waypoints). The unit stores the path found, which is free of static obstacles (known as unwalkable tiles).
 
@@ -153,7 +153,7 @@ _Enum with all of the possible states of a unit's movement_
 
 2. The unit moves along the path, but it only goes 1 square at a time, due to the need of local collision determination. Before making the move, the unit just asks the path which direction it's supposed to go next. After that, it tries to move there.
 
-###### FAQ
+#### FAQ
 
 **When is the path recalculated?**
 - When a new move command is issued while the unit is en route. This behaviour has given rise to SPAM-CLICKING. The path is literally re-calculated each time you click, so technically a unit is finding the most efficient path at the point of time closest to the click.
@@ -172,14 +172,14 @@ In <I>StarCraft</I>, units are constrained by the fact that they are competing f
 
 In <I>Starcraft II</I>, units avoid obstacles and other units (but also flock together) using steering behaviour. This allows units to weave in and out without calculating a whole new path or losing momentum. In a worst case scenario, the units can even ignore the collision radius, allowing for more fluid movement and higher movement efficiency overall.
 
-###### Implementation
+#### Implementation
 
 **PROBLEM 2. Dealing with dynamic obstacles (moving and still units)**
 
 3. Before getting to the next position, units must process this next position through the Collision Prediction System, in order to predict collision with the other units in the environment.
 4. If a collision is found, the unit has to avoid (before it happens) it by following the rules of the Collision Avoidance System. If there is no collision, then the unit can go on its way.
 
-###### Collision Prediction System (detecting collisions)
+#### Collision Prediction System (detecting collisions)
 
 In each frame of the simulation, each unit needs to check for future collisions with all other units in the scene. This is done by processing the next tile the unit wants to go to through the collision prediction system. The possible situations of collision are:
 
@@ -193,7 +193,7 @@ _Enum with all of the possible types of collision_
 
 In most RTS, basic collision determination consists of treating all units as spheres (or circles in 2D) and doing a simple spherical collision check. However, we do treat units as points and do the collision check with their next tiles.
 
-###### Collision Avoidance System (resolving collisions)
+#### Collision Avoidance System (resolving collisions)
 
 Collision avoidance between units can involve some problems that only appear when we deal with many units, so a method to avoid collision between individuals can be inefficient when we have several ones.
 
@@ -211,12 +211,12 @@ The behavior in the next frame of each unit depends on the type of collision pre
 
 ## Performance
 
-###### CPU usage
+### CPU usage
 CPU is not affected by moving a single unit, but the movement of multiple units needs to be extremely conservative in its CPU usage. This is why, before making any decision that may affect the performance of the system, we need to prioritize one of two things. **Minimize CPU usage or maximize the intelligence behind the movement?**
 
 E.g.: when a unit needs to find a new, valid tile to move to, the possible, valid tiles are checked taking in account its priority. We could calculate this priority as the number of waypoints that the new path would have (maximize the accuracy behind the movement: the new tile would be the accurest tile that could have been found) or as the distance from the new tile to the goal tile (minimize CPU usage: since the unwalkable tiles are ignored, the new tile could be the closest to the goal tile, but not the best option when creating the new path).
 
-###### Movement module performance
+### Movement module performance
 
 After a session of profiling, these are the results of the implemented Movement module:
 
@@ -324,14 +324,12 @@ The units should move considering the other units. This means that units will co
 
 If this research caught your eye and you want to keep practising, I suggest you to try to add one or all of the following improvements to the group movement system.
 
-1.
-2. Formations:
+**1. EASY:** make your system consider other dynamic obstacles (like buildings), not just units. What if the map changes and the path is no longer optimal (or possible)? If you clicked your unit to go across the map and suddenly a building gets placed in the middle of its way, the original path calculated can no longer be considered accurate (because it was generated before the building was placed).
+
+**2. MID:** add formations to your system:
 - In contrast to groups, there are no internal collisions within the formation. If any space is left between some units, a non-grouped unit cannot occupy it.
 - Rules can be implemented to allow formations to break and reform on the other side of an obstacle if no path around the obstacle can be found, and/or to reshape.
 
-
-Generate formations around the clicked location.
 Check out how <I>Rise of Nations</I> (2003) does formations! When you click on your destination, if you hold the mouse button down and drag, small circles are drawn on the tiles, showing the formation that the selected units would made.
-PLUS: it also has smart systems where the melee is in front, the ranged behind, with artillery behind them.
 
-
+**3. HARD:** if two groups of enemy units bump into each other while following their paths, make the units attack the units of the other group. Each of the units should choose another unit to attack. The other unit should have the same level or less than the unit that is attacking it. If a unit runs low in health, make it go away. When the battle is over, the remaining units (if any) should keep following their path to their initial destination.
