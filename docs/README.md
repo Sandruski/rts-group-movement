@@ -244,6 +244,79 @@ To sum up, the Movement module should be used for 8 to 16 units. While it is ide
 
 ## TODOs
 
+Time to practise! Download the Handout and try to finish the TODOs by your own. If you are stuck in a TODO, you can check it explained in detail down below. With the given Handout, you should be able to create units and select them. However, if you set a destination tile for them, the program should crush.
+
+### TODO 1
+
+#### Solution explained
+- The unit has a pointer to a SingleUnit already declared, which is called ‘singleUnit’. It is only needed to initialize it with a new SingleUnit. Since the unit is not a member of a group yet, its group will be nullptr.
+- The Movement module has a method to create a group from a given unit. Call it from this unit.
+
+#### What should happen after completing it
+You should be able to create units, select them and set a destination tile for them without having the program crush. However, the selected units will not move.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/IkCTjuU-dwY" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+### TODO 2
+
+#### Solution explained
+- The Movement module has a method to check if a tile is valid. Call it. The goal of the unit is the tile that needs to be checked. Set to true the goalTile check, so the tile will not be valid if it coincides with the goal of another unit.
+- If the goal is not valid, update both the goal and the newGoal of the unit with a goal calculated with a method that finds a new valid goal. The goal that must be passed as an argument is the goal of the group, not the unit’s (it could not be valid). The method will expand with a BFS from the goal passed as an argument.
+
+#### What should happen after completing it
+If you set a destination tile for the units, you should see the goal tile of each unit drawn on the map.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/yQbKd3JgzO8" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+### TODO 3
+
+#### Solution explained
+- nextPos is nextTile in map coordinates. By calculating the difference between the nextPos and the current position of the unit, we find the distance that the unit should move to reach nextTile.
+- To normalize the movePos, first you need to calculate its norm. After that, divide the movePos by its norm (only if the norm is bigger than zero).
+- The unit has a method to set its direction. Set it with the normalized movePos. 
+- Multiply the movePos by the speed of the unit and the delta time.
+
+#### What should happen after completing it:
+Nothing in the scene should have changed.
+
+### TODO 4
+
+#### Solution explained
+- The endPos is calculated by adding the movePos to the current position of the unit.
+- The unit has a method to know if it would reach a tile during this move. It only needs the nextPos and the endPos to be passed as arguments.
+- If the unit would reach the nextTile during this move, simply assign the nextPos to the current position of the unit and the nextTile to the currTile. Set the movement state of the unit to increase waypoint.
+- If the unit would not reach the nextTile during this move, add the movePos to its current position.
+
+#### What should happen after completing it
+Units should be moving perfectly from one tile to the next one, until the reach their destinations. When moving, units will overlap each other, because there is no collision system running yet.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/9YKEKs1uElI" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+### TODO 5
+
+#### Solution explained
+a) Towards collision: the nextTile of the unit should match the currTile of the other unit and the nextTile of the other unit should match the currTile of this unit.
+b) Its cell collision: the nextTile of the unit should match the currTile of the other unit.
+c) Same cell collision: the nextTile of the unit should match the nextTile of the other unit.
+
+#### What should happen after completing it (and having uncommented the bonus code)
+If two units collide while moving, the unit that waits for the other unit will wait forever, since we have not set yet the appropriate conditions to resolve the collisions found.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/HSwNaQVSvAw" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+### TODO 6
+
+#### Solution explained
+a) Towards collision: units get stuck, so it is needed to find a new, valid nextTile for the unit by calling a method that changes the next tile of a unit.
+b) Its cell collision: check if the currTile of the other unit is no longer the conflict cell.
+c) Same cell collision: check if the nextTile of the other unit is no longer the conflict cell.
+d) Diagonal crossing: check if the currTile of the other unit is the conflict cell.
+
+#### What should happen after completing it (and having uncommented the bonus code)
+The units should move considering the other units. This means that units will collide between themselves and resolve this collisions by either waiting for the other unit to pass or repathing an alternate route.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/f2Z3AoSObHQ" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
 ### Homework (optional)
 
 If this research caught your eye and you want to keep practising, I suggest you to try to add one or all of the following improvements to the group movement system.
