@@ -46,7 +46,7 @@ Unit::Unit(EntityInfo entityInfo, uint priority) : Entity(entityInfo)
 	idleSpeed = u.idle.speed;
 
 	// TODO 1:
-	// Create a new SingleUnit for the Unit
+	// Create a new SingleUnit for the unit
 	// Ask the Movement module to create a new group with the unit
 
 }
