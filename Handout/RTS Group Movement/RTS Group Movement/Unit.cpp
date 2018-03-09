@@ -45,8 +45,10 @@ Unit::Unit(EntityInfo entityInfo, uint priority) : Entity(entityInfo)
 	downRightSpeed = u.downRight.speed;
 	idleSpeed = u.idle.speed;
 
-	singleUnit = new SingleUnit(this, nullptr);
-	App->movement->CreateGroupFromUnit(this);
+	// TODO 1:
+	// Create a new SingleUnit for the Unit
+	// Ask the Movement module to create a new group with the unit
+
 }
 
 void Unit::Move(float dt)
@@ -60,8 +62,9 @@ void Unit::Move(float dt)
 
 	// ---------------------------------------------------------------------
 
-	if ((isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) || singleUnit->wakeUp)
-		unitState = UnitState_Walk;
+	if (singleUnit != nullptr)
+		if ((isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) || singleUnit->wakeUp)
+			unitState = UnitState_Walk;
 
 	UnitStateMachine(dt);
 

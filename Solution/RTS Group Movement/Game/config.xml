@@ -1,0 +1,101 @@
+<!-- Config file for the game -->
+
+<config>
+  <app>
+    <title>RTS Group Movement</title>
+    <organization>UPC</organization>    
+  </app>
+	
+  <renderer>
+    <vsync value="0"/>
+    <capFrames value="30"/>
+  </renderer>
+
+  <window>
+    <resolution width="1024" height="768" scale="1"/>
+    <fullscreen value="false"/>
+    <borderless value="false"/>
+    <resizable value="false"/>
+    <fullscreen_window value="false"/>
+    <icon name="Assets/Sprites/Textures/Icon.bmp"/>
+  </window>
+
+  <map>
+    <folder>data/assets/textures/maps/</folder>
+  </map>
+
+  <scene>
+    <maps>
+      <warcraft name="warcraft_walk.tmx" active="1" tex="data/assets/textures/maps/warcraftDebugTex.png"/>
+    </maps>
+  </scene>
+
+  <entities>
+    <spritesheets>
+      <archer name="data/assets/textures/sprites/archer.png"/>
+    </spritesheets>
+    <animations>
+      <archer>
+        <up speed="4" loop="1">
+          <frame x="0" y="0" w="60" h="75"/>
+          <frame x="0" y="75" w="60" h="75"/>
+          <frame x="0" y="150" w="60" h="75"/>
+          <frame x="0" y="225" w="60" h="75"/>
+          <frame x="0" y="300" w="60" h="75"/>
+        </up>
+        <upRight speed="4" loop="1">
+          <frame x="60" y="0" w="60" h="75"/>
+          <frame x="60" y="75" w="60" h="75"/>
+          <frame x="60" y="150" w="60" h="75"/>
+          <frame x="60" y="225" w="60" h="75"/>
+          <frame x="60" y="300" w="60" h="75"/>
+        </upRight>
+        <upLeft speed="4" loop="1">
+          <frame x="480" y="0" w="60" h="75"/>
+          <frame x="480" y="75" w="60" h="75"/>
+          <frame x="480" y="150" w="60" h="75"/>
+          <frame x="480" y="225" w="60" h="75"/>
+          <frame x="480" y="300" w="60" h="75"/>
+        </upLeft>
+        <down speed="4" loop="1">
+          <frame x="240" y="0" w="60" h="75"/>
+          <frame x="240" y="75" w="60" h="75"/>
+          <frame x="240" y="150" w="60" h="75"/>
+          <frame x="240" y="225" w="60" h="75"/>
+          <frame x="240" y="300" w="60" h="75"/>
+        </down>
+        <downRight speed="4" loop="1">
+          <frame x="180" y="0" w="60" h="75"/>
+          <frame x="180" y="75" w="60" h="75"/>
+          <frame x="180" y="150" w="60" h="75"/>
+          <frame x="180" y="225" w="60" h="75"/>
+          <frame x="180" y="300" w="60" h="75"/>
+        </downRight>
+        <downLeft speed="4" loop="1">
+          <frame x="360" y="0" w="60" h="75"/>
+          <frame x="360" y="75" w="60" h="75"/>
+          <frame x="360" y="150" w="60" h="75"/>
+          <frame x="360" y="225" w="60" h="75"/>
+          <frame x="360" y="300" w="60" h="75"/>
+        </downLeft>
+        <left speed="4" loop="1">
+          <frame x="420" y="0" w="60" h="75"/>
+          <frame x="420" y="75" w="60" h="75"/>
+          <frame x="420" y="150" w="60" h="75"/>
+          <frame x="420" y="225" w="60" h="75"/>
+          <frame x="420" y="300" w="60" h="75"/>
+        </left>
+        <right speed="4" loop="1">
+          <frame x="120" y="0" w="60" h="75"/>
+          <frame x="120" y="75" w="60" h="75"/>
+          <frame x="120" y="150" w="60" h="75"/>
+          <frame x="120" y="225" w="60" h="75"/>
+          <frame x="120" y="300" w="60" h="75"/>
+        </right>
+        <idle speed="4" loop="1">
+          <frame x="240" y="0" w="60" h="75"/>
+        </idle>
+      </archer>
+    </animations>
+  </entities>
+</config>

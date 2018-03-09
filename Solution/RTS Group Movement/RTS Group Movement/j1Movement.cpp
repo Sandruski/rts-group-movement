@@ -207,24 +207,24 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 	float m;
 	iPoint newGoal;
 
-	/// For each step:
 	switch (u->movementState) {
 
 	case MovementState_WaitForPath:
 
 		if (pathsCreated < MAX_PATHS_CREATED) {
 
-			// Check if the goal is valid. Valid means that it isn't the goal of another unit and that it isn't { -1,-1 }
+			// TODO 2:
+			// Check if the goal of the unit is valid. Valid means that it isn't the goal of another unit
+				// If the goal is not valid, find a new goal
+			// Create a new path for the unit
+				// If the path is created, set the unit state to MovementState_IncreaseWaypoint
+
 			if (!IsValidTile(u, u->goal, false, false, true))
 
-				// If the goal is not valid, find a new goal
 				u->goal = u->newGoal = FindNewValidGoal(u, u->group->goal);
 
-			// In case of execution FindNewValidGoal: this method returns { -1,-1 } if it doesn't find a valid goal 
-			// The pathfinding module will detect it isn't a valid goal, so we don't need to check it again
 			if (u->CreatePath(u->currTile)) {
 
-				// Set state to IncreaseWaypoint, in order to start following the path
 				u->movementState = MovementState_IncreaseWaypoint;
 
 				pathsCreated++;
@@ -239,10 +239,14 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 		// MOVEMENT CALCULATION
 		// ---------------------------------------------------------------------
 
-		// Calculate the difference between nextTile and currTile. The result will be in the interval [-1,1]
+		// TODO 3:
+		// Calculate the difference between the nextPos and the current position of the unit and store the result inside the temporary iPoint called movePos
+		// Normalize the movePos. It should be in the interval [-1,1]
+		// Update the direction of the unit with the normalized movePos
+		// Apply the speed and the dt to the movePos
+
 		movePos = { (float)nextPos.x - u->unit->entityInfo.pos.x, (float)nextPos.y - u->unit->entityInfo.pos.y };
 
-		// Normalize
 		m = sqrtf(pow(movePos.x, 2.0f) + pow(movePos.y, 2.0f));
 
 		if (m > 0.0f) {
@@ -252,7 +256,6 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 		u->unit->SetUnitDirectionByValue(movePos);
 
-		// Apply the speed and the dt to the previous result
 		movePos.x *= u->speed * dt;
 		movePos.y *= u->speed * dt;
 
@@ -266,6 +269,8 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 		if (u->coll != CollisionType_NoCollision) {
 
 			u->StopUnit();
+
+			// TODO 6 BONUS CODE: Uncomment when finished the whole TODO 6
 
 			// If the waitTile is the waitUnit's goal, the tile will never be available (unless the waitUnit changes its goal)
 			if (u->waitUnit != nullptr) {
@@ -320,12 +325,16 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 					}		
 
 					break;
-				}
+				}				
 			}
 
 			if (u->coll == CollisionType_ItsCell) {
 
-				if (u->waitUnit != nullptr)
+				if (u->waitUnit != nullptr) {
+
+					// TODO 6b: Check if the other unit is no longer on the conflict tile
+						// If the answer is true, set the collision of the unit to NoCollision and its 'wait' variable to false
+
 					if (u->waitUnit->currTile != u->waitTile) {
 
 						u->coll = CollisionType_NoCollision;
@@ -333,10 +342,15 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 						LOG("%s: RESOLVED ITS CELL", u->unit->GetColorName().data());
 					}
+				}
 			}
 			else if (u->coll == CollisionType_SameCell) {
 
-				if (u->waitUnit != nullptr)
+				if (u->waitUnit != nullptr) {
+
+					// TODO 6c: Check if the other unit's nextTile is no longer the conflict tile
+						// If the answer is true, set the collision of the unit to NoCollision and its 'wait' variable to false
+
 					if (u->waitUnit->nextTile != u->waitTile) {
 
 						u->coll = CollisionType_NoCollision;
@@ -344,10 +358,15 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 						LOG("%s: RESOLVED SAME CELL", u->unit->GetColorName().data());
 					}
+				}
 			}
 			else if (u->coll == CollisionType_DiagonalCrossing) {
 
-				if (u->waitUnit != nullptr)
+				if (u->waitUnit != nullptr) {
+
+					// TODO 6d: Check if the other unit has reached the conflict tile
+						// If the answer is true, set the collision of the unit to NoCollision and its 'wait' variable to false
+
 					if (u->waitUnit->currTile == u->waitTile) {
 
 						u->coll = CollisionType_NoCollision;
@@ -355,13 +374,14 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 						LOG("%s: RESOLVED CROSSING", u->unit->GetColorName().data());
 					}
+				}
 			}
 			else if (u->coll == CollisionType_TowardsCell) {
 
-				// Units get stuck. Find a new, valid nextTile for one of them
-				// ChangeNextTile uses the CreatePath method, so first we need to check if we can create a new path on this update
-
 				if (pathsCreated < MAX_PATHS_CREATED) {
+
+					// TODO 6a: Find a new, valid nextTile for the unit and update it
+						// If it the tile is found, set the collision of the unit to NoCollision and its 'wait' variable to false
 
 					if (ChangeNextTile(u)) {
 
@@ -382,25 +402,27 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 		// TILE FITTING
 		// ---------------------------------------------------------------------
 
-		// Predict where the unit will be after moving
+		// TODO 4:
+		// Predict where the unit will be after moving and store the result it inside the temporary iPoint called endPos
+		// Check if the unit would reach the nextTile during this move. If the answer is yes, then:
+			// Update the unit's position with the nextPos
+			// Update the unit's currTile with the nextTile
+			// Set the unit's movement state to IncreaseWaypoint
+		// Add the movePos to the unit's current position
+
 		endPos = { u->unit->entityInfo.pos.x + movePos.x,u->unit->entityInfo.pos.y + movePos.y };
 
-		// Check if the unit would reach the nextTile during this move
-		/// We check with an offset, in order to avoid the unit to miss the nextTile
 		if (u->IsTileReached(nextPos, endPos)) {
 
-			// If the unit's going to reach the nextTile during this move:
 			u->unit->entityInfo.pos.x = nextPos.x;
 			u->unit->entityInfo.pos.y = nextPos.y;
 
-			// Notice that we update the currTile here!
 			u->currTile = u->nextTile;
 
 			u->movementState = MovementState_IncreaseWaypoint;
 			break;
 		}
 
-		// If the unit's not going to reach the nextTile yet, keep moving
 		u->unit->entityInfo.pos.x += movePos.x;
 		u->unit->entityInfo.pos.y += movePos.y;
 
@@ -464,32 +486,34 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 			if ((*units) != singleUnit) {
 
 				// TOWARDS COLLISION
+				// TODO 5a: Check if two units would reach the tile of each other. Make sure that the collision would be frontal!
+
 				if (singleUnit->nextTile == (*units)->currTile && (*units)->nextTile == singleUnit->currTile && (*units)->coll != CollisionType_TowardsCell) {
 
 					if (IsOppositeDirection(singleUnit, (*units))) {
+						
+						// TODO 5a BONUS CODE: Uncomment when finished the TODO 5a
 
-						// Decide which unit waits (depending on its priority value)
 						singleUnit->waitUnit = *units;
 						singleUnit->waitTile = singleUnit->nextTile;
-
-						/// DRAWING A: Here we don't check if the unit is already waiting. The unit can be waiting because of a previous check with another unit
-						/// But the important collision, above any else, is this. So if in a previous check with another unit, the unit has been detected
-						/// another kind of collision, it should have wait in true. We don't care and we subscribe the collision:)
-						/// We delete the check if (!singleUnit->wait)
 
 						singleUnit->coll = CollisionType_TowardsCell;
 						singleUnit->wait = true;
 
 						LOG("%s: TOWARDS", singleUnit->unit->GetColorName().data());
+						
 					}
 				}
 
 				if (singleUnit->coll != CollisionType_TowardsCell && (*units)->coll != CollisionType_TowardsCell) {
 
-					// ITS CELL
+					// ITS CELL. A reaches B's tile
+					// TODO 5b: Check if the unit would reach another unit's tile
+
 					if (singleUnit->nextTile == (*units)->currTile) {
 
-						// A reaches B's tile
+						// TODO 5b BONUS CODE: Uncomment when finished the TODO 5b
+						
 						singleUnit->waitUnit = *units;
 						singleUnit->waitTile = singleUnit->nextTile;
 
@@ -499,12 +523,16 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 
 							LOG("%s: ITS CELL", singleUnit->unit->GetColorName().data());
 						}
+						
 					}
 
-					// SAME CELL
+					// SAME CELL. A and B reach the same tile
+					// TODO 5c: Check if two units would reach the same tile
+
 					else if (singleUnit->nextTile == (*units)->nextTile && !(*units)->wait) {
 
-						// A and B reach the same tile
+						// TODO 5c BONUS CODE: Uncomment when finished the TODO 5c
+						
 						UnitDirection dirA = singleUnit->unit->GetUnitDirection();
 						UnitDirection dirB = (*units)->unit->GetUnitDirection();
 
@@ -541,12 +569,14 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 
 							LOG("%s: SAME CELL", (*units)->unit->GetColorName().data());
 						}
+						
 					}
 
 					// DIAGONAL CROSSING
+					// TODO 5 BONUS CODE: Uncomment when finished the whole TODO 5
+					
 					else {
 
-						// Diagonal crossing: even though the units don't reach the same tile, we want to avoid this situation
 						iPoint up = { (*units)->currTile.x, (*units)->currTile.y - 1 };
 						iPoint down = { (*units)->currTile.x, (*units)->currTile.y + 1 };
 						iPoint left = { (*units)->currTile.x - 1, (*units)->currTile.y };
@@ -560,10 +590,6 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 						if (singleUnit->nextTile == up) {
 
 							// We are sure than nextTile of this unit is valid, but what about the other unit's nextTile? We haven't check it yet
-							/// DRAWING B: IsValidTile(nullptr, (*units)->nextTile, true) we need it because the other unit may not be waiting yet (update order),
-							/// but will wait when it is its turn this update. Its nextTile may be occupied, whereas the current unit nextTile is not.
-							/// If this is the case, when checking for collisions for the other unit, it would give us an ItsCell or SameCell collision, probably...
-
 							if ((*units)->nextTile == myUp && !(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
 
 								// Decide which unit waits (depending on its priority value)
