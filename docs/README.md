@@ -147,11 +147,11 @@ _Enum with all of the possible states of a unit's movement_
 
 #### Implementation
 
-1. When a unit is issued a command, the parameters of that command (the current location and the destination in the grid) are run through the pathfinding algorithm, which spits out an array of path coordinates (waypoints). The unit stores the path found, which is free of static obstacles (known as unwalkable tiles).
+**FIRST STEP.** When a unit is issued a command, the parameters of that command (the current location and the destination in the grid) are run through the pathfinding algorithm, which spits out an array of path coordinates (waypoints). The unit stores the path found, which is free of static obstacles (known as unwalkable tiles).
 
 **PROBLEM 1. Shared destination.** If the unit is in a bigger group, only the first unit of the group calculates the path to the goal set by the user. The rest of the units' destinations are offset from that point and calculated after, one at a frame. This prevents the units to finish the path all to the same spot. Besides that, if every unit has its own path to its own unique destination, the whole movement of the group looks more natural, because paths tend to have less waypoints in common. This minimizes the chance of collision between the units along the path.
 
-2. The unit moves along the path, but it only goes 1 square at a time, due to the need of local collision determination. Before making the move, the unit just asks the path which direction it's supposed to go next. After that, it tries to move there.
+**SECOND STEP.** The unit moves along the path, but it only goes 1 square at a time, due to the need of local collision determination. Before making the move, the unit just asks the path which direction it's supposed to go next. After that, it tries to move there.
 
 #### FAQ
 
@@ -176,8 +176,8 @@ In _Starcraft II_, units avoid obstacles and other units (but also flock togethe
 
 **PROBLEM 2. Dealing with dynamic obstacles (moving and still units)**
 
-3. Before getting to the next position, units must process this next position through the Collision Prediction System, in order to predict collision with the other units in the environment.
-4. If a collision is found, the unit has to avoid (before it happens) it by following the rules of the Collision Avoidance System. If there is no collision, then the unit can go on its way.
+**THIRD STEP.** Before getting to the next position, units must process this next position through the Collision Prediction System, in order to predict collision with the other units in the environment.
+**FOURTH STEP.** If a collision is found, the unit has to avoid (before it happens) it by following the rules of the Collision Avoidance System. If there is no collision, then the unit can go on its way.
 
 #### Collision Prediction System (detecting collisions)<br><br>
 
@@ -207,7 +207,7 @@ If a collision is predicted, one of the two units involved must act consequently
 
 The behavior in the next frame of each unit depends on the type of collision prediction and the type of collision avoidance.
 
-5. The unit keeps moving until it reaches its goal.
+**FIFTH AND LAST STEP.** The unit keeps moving until it reaches its goal.
 
 ## Performance
 
