@@ -134,6 +134,7 @@
     <ClInclude Include="j1Window.h" />
     <ClInclude Include="p2Log.h" />
     <ClInclude Include="p2Point.h" />
+    <ClInclude Include="j1PathManager.h" />
     <ClInclude Include="PugiXml\src\pugiconfig.hpp" />
     <ClInclude Include="PugiXml\src\pugixml.hpp" />
     <ClInclude Include="Unit.h" />
@@ -155,6 +156,7 @@
     <ClCompile Include="j1Timer.cpp" />
     <ClCompile Include="j1Window.cpp" />
     <ClCompile Include="p2Log.cpp" />
+    <ClCompile Include="j1PathManager.cpp" />
     <ClCompile Include="PugiXml\src\pugixml.cpp" />
     <ClCompile Include="Unit.cpp" />
   </ItemGroup>

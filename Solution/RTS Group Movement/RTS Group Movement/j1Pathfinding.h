@@ -12,10 +12,18 @@ using namespace std;
 #define DEFAULT_PATH_LENGTH 50
 #define INVALID_WALK_CODE 255
 
-enum Distance {
-	DISTANCE_TO,
-	DISTANCE_NO_SQRT,
-	DISTANCE_MANHATTAN
+enum DistanceHeuristic {
+
+	DistanceHeuristic_DistanceTo,
+	DistanceHeuristic_DistanceNoSqrt,
+	DistanceHeuristic_DistanceManhattan
+};
+
+enum PathfindingStatus {
+
+	PathfindingStatus_PathFound,
+	PathfindingStatus_PathNotFound,
+	PathfindingStatus_SearchIncomplete
 };
 
 // --------------------------------------------------
@@ -23,49 +31,6 @@ enum Distance {
 // Intro: http://www.raywenderlich.com/4946/introduction-to-a-pathfinding
 // Details: http://theory.stanford.edu/~amitp/GameProgramming/
 // --------------------------------------------------
-
-struct PathNode;
-
-class j1PathFinding : public j1Module
-{
-public:
-
-	j1PathFinding();
-
-	// Destructor
-	~j1PathFinding();
-
-	// Called before quitting
-	bool CleanUp();
-
-	// Sets up the walkability map
-	void SetMap(uint width, uint height, uchar* data);
-
-	// Main function to request a path from A to B
-	int CreatePath(const iPoint& origin, const iPoint& destination, Distance distance_type);
-
-	// To request all tiles involved in the last generated path
-	const vector<iPoint>* GetLastPath() const;
-
-	// Utility: return true if pos is inside the map boundaries
-	bool CheckBoundaries(const iPoint& pos) const;
-
-	// Utility: returns true is the tile is walkable
-	bool IsWalkable(const iPoint& pos) const;
-
-	// Utility: return the walkability value of a tile
-	int GetTileAt(const iPoint& pos) const;
-
-private:
-
-	// size of the map
-	uint width = 0;
-	uint height = 0;
-	// all map walkability values [0..255]
-	uchar* map = nullptr;
-	// we store the created path here
-	vector<iPoint> last_path;
-};
 
 // forward declaration
 struct PathList;
@@ -85,7 +50,7 @@ struct PathNode
 	// Calculates this tile score
 	float Score() const;
 	// Calculate the F for a specific destination tile
-	float CalculateF(const iPoint& destination, Distance distance_type);
+	float CalculateF(const iPoint& destination, DistanceHeuristic distanceHeuristic);
 
 	// -----------
 	float g = 0;
@@ -100,6 +65,8 @@ struct PathNode
 // ---------------------------------------------------------------------
 struct PathList
 {
+	PathList() {}
+
 	// Looks for a node in this list and returns it's list node or NULL
 	const PathNode* Find(const iPoint& point) const;
 
@@ -112,6 +79,55 @@ struct PathList
 };
 
 // Utility: calculate a specific distance
-int CalculateDistance(iPoint origin, iPoint destination, Distance distance_type);
+int CalculateDistance(iPoint origin, iPoint destination, DistanceHeuristic distanceHeuristic);
+
+class j1PathFinding : public j1Module
+{
+public:
+
+	j1PathFinding();
+
+	// Destructor
+	~j1PathFinding();
+
+	// Called before quitting
+	bool CleanUp();
+
+	// Sets up the walkability map
+	void SetMap(uint width, uint height, uchar* data);
+
+	// Main function to request a path from A to B
+	int CreatePath(const iPoint& origin, const iPoint& destination, DistanceHeuristic distanceHeuristic = DistanceHeuristic_DistanceManhattan);
+
+	// To request all tiles involved in the last generated path
+	const vector<iPoint>* GetLastPath() const;
+
+	// Utility: return true if pos is inside the map boundaries
+	bool CheckBoundaries(const iPoint& pos) const;
+
+	// Utility: returns true is the tile is walkable
+	bool IsWalkable(const iPoint& pos) const;
+
+	// Utility: return the walkability value of a tile
+	int GetTileAt(const iPoint& pos) const;
+
+	PathfindingStatus CycleOnce();
+
+private:
+
+	// size of the map
+	uint width = 0;
+	uint height = 0;
+	// all map walkability values [0..255]
+	uchar* map = nullptr;
+	// we store the created path here
+	vector<iPoint> last_path;
+
+	// CycleOnce
+	PathList open;
+	PathList close;
+	iPoint goal = { 0,0 };
+	DistanceHeuristic distanceHeuristic = DistanceHeuristic_DistanceManhattan;
+};
 
 #endif //__j1PATHFINDING_H__

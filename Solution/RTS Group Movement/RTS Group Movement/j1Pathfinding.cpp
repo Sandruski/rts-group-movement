@@ -180,14 +180,14 @@ float PathNode::Score() const
 // PathNode -------------------------------------------------------------------------
 // Calculate the F for a specific destination tile
 // ----------------------------------------------------------------------------------
-float PathNode::CalculateF(const iPoint& destination, Distance distance_type)
+float PathNode::CalculateF(const iPoint& destination, DistanceHeuristic distanceHeuristic)
 {
 	if (diagonal)
 		g = parent->g + 1.7f;
 	else
 		g = parent->g + 1.0f;
 
-	h = CalculateDistance(pos, destination, distance_type);
+	h = CalculateDistance(pos, destination, distanceHeuristic);
 
 	return g + h;
 }
@@ -195,12 +195,16 @@ float PathNode::CalculateF(const iPoint& destination, Distance distance_type)
 // ----------------------------------------------------------------------------------
 // Actual A* algorithm: return number of steps in the creation of the path or -1 ----
 // ----------------------------------------------------------------------------------
-int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, Distance distance_type)
+int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, DistanceHeuristic distanceHeuristic)
 {	
 	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
 
 	last_path.clear();
 	int ret = 0;
+
+	// CycleOnce
+	goal = destination;
+	this->distanceHeuristic = distanceHeuristic;
 
 	// If origin or destination are not walkable, return -1
 	if (!IsWalkable(origin) || !IsWalkable(destination))
@@ -208,11 +212,9 @@ int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, D
 	else {
 
 		// Create two lists: open, close
-		PathList open;
-		PathList close;
 
 		// Add the origin tile to open
-		PathNode originNode(0, CalculateDistance(origin, destination, distance_type), origin, nullptr);
+		PathNode originNode(0, CalculateDistance(origin, destination, distanceHeuristic), origin, nullptr);
 		open.pathNodeList.push_back(originNode);
 
 		// Iterate while we have tile in the open list
@@ -220,7 +222,6 @@ int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, D
 
 			// Move the lowest score cell from open list to the closed list
 			PathNode* curr = (PathNode*)open.GetNodeLowestScore();
-
 			close.pathNodeList.push_back(*curr);
 
 			// Erase element from list -----
@@ -269,7 +270,7 @@ int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, D
 						continue;
 					}
 
-					(*iterator).CalculateF(destination, distance_type);
+					(*iterator).CalculateF(destination, distanceHeuristic);
 					// If it is already in the open list, check if it is a better path (compare G)
 					if (open.Find((*iterator).pos) != NULL) {
 
@@ -292,21 +293,79 @@ int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, D
 	return ret;
 }
 
-int CalculateDistance(iPoint origin, iPoint destination, Distance distance_type)
+int CalculateDistance(iPoint origin, iPoint destination, DistanceHeuristic distanceHeuristic)
 {
 	int distance = 0;
 
-	switch (distance_type) {
-	case DISTANCE_TO:
+	switch (distanceHeuristic) {
+	case DistanceHeuristic_DistanceTo:
 		distance = origin.DistanceTo(destination);
 		break;
-	case DISTANCE_NO_SQRT:
+	case DistanceHeuristic_DistanceNoSqrt:
 		distance = origin.DistanceNoSqrt(destination);
 		break;
-	case DISTANCE_MANHATTAN:
+	case DistanceHeuristic_DistanceManhattan:
 		distance = origin.DistanceManhattan(destination);
 		break;
 	}
 
 	return distance;
+}
+
+PathfindingStatus j1PathFinding::CycleOnce() 
+{
+	// If the open list is empty, the path has not been found
+	if (open.pathNodeList.size() == 0)
+		return PathfindingStatus_PathNotFound;
+
+	// Move the lowest score cell from open list to the closed list
+	PathNode* curr = (PathNode*)open.GetNodeLowestScore();
+
+	/// Push_back the lowest score cell to the closed list
+	close.pathNodeList.push_back(*curr);
+	list<PathNode>::iterator currIt = close.pathNodeList.end();
+
+	/// Erase the lowest score cell from the open list
+	open.pathNodeList.erase(currIt);
+
+	// If the current node is the goal, the path has been found
+	if (curr->pos == goal)
+		return PathfindingStatus_PathFound;
+
+	// Fill a list of all adjancent nodes
+	PathList neighbors;
+	close.pathNodeList.back().FindWalkableAdjacents(neighbors);
+
+	list<PathNode>::iterator iterator = neighbors.pathNodeList.begin();
+
+	while (iterator != neighbors.pathNodeList.end()) {
+
+		// Ignore nodes in the closed list
+		if (close.Find((*iterator).pos) != NULL) {
+			iterator++;
+			continue;
+		}
+
+		(*iterator).CalculateF(goal, DistanceHeuristic_DistanceManhattan);
+
+		// If it is already in the open list, check if it is a better path (compare G)
+		if (open.Find((*iterator).pos) != NULL) {
+
+			// If it is a better path, Update the parent
+			PathNode open_node = *open.Find((*iterator).pos);
+			if ((*iterator).g < open_node.g)
+				open_node.parent = (*iterator).parent;
+		}
+		else {
+
+			// If it is NOT found, calculate its F and add it to the open list
+			open.pathNodeList.push_back(*iterator);
+		}
+
+		iterator++;
+	}
+	neighbors.pathNodeList.clear();
+
+	// There are still nodes to explore
+	return PathfindingStatus_SearchIncomplete;
 }

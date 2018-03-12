@@ -96,6 +96,9 @@
     <ClInclude Include="Animation.h">
       <Filter>Modules\Tools</Filter>
     </ClInclude>
+    <ClInclude Include="j1PathManager.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="j1App.cpp">
@@ -150,6 +153,9 @@
       <Filter>Modules\Entities</Filter>
     </ClCompile>
     <ClCompile Include="j1Movement.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="j1PathManager.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
   </ItemGroup>

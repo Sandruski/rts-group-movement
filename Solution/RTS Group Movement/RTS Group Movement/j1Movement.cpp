@@ -1120,7 +1120,7 @@ bool SingleUnit::CreatePath(iPoint startPos)
 	bool ret = true;
 
 	// Find a path
-	if (App->pathfinding->CreatePath(startPos, goal, DISTANCE_MANHATTAN) == -1)
+	if (App->pathfinding->CreatePath(startPos, goal, DistanceHeuristic_DistanceManhattan) == -1)
 		ret = false;
 
 	// Save the path found
