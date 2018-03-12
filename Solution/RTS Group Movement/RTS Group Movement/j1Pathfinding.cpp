@@ -202,10 +202,6 @@ int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, D
 	last_path.clear();
 	int ret = 0;
 
-	// CycleOnce
-	goal = destination;
-	this->distanceHeuristic = distanceHeuristic;
-
 	// If origin or destination are not walkable, return -1
 	if (!IsWalkable(origin) || !IsWalkable(destination))
 		ret = -1;
@@ -323,14 +319,34 @@ PathfindingStatus j1PathFinding::CycleOnce()
 
 	/// Push_back the lowest score cell to the closed list
 	close.pathNodeList.push_back(*curr);
-	list<PathNode>::iterator currIt = close.pathNodeList.end();
-
-	/// Erase the lowest score cell from the open list
-	open.pathNodeList.erase(currIt);
 
 	// If the current node is the goal, the path has been found
-	if (curr->pos == goal)
+	if (curr->pos == goal) {
+
+		// Backtrack to create the final path
+		for (PathNode iterator = close.pathNodeList.back(); iterator.parent != nullptr;
+			iterator = *close.Find(iterator.parent->pos)) {
+
+			last_path.push_back(iterator.pos);
+		}
+
+		last_path.push_back(close.pathNodeList.front().pos);
+
+		// Flip the path
+		reverse(last_path.begin(), last_path.end());
+
 		return PathfindingStatus_PathFound;
+	}
+
+	/// Erase the lowest score cell from the open list
+	list<PathNode>::iterator it = open.pathNodeList.begin();
+	while (it != open.pathNodeList.end()) {
+
+		if (&(*it) == &(*curr))
+			break;
+		it++;
+	}
+	open.pathNodeList.erase(it);
 
 	// Fill a list of all adjancent nodes
 	PathList neighbors;
@@ -368,4 +384,15 @@ PathfindingStatus j1PathFinding::CycleOnce()
 
 	// There are still nodes to explore
 	return PathfindingStatus_SearchIncomplete;
+}
+
+bool j1PathFinding::Initialize(iPoint origin, iPoint destination) 
+{
+	goal = destination;
+
+	// Add the origin tile to open
+	PathNode originNode(0, CalculateDistance(origin, destination, distanceHeuristic), origin, nullptr);
+	open.pathNodeList.push_back(originNode);
+
+	return true;
 }

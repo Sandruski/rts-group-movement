@@ -113,6 +113,8 @@ public:
 
 	PathfindingStatus CycleOnce();
 
+	bool Initialize(iPoint origin, iPoint destination);
+
 private:
 
 	// size of the map
@@ -126,8 +128,11 @@ private:
 	// CycleOnce
 	PathList open;
 	PathList close;
-	iPoint goal = { 0,0 };
 	DistanceHeuristic distanceHeuristic = DistanceHeuristic_DistanceManhattan;
+
+public:
+
+	iPoint goal = { 0,0 };
 };
 
 #endif //__j1PATHFINDING_H__

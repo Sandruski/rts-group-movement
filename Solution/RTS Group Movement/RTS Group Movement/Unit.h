@@ -12,6 +12,8 @@ using namespace std;
 struct SDL_Color;
 struct SingleUnit;
 
+class PathPlanner;
+
 #define MAX_UNIT_PRIORITY 8
 
 struct UnitInfo {
@@ -78,6 +80,10 @@ public:
 
 	UnitInfo unitInfo;
 
+	PathPlanner* pathPlanner = nullptr;
+	SingleUnit* singleUnit = nullptr;
+	bool isPath = false;
+
 private:
 
 	UnitState unitState = UnitState_Idle;
@@ -85,8 +91,6 @@ private:
 
 	SDL_Color color = ColorWhite;
 	string colorName = "White";
-
-	SingleUnit* singleUnit = nullptr;
 
 	// Animations speed
 	float upSpeed, downSpeed, leftSpeed, rightSpeed;

@@ -10,6 +10,7 @@
 #include "j1EntityFactory.h"
 #include "j1Input.h"
 #include "j1Movement.h"
+#include "j1PathManager.h"
 
 #include "Brofiler\Brofiler.h"
 
@@ -50,6 +51,8 @@ Unit::Unit(EntityInfo entityInfo, uint priority) : Entity(entityInfo)
 	// Ask the Movement module to create a new group with the unit
 	singleUnit = new SingleUnit(this, nullptr);
 	App->movement->CreateGroupFromUnit(this);
+
+	pathPlanner = new PathPlanner(this);
 }
 
 void Unit::Move(float dt)

@@ -53,27 +53,31 @@ public:
 
 	PathPlanner(Entity* owner);
 
+	~PathPlanner();
+
 	// Creates an instance of the A* time-sliced search and registers it with the path manager
-	bool RequestPathToPosition(iPoint goal);
+	bool RequestPathToTarget(iPoint goal);
+
+	void GetReadyForNewSearch();
 
 	// The PathManager calls this to iterate once though the search cycle of the currently
 	// asigned search algorithm. When a search is terminated the method messages the owner
-	PathfindingStatus CycleOnce() const;
+	PathfindingStatus CycleOnce();
 
 	// Called by an agent after it has been notified that a search has terminated successfully
 	vector<iPoint> GetPath();
 
 private:
 
-	Entity* entity; // a pointer to the owner of this class
+	Entity* entity = nullptr; // a pointer to the owner of this class
 	iPoint goal = { 0,0 }; // destination that the entity wishes to plan a path to reach
 
-	// GetClosestNodeToPosition
+	iPoint GetClosestNodeToPosition(iPoint pos);
 	// a local reference to the navgraph
 
+	j1PathFinding* currentSearch = nullptr;
 	vector<iPoint> path;
 
-	j1PathFinding* currentSearch = nullptr;
 };
 
 #endif //__j1PATH_MANAGER_H__

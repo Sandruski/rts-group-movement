@@ -8,6 +8,7 @@
 #include "j1Map.h"
 #include "j1Render.h"
 #include "j1Scene.h"
+#include "j1PathManager.h"
 
 #include "Brofiler\Brofiler.h"
 
@@ -211,24 +212,28 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 	case MovementState_WaitForPath:
 
-		if (pathsCreated < MAX_PATHS_CREATED) {
-
 			// TODO 2:
 			// Check if the goal of the unit is valid. Valid means that it isn't the goal of another unit
 				// If the goal is not valid, find a new goal
 			// Create a new path for the unit
 				// If the path is created, set the unit state to MovementState_IncreaseWaypoint
+		
+		if (!u->pathRequested) {
 
 			if (!IsValidTile(u, u->goal, false, false, true))
 
 				u->goal = u->newGoal = FindNewValidGoal(u, u->group->goal);
 
-			if (u->CreatePath(u->currTile)) {
+			u->unit->pathPlanner->RequestPathToTarget(u->goal);
 
-				u->movementState = MovementState_IncreaseWaypoint;
+			u->pathRequested = true;
+		}
 
-				pathsCreated++;
-			}
+		if (u->unit->isPath) {
+
+			u->movementState = MovementState_IncreaseWaypoint;
+			u->path = u->unit->pathPlanner->GetPath();
+			u->pathRequested = false;
 		}
 
 		break;
@@ -1111,6 +1116,7 @@ SingleUnit::SingleUnit(Unit* unit, UnitGroup* group) :unit(unit), group(group)
 	speed = this->unit->entityInfo.speed;
 
 	priority = unit->unitInfo.priority;
+	goal = newGoal = { 18,15 };
 }
 
 // Creates a path for the unit

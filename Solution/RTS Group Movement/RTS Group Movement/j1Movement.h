@@ -185,6 +185,8 @@ struct SingleUnit
 	iPoint waitTile = { -1,-1 }; // conflict tile (tile where the collision has been found)
 	SingleUnit* waitUnit = nullptr; // conflict unit (unit whom the collision has been found with)
 	CollisionType coll = CollisionType_NoCollision; // type of collision
+
+	bool pathRequested = false;
 };
 
 // Helper classes to compare iPoints by its priority
