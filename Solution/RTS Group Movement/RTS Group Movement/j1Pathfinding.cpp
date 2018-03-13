@@ -386,9 +386,16 @@ PathfindingStatus j1PathFinding::CycleOnce()
 	return PathfindingStatus_SearchIncomplete;
 }
 
-bool j1PathFinding::Initialize(iPoint origin, iPoint destination) 
+bool j1PathFinding::Initialize(const iPoint& origin, const iPoint& destination, DistanceHeuristic distanceHeuristic)
 {
+	// If origin or destination are not walkable, return false
+	if (!IsWalkable(origin) || !IsWalkable(destination))
+		return false;
+
 	goal = destination;
+	this->distanceHeuristic = distanceHeuristic;
+
+	last_path.clear();
 
 	// Add the origin tile to open
 	PathNode originNode(0, CalculateDistance(origin, destination, distanceHeuristic), origin, nullptr);

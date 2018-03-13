@@ -11,8 +11,6 @@
 #include <vector>
 using namespace std;
 
-#define MAX_PATHS_CREATED 1
-
 class Entity;
 
 enum MovementState {
@@ -163,7 +161,7 @@ struct SingleUnit
 
 	Unit* unit = nullptr;
 	UnitGroup* group = nullptr;
-	MovementState movementState = MovementState_WaitForPath;
+	MovementState movementState = MovementState_NoState;
 
 	vector<iPoint> path; // path to the unit's goal
 	iPoint currTile = { -1,-1 }; // position of the unit in map coords

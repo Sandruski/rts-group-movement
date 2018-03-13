@@ -313,21 +313,18 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 					}
 					else {
 
-						if (pathsCreated < MAX_PATHS_CREATED) {
+						if (ChangeNextTile(u)) {
 
-							if (ChangeNextTile(u)) {
+							u->coll = CollisionType_NoCollision;
+							u->wait = false;
 
-								u->coll = CollisionType_NoCollision;
-								u->wait = false;
-
-								LOG("%s: MOVED AWAY %s", u->waitUnit->unit->GetColorName().data(), u->unit->GetColorName().data());
-							}
-							else {
-								u->reversePriority = true;
-								LOG("%s: reversed its priority", u->waitUnit->unit->GetColorName().data());
-							}
+							LOG("%s: MOVED AWAY %s", u->waitUnit->unit->GetColorName().data(), u->unit->GetColorName().data());
 						}
-					}		
+						else {
+							u->reversePriority = true;
+							LOG("%s: reversed its priority", u->waitUnit->unit->GetColorName().data());
+						}
+					}
 
 					break;
 				}				
@@ -383,21 +380,18 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 			}
 			else if (u->coll == CollisionType_TowardsCell) {
 
-				if (pathsCreated < MAX_PATHS_CREATED) {
+				// TODO 6a: Find a new, valid nextTile for the unit and update it
+					// If it the tile is found, set the collision of the unit to NoCollision and its 'wait' variable to false
 
-					// TODO 6a: Find a new, valid nextTile for the unit and update it
-						// If it the tile is found, set the collision of the unit to NoCollision and its 'wait' variable to false
+				if (ChangeNextTile(u)) {
 
-					if (ChangeNextTile(u)) {
+					u->coll = CollisionType_NoCollision;
+					u->wait = false;
 
-						u->coll = CollisionType_NoCollision;
-						u->wait = false;
-
-						LOG("%s: RESOLVED TOWARDS", u->unit->GetColorName().data());
-					}
-					else
-						LOG("%s: Couldn't find newTile", u->unit->GetColorName().data());
+					LOG("%s: RESOLVED TOWARDS", u->unit->GetColorName().data());
 				}
+				else
+					LOG("%s: Couldn't find newTile", u->unit->GetColorName().data());
 			}
 
 			break;
@@ -433,20 +427,6 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 		break;
 
-	case MovementState_GoalReached:
-
-		// The unit is still
-		u->StopUnit();
-
-		// If the goal has been changed:
-		if (u->goal != u->newGoal) {
-			u->goal = u->newGoal;
-			u->movementState = MovementState_WaitForPath;
-			break;
-		}
-
-		break;
-
 	case MovementState_IncreaseWaypoint:
 
 		// If the goal has been changed:
@@ -469,6 +449,24 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 		else
 			// If the unit's path is out of waypoints, it means that the unit has reached the goal
 			u->movementState = MovementState_GoalReached;
+
+		break;
+
+	case MovementState_GoalReached:
+	case MovementState_NoState:
+	default:
+
+		u->unit->isPath = false;
+
+		// The unit is still
+		u->StopUnit();
+
+		// If the goal has been changed:
+		if (u->goal != u->newGoal) {
+			u->goal = u->newGoal;
+			u->movementState = MovementState_WaitForPath;
+			break;
+		}
 
 		break;
 	}
@@ -1112,11 +1110,10 @@ iPoint UnitGroup::GetGoal() const
 
 SingleUnit::SingleUnit(Unit* unit, UnitGroup* group) :unit(unit), group(group)
 {
-	currTile = goal = newGoal = App->map->WorldToMap(this->unit->entityInfo.pos.x, this->unit->entityInfo.pos.y);
+	currTile = App->map->WorldToMap(this->unit->entityInfo.pos.x, this->unit->entityInfo.pos.y);
 	speed = this->unit->entityInfo.speed;
 
 	priority = unit->unitInfo.priority;
-	goal = newGoal = { 18,15 };
 }
 
 // Creates a path for the unit

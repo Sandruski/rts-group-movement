@@ -111,9 +111,11 @@ public:
 	// Utility: return the walkability value of a tile
 	int GetTileAt(const iPoint& pos) const;
 
+	// CycleOnce
 	PathfindingStatus CycleOnce();
 
-	bool Initialize(iPoint origin, iPoint destination);
+	// Initialize CycleOnce
+	bool Initialize(const iPoint& origin, const iPoint& destination, DistanceHeuristic distanceHeuristic = DistanceHeuristic_DistanceManhattan);
 
 private:
 

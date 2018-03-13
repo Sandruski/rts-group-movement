@@ -77,7 +77,6 @@ private:
 
 	j1PathFinding* currentSearch = nullptr;
 	vector<iPoint> path;
-
 };
 
 #endif //__j1PATH_MANAGER_H__
