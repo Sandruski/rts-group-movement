@@ -397,14 +397,29 @@ void j1EntityFactory::SetUnitsSelectedColor()
 	SDL_Color colors[8] = { ColorYellow, ColorDarkGreen, ColorBrightBlue, ColorOrange, ColorPink, ColorPurple, ColorGrey, ColorBlack };
 	string colorNames[8] = { "Yellow", "DarkGreen", "BrightBlue", "Orange", "Pink", "Purple", "Grey", "Black" };
 
-	list<Unit*>::const_iterator it = unitsSelected.begin();
+	list<Entity*>::const_iterator it = activeEntities.begin();
 	uint i = 0;
 
-	while (it != unitsSelected.end())
+	while (it != activeEntities.end())
 	{
-		(*it)->SetColor(colors[i], colorNames[i]);
+		// ONLY UNITS
+		if ((*it)->type == EntityType_Unit) {
+
+			Unit* u = GetUnitByEntity(*it);
+
+			// If the unit is selected, change its color
+			if ((*it)->isSelected) {
+				u->SetColor(colors[i], colorNames[i]);
+				i++;
+			}
+			else {
+
+				// If the unit is no longer selected, change its color to default white
+				u->SetColor(ColorWhite, "White");
+			}
+		}
+
 		it++;
-		i++;
 	}
 }
 

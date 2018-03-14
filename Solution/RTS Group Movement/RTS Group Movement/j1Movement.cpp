@@ -208,6 +208,16 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 	float m;
 	iPoint newGoal;
 
+	iPoint currTilePos = App->map->MapToWorld(u->currTile.x, u->currTile.y);
+	if ((int)u->unit->entityInfo.pos.x == currTilePos.x && (int)u->unit->entityInfo.pos.y == currTilePos.y) {
+
+		// If the goal has been changed:
+		if (u->goal != u->newGoal) {
+			u->ResetVariables();
+			u->movementState = MovementState_WaitForPath;
+		}
+	}
+
 	switch (u->movementState) {
 
 	case MovementState_WaitForPath:
@@ -222,7 +232,8 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 			if (!IsValidTile(u, u->newGoal, false, false, true))
 
-				u->newGoal = FindNewValidGoal(u, u->group->goal);
+				u->goal = u->newGoal = FindNewValidGoal(u, u->group->goal);
+
 			else {
 
 				u->goal = u->newGoal;
@@ -443,15 +454,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 		break;
 
 	case MovementState_IncreaseWaypoint:
-
-		// If the goal has been changed:
-		/// We only want to update the goal when the unit has reached nextTile. That's why we do it here
-		if (u->goal != u->newGoal) {
-			u->goal = u->newGoal;
-			u->movementState = MovementState_WaitForPath;
-			break;
-		}
-
+		
 		// If the unit's path contains waypoints:
 		if (u->path.size() > 0) {
 
@@ -471,17 +474,8 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 	case MovementState_NoState:
 	default:
 
-		u->unit->isPath = false;
-		u->pathRequested = false;
-
 		// The unit is still
 		u->StopUnit();
-
-		// If the goal has been changed:
-		if (u->goal != u->newGoal) {
-			u->movementState = MovementState_WaitForPath;
-			break;
-		}
 
 		break;
 	}
@@ -523,7 +517,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 					//}
 				}
 
-				if (singleUnit->coll != CollisionType_TowardsCell && (*units)->coll != CollisionType_TowardsCell) {
+				if (singleUnit->coll != CollisionType_TowardsCell) {
 
 					// ITS CELL. A reaches B's tile
 					// TODO 5b: Check if the unit would reach another unit's tile
@@ -920,18 +914,6 @@ bool j1Movement::ChangeNextTile(SingleUnit* singleUnit)
 			if (singleUnit->unit->pathPlanner->RequestAStar(newTile, singleUnit->goal))
 
 				singleUnit->pathRequested = true;
-
-		if (singleUnit->pathRequested && singleUnit->unit->isPath) {
-
-			singleUnit->path = singleUnit->unit->pathPlanner->GetAStarPath();
-
-			// Update the unit's nextTile
-			singleUnit->nextTile = newTile;
-			singleUnit->unit->isPath = false;
-			singleUnit->pathRequested = false;
-
-			ret = true;
-		}
 	}
 	else {
 
@@ -946,19 +928,19 @@ bool j1Movement::ChangeNextTile(SingleUnit* singleUnit)
 				if (singleUnit->unit->pathPlanner->RequestAStar(newTile, singleUnit->goal))
 
 					singleUnit->pathRequested = true;
-
-			if (singleUnit->pathRequested && singleUnit->unit->isPath) {
-
-				singleUnit->path = singleUnit->unit->pathPlanner->GetAStarPath();
-
-				// Update the unit's nextTile
-				singleUnit->nextTile = newTile;
-				singleUnit->unit->isPath = false;
-				singleUnit->pathRequested = false;
-
-				ret = true;
-			}
 		}
+	}
+
+	if (singleUnit->pathRequested && singleUnit->unit->isPath) {
+
+		singleUnit->path = singleUnit->unit->pathPlanner->GetAStarPath();
+
+		// Update the unit's nextTile
+		singleUnit->nextTile = newTile;
+		singleUnit->unit->isPath = false;
+		singleUnit->pathRequested = false;
+
+		ret = true;
 	}
 
 	return ret;
@@ -1197,4 +1179,19 @@ bool SingleUnit::IsTileReached(iPoint nextPos, fPoint endPos) const
 void SingleUnit::StopUnit()
 {
 	unit->SetUnitDirection(UnitDirection_Idle);
+}
+
+// Resets the variables of the unit
+void SingleUnit::ResetVariables() 
+{
+	reversePriority = false;
+
+	wait = false;
+	wakeUp = false;
+	waitTile = { -1,-1 };
+	waitUnit = nullptr;
+	coll = CollisionType_NoCollision;
+
+	pathRequested = false;
+	unit->isPath = false;
 }

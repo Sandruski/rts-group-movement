@@ -151,6 +151,9 @@ struct SingleUnit
 	// Stops the unit
 	void StopUnit();
 
+	// Resets the variables of the unit
+	void ResetVariables();
+
 	// -----
 
 	Unit* unit = nullptr;
