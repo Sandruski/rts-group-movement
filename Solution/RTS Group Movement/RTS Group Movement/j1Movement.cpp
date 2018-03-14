@@ -212,9 +212,10 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 	if ((int)u->unit->entityInfo.pos.x == currTilePos.x && (int)u->unit->entityInfo.pos.y == currTilePos.y) {
 
 		// If the goal has been changed:
-		if (u->goal != u->newGoal) {
+		if (u->isGoalSetByUser) {
 			u->ResetVariables();
 			u->movementState = MovementState_WaitForPath;
+			u->isGoalSetByUser = false;
 		}
 	}
 
@@ -936,7 +937,7 @@ bool j1Movement::ChangeNextTile(SingleUnit* singleUnit)
 		singleUnit->path = singleUnit->unit->pathPlanner->GetAStarPath();
 
 		// Update the unit's nextTile
-		singleUnit->nextTile = newTile;
+		singleUnit->nextTile = singleUnit->path.front();
 		singleUnit->unit->isPath = false;
 		singleUnit->pathRequested = false;
 
@@ -1114,6 +1115,7 @@ bool UnitGroup::SetGoal(iPoint goal)
 		while (it != units.end()) {
 
 			(*it)->newGoal = goal;
+			(*it)->isGoalSetByUser = true;
 
 			it++;
 		}

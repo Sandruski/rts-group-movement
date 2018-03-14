@@ -166,6 +166,7 @@ struct SingleUnit
 
 	iPoint goal = { -1,-1 }; // current goal of the unit
 	iPoint newGoal = { -1,-1 }; // new goal of the unit
+	bool isGoalSetByUser = false;
 	/// newGoal exists to save the new goal set for the unit and not change abruptly the current goal
 	/// The current goal will be changed when the unit has reached its next tile
 

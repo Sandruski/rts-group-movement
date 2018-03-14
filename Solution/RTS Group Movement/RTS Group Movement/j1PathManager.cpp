@@ -101,6 +101,7 @@ bool PathPlanner::RequestAStar(iPoint origin, iPoint destination)
 {
 	bool ret = false;
 
+	App->pathmanager->UnRegister(this);
 	GetReadyForNewSearch();
 
 	Unit* u = (Unit*)entity;
