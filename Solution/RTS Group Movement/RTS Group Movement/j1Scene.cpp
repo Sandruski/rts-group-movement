@@ -92,13 +92,16 @@ bool j1Scene::PreUpdate()
 	entityInfo.size = { App->map->data.tile_width,App->map->data.tile_height };
 	entityInfo.speed = 50.0f;
 
-	// 1: spawn a unit with priority 1
-	if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN && !App->entities->IsUnitOnTile(mouseTile) && App->pathfinding->IsWalkable(mouseTile))
-		App->entities->AddUnit(entityInfo, 1);
+	if (!App->entities->IsUnitOnTile(mouseTile) && App->pathfinding->IsWalkable(mouseTile)) {
 
-	// 2: spawn a unit with priority 2
-	if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN && !App->entities->IsUnitOnTile(mouseTile) && App->pathfinding->IsWalkable(mouseTile))
-		App->entities->AddUnit(entityInfo, 2);
+		// 1: spawn a unit with priority 1
+		if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN)
+			App->entities->AddUnit(entityInfo, 1);
+
+		// 2: spawn a unit with priority 2
+		if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
+			App->entities->AddUnit(entityInfo, 2);
+	}
 
 	return ret;
 }

@@ -11,6 +11,8 @@
 #include <string>
 using namespace std;
 
+#define MS_PATHFINDING 2.0
+
 // Modules
 class j1Window;
 class j1Input;

@@ -34,7 +34,7 @@ j1App::j1App(int argc, char* args[]) : argc(argc), args(args)
 	entities = new j1EntityFactory();
 	pathfinding = new j1PathFinding();
 	movement = new j1Movement();
-	pathmanager = new j1PathManager(3);
+	pathmanager = new j1PathManager(MS_PATHFINDING);
 
 	// Ordered for awake / Start / Update
 	// Reverse order of CleanUp

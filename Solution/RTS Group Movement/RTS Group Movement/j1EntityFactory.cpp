@@ -260,20 +260,37 @@ Unit* j1EntityFactory::GetUnitByEntity(Entity* entity)
 // Returns true if there is a unit on the tile
 bool j1EntityFactory::IsUnitOnTile(iPoint tile) const
 {
-	list<Entity*>::const_iterator it = activeEntities.begin();
+	list<Entity*>::const_iterator active = activeEntities.begin();
 
-	while (it != activeEntities.end()) {
+	while (active != activeEntities.end()) {
 
 		// ONLY UNITS
-		if ((*it)->type == EntityType_Unit) {
+		if ((*active)->type == EntityType_Unit) {
 
-			iPoint entityTile = App->map->WorldToMap((*it)->entityInfo.pos.x, (*it)->entityInfo.pos.y);
+			iPoint entityTile = App->map->WorldToMap((*active)->entityInfo.pos.x, (*active)->entityInfo.pos.y);
 
 			if (tile.x == entityTile.x && tile.y == entityTile.y)
 				return true;
 		}
 
-		it++;
+		active++;
+	}
+
+	// We do also need to check the toSpawn units
+	list<Entity*>::const_iterator toSpawn = toSpawnEntities.begin();
+
+	while (toSpawn != toSpawnEntities.end()) {
+
+		// ONLY UNITS
+		if ((*toSpawn)->type == EntityType_Unit) {
+
+			iPoint entityTile = App->map->WorldToMap((*toSpawn)->entityInfo.pos.x, (*toSpawn)->entityInfo.pos.y);
+
+			if (tile.x == entityTile.x && tile.y == entityTile.y)
+				return true;
+		}
+
+		toSpawn++;
 	}
 
 	return false;
@@ -284,8 +301,7 @@ Unit* j1EntityFactory::SelectUnit(iPoint tile)
 {
 	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
 
-	if (!IsUnitOnTile(tile))
-		return nullptr;
+	Unit* ret = nullptr;
 
 	list<Entity*>::const_iterator it = activeEntities.begin();
 
@@ -305,7 +321,7 @@ Unit* j1EntityFactory::SelectUnit(iPoint tile)
 					unitsSelected.push_back(u);
 					(*it)->isSelected = true;
 
-					return u;
+					ret = u;
 				}
 			}
 			else {
@@ -316,11 +332,14 @@ Unit* j1EntityFactory::SelectUnit(iPoint tile)
 					(*it)->isSelected = false;
 				}
 			}
-			it++;
 		}
+
+		it++;
 	}
 
 	SetUnitsSelectedColor();
+
+	return ret;
 }
 
 // Selects the units within the rectangle
@@ -358,8 +377,9 @@ void j1EntityFactory::SelectUnitsWithinRectangle(SDL_Rect rectangleRect)
 					(*it)->isSelected = false;
 				}
 			}
-			it++;
 		}
+
+		it++;
 	}
 
 	SetUnitsSelectedColor();

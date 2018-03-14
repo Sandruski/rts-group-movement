@@ -12,7 +12,7 @@
 
 #include "Brofiler\Brofiler.h"
 
-j1PathManager::j1PathManager(uint numSearchCyclesPerUpdate) : j1Module(), numSearchCyclesPerUpdate(numSearchCyclesPerUpdate)
+j1PathManager::j1PathManager(double msSearchPerUpdate) : j1Module(), msSearchPerUpdate(msSearchPerUpdate)
 {
 	name.assign("pathmanager");
 }
@@ -34,23 +34,21 @@ bool j1PathManager::Update(float dt)
 {
 	bool ret = true;
 
-	UpdateSearches();
+	if (searchRequests.size() > 0)
+		UpdateSearches();
 
 	return ret;
 }
 
 void j1PathManager::UpdateSearches() 
 {
-	// RESTRICT THE PATH MANAGER TO A SPECIFIC AMOUNT OF TIME!
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
 
-	int numSearchCyclesRemaining = numSearchCyclesPerUpdate;
+	timer.Start();
 
-	// Iterate through the search requests until either all requests have been
-	// fulfilled or there are no search cycles remaining for this update step
-	
 	list<PathPlanner*>::const_iterator currPath = searchRequests.begin();
 
-	while (numSearchCyclesRemaining-- && searchRequests.size() > 0) {
+	while (timer.ReadMs() < msSearchPerUpdate && searchRequests.size() > 0) {
 
 		// Make one search cycle of this path request
 		PathfindingStatus result = (*currPath)->CycleOnce();
@@ -99,6 +97,53 @@ PathPlanner::~PathPlanner()
 	entity = nullptr;
 }
 
+bool PathPlanner::RequestAStar(iPoint origin, iPoint destination)
+{
+	bool ret = false;
+
+	GetReadyForNewSearch();
+
+	Unit* u = (Unit*)entity;
+	u->isPath = false;
+
+	currentSearch = new j1PathFinding();
+
+	// Set the walkability map
+	int w, h;
+	uchar* data = NULL;
+
+	ret = App->map->CreateWalkabilityMap(w, h, &data);
+	if (ret)
+		currentSearch->SetMap(w, h, data);
+
+	RELEASE_ARRAY(data);
+
+	// Invalidate if origin or destination are non-walkable
+	ret = currentSearch->Initialize(origin, destination);
+
+	if (ret)
+		App->pathmanager->Register(this);
+
+	return ret;
+}
+
+bool PathPlanner::RequestDijkstra(iPoint origin, iPoint destination) 
+{
+	bool ret = true;
+
+	return ret;
+}
+
+void PathPlanner::GetReadyForNewSearch()
+{
+	// Clear the waypoint list and delete any active search
+	path.clear();
+
+	if (currentSearch != nullptr)
+		delete currentSearch;
+	currentSearch = nullptr;
+}
+
 PathfindingStatus PathPlanner::CycleOnce()
 {
 	PathfindingStatus result = currentSearch->CycleOnce();
@@ -117,44 +162,12 @@ PathfindingStatus PathPlanner::CycleOnce()
 	return result;
 }
 
-bool PathPlanner::RequestPathToTarget(iPoint goal) 
-{
-	bool ret = true;
-
-	GetReadyForNewSearch();
-
-	Unit* u = (Unit*)entity;
-	u->isPath = false;
-	// GetClosestNodeToPosition
-	// invalidate if origin or destination are non-walkable
-
-	currentSearch = new j1PathFinding();
-
-	int w, h;
-	uchar* data = NULL;
-	if (App->map->CreateWalkabilityMap(w, h, &data))
-		currentSearch->SetMap(w, h, data);
-
-	RELEASE_ARRAY(data);
-
-	currentSearch->Initialize(u->singleUnit->currTile, goal);
-
-	App->pathmanager->Register(this);
-
-	return ret;
-}
-
-void PathPlanner::GetReadyForNewSearch() 
-{
-	// Clear the waypoint list and delete any active search
-	path.clear();
-
-	if (currentSearch != nullptr)
-		delete currentSearch;
-	currentSearch = nullptr;
-}
-
-vector<iPoint> PathPlanner::GetPath() 
+vector<iPoint> PathPlanner::GetAStarPath() const
 {
 	return path;
+}
+
+iPoint PathPlanner::GetDijkstraTile() const 
+{
+	return tile;
 }

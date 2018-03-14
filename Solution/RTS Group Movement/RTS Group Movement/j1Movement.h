@@ -97,8 +97,6 @@ public:
 private:
 
 	list<UnitGroup*> unitGroups; // contains all the existing groups
-	int pathsCreated = 0; // to keep track of the number of paths created at the current update and avoid saturating the program
-	int frames = 0;
 };
 
 // ---------------------------------------------------------------------
@@ -144,10 +142,6 @@ struct UnitGroup
 struct SingleUnit
 {
 	SingleUnit(Unit* entity, UnitGroup* group);
-
-	// Creates a path for the unit
-	/// It uses the A* algorithm from the Pathfinding module
-	bool CreatePath(iPoint startPos);
 
 	// Returns true if the unit would reach its next tile during this move
 	/// nextPos is the next tile that the unit is heading to

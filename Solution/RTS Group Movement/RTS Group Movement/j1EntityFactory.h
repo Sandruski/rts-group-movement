@@ -74,6 +74,8 @@ private:
 
 	// Entities info
 	UnitInfo unitInfo;
+
+	int i = 0;
 };
 
 #endif //__j1ENTITY_FACTORY_H__
