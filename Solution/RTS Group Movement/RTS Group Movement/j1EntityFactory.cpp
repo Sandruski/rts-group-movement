@@ -276,7 +276,7 @@ bool j1EntityFactory::IsUnitOnTile(iPoint tile) const
 		active++;
 	}
 
-	// We do also need to check the toSpawn units
+	// We do also need to check the toSpawn list (just in case)
 	list<Entity*>::const_iterator toSpawn = toSpawnEntities.begin();
 
 	while (toSpawn != toSpawnEntities.end()) {

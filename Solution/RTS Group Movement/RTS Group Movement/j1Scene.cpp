@@ -99,7 +99,7 @@ bool j1Scene::PreUpdate()
 			App->entities->AddUnit(entityInfo, 1);
 
 		// 2: spawn a unit with priority 2
-		if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
+		else if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
 			App->entities->AddUnit(entityInfo, 2);
 	}
 
