@@ -46,26 +46,27 @@ void j1PathManager::UpdateSearches()
 
 	timer.Start();
 
-	list<PathPlanner*>::const_iterator currPath = searchRequests.begin();
+	list<PathPlanner*>::const_iterator currSearch = searchRequests.begin();
 
 	while (timer.ReadMs() < msSearchPerUpdate && searchRequests.size() > 0) {
 
 		// Make one search cycle of this path request
-		PathfindingStatus result = (*currPath)->CycleOnce();
+		PathfindingStatus result = (*currSearch)->CycleOnce();
 
-		// If the search has terminated, remove this path from the list
-		if (result == PathfindingStatus_PathFound || result == PathfindingStatus_PathNotFound) {
-			currPath = searchRequests.erase(currPath);
+		// If the search has terminated, remove it from the list
+		if (result == PathfindingStatus_PathFound || result == PathfindingStatus_PathNotFound
+			|| result == PathfindingStatus_TileFound || result == PathfindingStatus_TileNotFound) {
+			currSearch = searchRequests.erase(currSearch);
 		}
 		else {
-			// Move on to the next path
-			currPath++;
+			// Move on to the next search
+			currSearch++;
 		}
 
 		// The iterator may now be pointing to the end of the list.
 		// If so, it must be reset to the beginning
-		if (currPath == searchRequests.end())
-			currPath = searchRequests.begin();
+		if (currSearch == searchRequests.end())
+			currSearch = searchRequests.begin();
 	}
 }
 
@@ -86,13 +87,23 @@ void j1PathManager::UnRegister(PathPlanner* pathPlanner)
 // PATH PLANNER
 // ---------------------------------------------------------------------
 
-PathPlanner::PathPlanner(Entity* owner) :entity(owner) {}
+PathPlanner::PathPlanner(Entity* owner) :entity(owner) 
+{
+	trigger = new FindActiveTrigger();
+
+	Unit* u = (Unit*)entity;
+	walkabilityMap = u->walkabilityMap;
+}
 
 PathPlanner::~PathPlanner()
 {
 	if (currentSearch != nullptr)
 		delete currentSearch;
 	currentSearch = nullptr;
+
+	if (trigger != nullptr)
+		delete trigger;
+	trigger = nullptr;
 
 	entity = nullptr;
 }
@@ -104,23 +115,19 @@ bool PathPlanner::RequestAStar(iPoint origin, iPoint destination)
 	App->pathmanager->UnRegister(this);
 	GetReadyForNewSearch();
 
+	pathfindingAlgorithmType = PathfindingAlgorithmType_AStar;
+
 	Unit* u = (Unit*)entity;
-	u->isPath = false;
+	u->isSearchComplete = false;
 
 	currentSearch = new j1PathFinding();
 
 	// Set the walkability map
-	int w, h;
-	uchar* data = NULL;
-
-	ret = App->map->CreateWalkabilityMap(w, h, &data);
-	if (ret)
-		currentSearch->SetMap(w, h, data);
-
-	RELEASE_ARRAY(data);
+	ret = walkabilityMap->SetWalkabilityMap(currentSearch);
 
 	// Invalidate if origin or destination are non-walkable
-	ret = currentSearch->Initialize(origin, destination);
+	if (ret)
+		ret = currentSearch->InitializeAStar(origin, destination);
 
 	if (ret)
 		App->pathmanager->Register(this);
@@ -132,14 +139,38 @@ bool PathPlanner::RequestDijkstra(iPoint origin, iPoint destination)
 {
 	bool ret = true;
 
+	App->pathmanager->UnRegister(this);
+	GetReadyForNewSearch();
+
+	pathfindingAlgorithmType = PathfindingAlgorithmType_Dijkstra;
+
+	Unit* u = (Unit*)entity;
+	u->isSearchComplete = false;
+
+	currentSearch = new j1PathFinding();
+
+	walkabilityMap->SetWalkabilityMap(currentSearch);
+
+	// Invalidate if origin is non-walkable
+	if (ret)
+		ret = currentSearch->InitializeDijkstra(origin);
+
+	if (ret)
+		App->pathmanager->Register(this);
+	
 	return ret;
 }
 
 void PathPlanner::GetReadyForNewSearch()
 {
-	// Clear the waypoint list and delete any active search
+	// Clear the waypoint list of the path (A Star)
 	path.clear();
+	// Clear the last tile found (Dijkstra)
+	tile = { 0,0 };
 
+	pathfindingAlgorithmType = PathfindingAlgorithmType_NoType;
+
+	// Delete any active search
 	if (currentSearch != nullptr)
 		delete currentSearch;
 	currentSearch = nullptr;
@@ -147,17 +178,52 @@ void PathPlanner::GetReadyForNewSearch()
 
 PathfindingStatus PathPlanner::CycleOnce()
 {
-	PathfindingStatus result = currentSearch->CycleOnce();
+	PathfindingStatus result;
 
-	// Let the bot know of the failure to find a path
-	if (result == PathfindingStatus_PathNotFound) {
+	switch (pathfindingAlgorithmType) {
 
-	}
-	// Let the bot know a path has been found
-	else if (result == PathfindingStatus_PathFound) {
-		path = *currentSearch->GetLastPath();
-		Unit* u = (Unit*)entity;
-		u->isPath = true;
+	case PathfindingAlgorithmType_AStar:
+
+		result = currentSearch->CycleOnceAStar();
+
+		// Let the bot know of the failure to find a path
+		if (result == PathfindingStatus_PathNotFound) {
+			// ERROR!
+		}
+		// Let the bot know a path has been found
+		else if (result == PathfindingStatus_PathFound) {
+			path = *currentSearch->GetLastPath();
+			Unit* u = (Unit*)entity;
+			u->isSearchComplete = true;
+		}
+
+		break;
+
+	case PathfindingAlgorithmType_Dijkstra:
+
+		result = currentSearch->CycleOnceDijkstra();
+
+		{
+			iPoint tile = currentSearch->GetLastTile();
+
+			if (trigger->isSatisfied(tile, entity)) {
+
+				this->tile = tile;
+				result = PathfindingStatus_TileFound;
+			}
+		}
+
+		// Let the bot know of the failure to find a tile
+		if (result == PathfindingStatus_TileNotFound) {
+			// ERROR!
+		}
+		// Let the bot know a tile has been found
+		else if (result == PathfindingStatus_TileFound) {
+			Unit* u = (Unit*)entity;
+			u->isSearchComplete = true;
+		}
+
+		break;
 	}
 
 	return result;
@@ -171,4 +237,34 @@ vector<iPoint> PathPlanner::GetAStarPath() const
 iPoint PathPlanner::GetDijkstraTile() const 
 {
 	return tile;
+}
+
+// FindActiveTrigger class ---------------------------------------------------------------------------------
+
+bool FindActiveTrigger::isSatisfied(iPoint tile, Entity* entity) 
+{
+
+	bool isSatisfied = false;
+
+	Unit* u = (Unit*)entity;
+
+	if (App->movement->IsValidTile(u->singleUnit, tile, u->singleUnit->checkEverything, u->singleUnit->checkEverything, true))
+		return isSatisfied;
+}
+
+// WalkabilityMap struct ---------------------------------------------------------------------------------
+
+bool WalkabilityMap::CreateWalkabilityMap()
+{
+	return App->map->CreateWalkabilityMap(w, h, &data);
+}
+
+bool WalkabilityMap::SetWalkabilityMap(j1PathFinding* currentSearch) const
+{
+	if (currentSearch == nullptr)
+		return false;
+
+	currentSearch->SetMap(w, h, data);
+
+	return true;
 }

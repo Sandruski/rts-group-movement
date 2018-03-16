@@ -11,9 +11,8 @@
 #include <vector>
 using namespace std;
 
-class Entity;
-
 enum MovementState {
+
 	MovementState_NoState,
 	MovementState_WaitForPath,
 	MovementState_FollowPath,
@@ -22,6 +21,7 @@ enum MovementState {
 };
 
 enum CollisionType {
+
 	CollisionType_NoCollision,
 	CollisionType_SameCell,
 	CollisionType_TowardsCell,
@@ -32,6 +32,8 @@ enum CollisionType {
 // forward declaration
 struct SingleUnit;
 struct UnitGroup;
+
+class Entity;
 
 class j1Movement : public j1Module
 {
@@ -183,31 +185,7 @@ struct SingleUnit
 	CollisionType coll = CollisionType_NoCollision; // type of collision
 
 	bool pathRequested = false;
-};
-
-// Helper classes to compare iPoints by its priority
-class iPointPriority
-{
-public:
-	iPointPriority() {}
-	iPointPriority(iPoint point, int priority) :point(point), priority(priority) {}
-	iPointPriority(const iPointPriority& i)
-	{
-		point = i.point;
-		priority = i.priority;
-	}
-
-	iPoint point = { 0,0 };
-	uint priority = 0;
-};
-
-class Comparator
-{
-public:
-	int operator() (const iPointPriority a, const iPointPriority b)
-	{
-		return a.priority > b.priority;
-	}
+	bool checkEverything = false;
 };
 
 #endif //__j1MOVEMENT_H__

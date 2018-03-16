@@ -1,12 +1,14 @@
 #include "Defs.h"
 #include "p2Log.h"
+
 #include "j1App.h"
 #include "j1PathFinding.h"
 #include "j1EntityFactory.h"
 #include "j1Map.h"
+
 #include "Brofiler\Brofiler.h"
 
-j1PathFinding::j1PathFinding() : j1Module(), map(NULL), last_path(DEFAULT_PATH_LENGTH), width(0), height(0)
+j1PathFinding::j1PathFinding() : j1Module(), walkabilityMap(NULL), last_path(DEFAULT_PATH_LENGTH), width(0), height(0)
 {
 	name.assign("pathfinding");
 }
@@ -14,7 +16,7 @@ j1PathFinding::j1PathFinding() : j1Module(), map(NULL), last_path(DEFAULT_PATH_L
 // Destructor
 j1PathFinding::~j1PathFinding()
 {
-	RELEASE_ARRAY(map);
+	RELEASE_ARRAY(walkabilityMap);
 }
 
 // Called before quitting
@@ -23,7 +25,7 @@ bool j1PathFinding::CleanUp()
 	LOG("Freeing pathfinding library");
 
 	last_path.clear();
-	RELEASE_ARRAY(map);
+	RELEASE_ARRAY(walkabilityMap);
 	return true;
 }
 
@@ -33,9 +35,9 @@ void j1PathFinding::SetMap(uint width, uint height, uchar* data)
 	this->width = width;
 	this->height = height;
 
-	RELEASE_ARRAY(map);
-	map = new uchar[width*height];
-	memcpy(map, data, width*height);
+	RELEASE_ARRAY(walkabilityMap);
+	walkabilityMap = new uchar[width*height];
+	memcpy(walkabilityMap, data, width*height);
 }
 
 // Utility: return true if pos is inside the map boundaries
@@ -56,7 +58,7 @@ bool j1PathFinding::IsWalkable(const iPoint& pos) const
 int j1PathFinding::GetTileAt(const iPoint& pos) const
 {
 	if (CheckBoundaries(pos))
-		return map[(pos.y*width) + pos.x];
+		return walkabilityMap[(pos.y*width) + pos.x];
 
 	return INVALID_WALK_CODE;
 }
@@ -308,7 +310,25 @@ int CalculateDistance(iPoint origin, iPoint destination, DistanceHeuristic dista
 	return distance;
 }
 
-PathfindingStatus j1PathFinding::CycleOnce() 
+bool j1PathFinding::InitializeAStar(const iPoint& origin, const iPoint& destination, DistanceHeuristic distanceHeuristic)
+{
+	// If origin or destination are not walkable, return false
+	if (!IsWalkable(origin) || !IsWalkable(destination))
+		return false;
+
+	goal = destination;
+	this->distanceHeuristic = distanceHeuristic;
+
+	last_path.clear();
+
+	// Add the origin tile to open
+	PathNode originNode(0, CalculateDistance(origin, destination, distanceHeuristic), origin, nullptr);
+	open.pathNodeList.push_back(originNode);
+
+	return true;
+}
+
+PathfindingStatus j1PathFinding::CycleOnceAStar() 
 {
 	// If the open list is empty, the path has not been found
 	if (open.pathNodeList.size() == 0)
@@ -386,20 +406,78 @@ PathfindingStatus j1PathFinding::CycleOnce()
 	return PathfindingStatus_SearchIncomplete;
 }
 
-bool j1PathFinding::Initialize(const iPoint& origin, const iPoint& destination, DistanceHeuristic distanceHeuristic)
+// Initialize CycleOnceDijkstra
+bool j1PathFinding::InitializeDijkstra(const iPoint& origin, DistanceHeuristic distanceHeuristic) 
 {
-	// If origin or destination are not walkable, return false
-	if (!IsWalkable(origin) || !IsWalkable(destination))
+	// If origin is not walkable, return false
+	if (!IsWalkable(origin))
 		return false;
 
-	goal = destination;
+	start = origin;
 	this->distanceHeuristic = distanceHeuristic;
 
 	last_path.clear();
 
-	// Add the origin tile to open
-	PathNode originNode(0, CalculateDistance(origin, destination, distanceHeuristic), origin, nullptr);
-	open.pathNodeList.push_back(originNode);
+	// Add the origin tile to the priorityQueue
+	iPointPriority curr;
+	curr.point = origin;
+	curr.priority = curr.point.DistanceManhattan(origin);
+	priorityQueue.push(curr);
 
 	return true;
+}
+
+// CycleOnce Dijkstra
+PathfindingStatus j1PathFinding::CycleOnceDijkstra() 
+{
+	// If the open list is empty, the path has not been found
+	if (priorityQueue.size() == 0)
+		return PathfindingStatus_TileNotFound;
+
+	iPointPriority curr;
+
+	// Pop the first element of the priorityQueue
+	curr = priorityQueue.top();
+	priorityQueue.pop();
+
+	iPoint neighbors[8];
+	neighbors[0].create(curr.point.x + 1, curr.point.y + 0);
+	neighbors[1].create(curr.point.x + 0, curr.point.y + 1);
+	neighbors[2].create(curr.point.x - 1, curr.point.y + 0);
+	neighbors[3].create(curr.point.x + 0, curr.point.y - 1);
+	neighbors[4].create(curr.point.x + 1, curr.point.y + 1);
+	neighbors[5].create(curr.point.x + 1, curr.point.y - 1);
+	neighbors[6].create(curr.point.x - 1, curr.point.y + 1);
+	neighbors[7].create(curr.point.x - 1, curr.point.y - 1);
+
+	for (uint i = 0; i < 8; ++i)
+	{
+		if (App->pathfinding->IsWalkable(neighbors[i])) {
+
+			/*
+				iPointPriority priorityNeighbors;
+				priorityNeighbors.point = neighbors[i];
+				priorityNeighbors.priority = neighbors[i].DistanceManhattan(start);
+
+				int g = cost_so_far[curr.point.x][curr.point.y] + neighbors[i].DistanceManhattan(start);
+
+				if (find(visited.begin(), visited.end(), neighbors[i]) == visited.end() || g < cost_so_far[neighbors[i].x][neighbors[i].y]) {
+
+					cost_so_far[neighbors[i].x][neighbors[i].y] = g;
+
+					priorityQueue.push(priorityNeighbors);
+
+					visited.push_back(neighbors[i]);
+				}
+			}
+			*/
+		}
+	}
+
+	return PathfindingStatus_SearchIncomplete;
+}
+
+iPoint j1PathFinding::GetLastTile() const 
+{
+	return last_tile;
 }

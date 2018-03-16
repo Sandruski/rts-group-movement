@@ -213,8 +213,11 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 		// If the goal has been changed:
 		if (u->isGoalSetByUser) {
+
 			u->ResetVariables();
+			u->StopUnit();
 			u->movementState = MovementState_WaitForPath;
+
 			u->isGoalSetByUser = false;
 		}
 	}
@@ -245,12 +248,12 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 			}
 		}
 
-		if (u->pathRequested && u->unit->isPath) {
+		if (u->pathRequested && u->unit->isSearchComplete) {
 
 			u->movementState = MovementState_IncreaseWaypoint;
 			u->path = u->unit->pathPlanner->GetAStarPath();
 			u->pathRequested = false;
-			u->unit->isPath = false;
+			u->unit->isSearchComplete = false;
 			u->wakeUp = true;
 		}
 
@@ -416,9 +419,13 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 					if (u->unit->isSelected)
 						LOG("%s: RESOLVED TOWARDS", u->unit->GetColorName().data());
 				}
-				else
+				else {
+
+					// If this unit can't move away, the other unit must stop
+
 					if (u->unit->isSelected)
 						LOG("%s: Couldn't find newTile", u->unit->GetColorName().data());
+				}
 			}
 
 			break;
@@ -518,7 +525,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 					//}
 				}
 
-				if (singleUnit->coll != CollisionType_TowardsCell) {
+				if (singleUnit->coll != CollisionType_TowardsCell && (*units)->coll != CollisionType_TowardsCell) {
 
 					// ITS CELL. A reaches B's tile
 					// TODO 5b: Check if the unit would reach another unit's tile
@@ -932,13 +939,13 @@ bool j1Movement::ChangeNextTile(SingleUnit* singleUnit)
 		}
 	}
 
-	if (singleUnit->pathRequested && singleUnit->unit->isPath) {
+	if (singleUnit->pathRequested && singleUnit->unit->isSearchComplete) {
 
 		singleUnit->path = singleUnit->unit->pathPlanner->GetAStarPath();
 
 		// Update the unit's nextTile
 		singleUnit->nextTile = singleUnit->path.front();
-		singleUnit->unit->isPath = false;
+		singleUnit->unit->isSearchComplete = false;
 		singleUnit->pathRequested = false;
 
 		ret = true;
@@ -1195,5 +1202,5 @@ void SingleUnit::ResetVariables()
 	coll = CollisionType_NoCollision;
 
 	pathRequested = false;
-	unit->isPath = false;
+	unit->isSearchComplete = false;
 }

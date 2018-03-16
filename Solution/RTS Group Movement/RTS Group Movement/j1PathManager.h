@@ -2,6 +2,7 @@
 #define __j1PATH_MANAGER_H__
 
 #include "j1Module.h"
+#include "j1Movement.h"
 #include "p2Point.h"
 
 #include <list>
@@ -9,8 +10,17 @@
 #include <algorithm>
 using namespace std;
 
+enum PathfindingAlgorithmType {
+
+	PathfindingAlgorithmType_NoType,
+	PathfindingAlgorithmType_AStar,
+	PathfindingAlgorithmType_Dijkstra,
+	PathfindingAlgorithmType_MaxTypes
+};
+
 class Entity;
 class PathPlanner;
+class FindActiveTrigger;
 
 class j1PathManager : public j1Module
 {
@@ -82,13 +92,48 @@ private:
 
 	Entity* entity = nullptr; // a pointer to the owner of this class
 
+	PathfindingAlgorithmType pathfindingAlgorithmType = PathfindingAlgorithmType_NoType;
+	j1PathFinding* currentSearch = nullptr; // a pointer to the current search
+	WalkabilityMap* walkabilityMap = nullptr; // a local reference to the navgraph
+
+	// A*
+	vector<iPoint> path; // last path
+
+	// Dijkstra
+	iPoint tile = { -1,-1 }; // last tile
+	FindActiveTrigger* trigger; // pointer to the FindActiveTrigger class
+};
+
+// ---------------------------------------------------------------------
+// Helper class to determine whether a condition for termination is fulfilled
+// ---------------------------------------------------------------------
+
+class FindActiveTrigger
+{
+public:
+
+	static bool isSatisfied(iPoint tile, Entity* entity);
+};
+
+// ---------------------------------------------------------------------
+// Helper struct to set a walkability map
+// ---------------------------------------------------------------------
+
+struct WalkabilityMap 
+{
+public:
+
+	// HighLevelNavgraph (used to quickly determine paths at the "room" level)
+	// LowLevelNavgraph (used to determine paths at the "point" level)
 	
-	// a local reference to the navgraph
+	bool CreateWalkabilityMap();
 
-	j1PathFinding* currentSearch = nullptr;
+	bool SetWalkabilityMap(j1PathFinding* currentSearch) const;
 
-	vector<iPoint> path; // A* path
-	iPoint tile = { -1,-1 }; // Dijkstra tile
+public:
+
+	int w = 0, h = 0;
+	uchar* data = nullptr;
 };
 
 #endif //__j1PATH_MANAGER_H__
