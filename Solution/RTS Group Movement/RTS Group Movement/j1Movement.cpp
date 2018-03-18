@@ -472,8 +472,8 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 			else if (singleUnit->coll == CollisionType_TowardsCell) {
 
 				singleUnit->unit->pathPlanner->RequestDijkstra(singleUnit->goal, FindActiveTrigger::ActiveTriggerType_Goal);
-				//singleUnit->unit->pathPlanner->SetCheckingCurrTile(false); 
-				//singleUnit->unit->pathPlanner->SetCheckingNextTile(false);
+				singleUnit->unit->pathPlanner->SetCheckingCurrTile(true); // TODO: this true was false...
+				singleUnit->unit->pathPlanner->SetCheckingNextTile(true); // TODO: this true was false...
 				singleUnit->unit->pathPlanner->SetCheckingGoalTile(false); // TODO: trigger must be fully customizable
 
 				// ***IS THE TILE READY?***
