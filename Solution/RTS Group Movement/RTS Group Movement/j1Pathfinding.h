@@ -25,8 +25,6 @@ enum PathfindingStatus {
 
 	PathfindingStatus_PathFound,
 	PathfindingStatus_PathNotFound,
-	PathfindingStatus_TileFound,
-	PathfindingStatus_TileNotFound,
 	PathfindingStatus_SearchIncomplete
 };
 
@@ -35,6 +33,8 @@ enum PathfindingStatus {
 // Intro: http://www.raywenderlich.com/4946/introduction-to-a-pathfinding
 // Details: http://theory.stanford.edu/~amitp/GameProgramming/
 // --------------------------------------------------
+
+class FindActiveTrigger;
 
 // forward declaration
 struct PathList;
@@ -54,7 +54,7 @@ struct PathNode
 	// Calculates this tile score
 	float Score() const;
 	// Calculate the F for a specific destination tile
-	float CalculateF(const iPoint& destination, DistanceHeuristic distanceHeuristic);
+	float CalculateF(bool h = false, const iPoint& destination = { -1,-1 }, DistanceHeuristic distanceHeuristic = DistanceHeuristic_DistanceManhattan);
 
 	// -----------
 	float g = 0;
@@ -83,37 +83,9 @@ struct PathList
 };
 
 // Utility: calculate a specific distance
-int CalculateDistance(iPoint origin, iPoint destination, DistanceHeuristic distanceHeuristic);
+int CalculateDistance(iPoint origin, iPoint destination, DistanceHeuristic distanceHeuristic = DistanceHeuristic_DistanceManhattan);
 
 // ---------------------------------------------------------------------
-// Helper class to establish a priority to an iPoint
-// ---------------------------------------------------------------------
-class iPointPriority
-{
-public:
-	iPointPriority() {}
-	iPointPriority(iPoint point, int priority) :point(point), priority(priority) {}
-	iPointPriority(const iPointPriority& i)
-	{
-		point = i.point;
-		priority = i.priority;
-	}
-
-	iPoint point = { 0,0 };
-	uint priority = 0;
-};
-
-// ---------------------------------------------------------------------
-// Helper class to compare two iPoints by its priority values
-// ---------------------------------------------------------------------
-class Comparator
-{
-public:
-	int operator() (const iPointPriority a, const iPointPriority b)
-	{
-		return a.priority > b.priority;
-	}
-};
 
 class j1PathFinding : public j1Module
 {
@@ -133,8 +105,14 @@ public:
 	// Main function to request a path from A to B
 	int CreatePath(const iPoint& origin, const iPoint& destination, DistanceHeuristic distanceHeuristic = DistanceHeuristic_DistanceManhattan);
 
-	// To request all tiles involved in the last generated path (A Star)
+	// To create the path once finished the search algorithm
+	int BacktrackToCreatePath();
+
+	// To request all tiles involved in the last generated path
 	const vector<iPoint>* GetLastPath() const;
+
+	// To request the last tile checked by the search algorithm
+	iPoint GetLastTile() const;
 
 	// Utility: return true if pos is inside the map boundaries
 	bool CheckBoundaries(const iPoint& pos) const;
@@ -152,41 +130,29 @@ public:
 	PathfindingStatus CycleOnceAStar();
 
 	// Initialize CycleOnceDijkstra
-	bool InitializeDijkstra(const iPoint& origin, DistanceHeuristic distanceHeuristic = DistanceHeuristic_DistanceManhattan);
+	bool InitializeDijkstra(const iPoint& origin, FindActiveTrigger* trigger = nullptr, bool isPathRequested = false);
 
 	// CycleOnce Dijkstra
 	PathfindingStatus CycleOnceDijkstra();
 
-	// To request the last tile checked (Dijkstra)
-	iPoint GetLastTile() const;
-
 private:
 
-	// size of the map
-	uint width = 0;
-	uint height = 0;
-	// all map walkability values [0..255]
-	uchar* walkabilityMap = nullptr;
-	// distance heuristic
-	DistanceHeuristic distanceHeuristic = DistanceHeuristic_DistanceManhattan;
+	uint width = 0; // size of the map (w)
+	uint height = 0; // size of the map (h)
+	uchar* walkabilityMap = nullptr; // all map walkability values [0..255]
+	DistanceHeuristic distanceHeuristic = DistanceHeuristic_DistanceManhattan; // distance heuristic of choice
 
-	// CycleOnceAStar
-	PathList open;
-	PathList close;
-	// we store the created path here
-	vector<iPoint> last_path;
+	PathList open; // open list of PathNodes
+	PathList close; // close list of PathNodes
+	vector<iPoint> last_path; // we store the created path here
+	iPoint last_tile = { -1,-1 }; // we store the last tile checked here
 
-	// CycleOnceDijkstra
-	priority_queue<iPointPriority, vector<iPointPriority>, Comparator> priorityQueue;
-	list<iPoint> visited;
-	map<int, iPoint> cost_so_far;
-	// we store the last tile checked here
-	iPoint last_tile = { 0,0 };
+	// A Star
+	iPoint goal = { -1,-1 }; // destination tile
 
-public:
-
-	iPoint goal = { 0,0 }; // AStar
-	iPoint start = { 0,0 }; // Dijkstra
+	// Dijkstra
+	FindActiveTrigger* trigger = nullptr;
+	bool isPathRequested = false;
 };
 
 #endif //__j1PATHFINDING_H__

@@ -54,8 +54,7 @@ void j1PathManager::UpdateSearches()
 		PathfindingStatus result = (*currSearch)->CycleOnce();
 
 		// If the search has terminated, remove it from the list
-		if (result == PathfindingStatus_PathFound || result == PathfindingStatus_PathNotFound
-			|| result == PathfindingStatus_TileFound || result == PathfindingStatus_TileNotFound) {
+		if (result == PathfindingStatus_PathFound || result == PathfindingStatus_PathNotFound) {
 			currSearch = searchRequests.erase(currSearch);
 		}
 		else {
@@ -80,6 +79,8 @@ void j1PathManager::Register(PathPlanner* pathPlanner)
 
 void j1PathManager::UnRegister(PathPlanner* pathPlanner) 
 {
+	pathPlanner->SetSearchRequested(false);
+
 	searchRequests.remove(pathPlanner);
 }
 
@@ -87,13 +88,7 @@ void j1PathManager::UnRegister(PathPlanner* pathPlanner)
 // PATH PLANNER
 // ---------------------------------------------------------------------
 
-PathPlanner::PathPlanner(Entity* owner) :entity(owner) 
-{
-	trigger = new FindActiveTrigger();
-
-	Unit* u = (Unit*)entity;
-	walkabilityMap = u->walkabilityMap;
-}
+PathPlanner::PathPlanner(Entity* owner, Navgraph& navgraph) :entity(owner), navgraph(navgraph) {}
 
 PathPlanner::~PathPlanner()
 {
@@ -112,18 +107,18 @@ bool PathPlanner::RequestAStar(iPoint origin, iPoint destination)
 {
 	bool ret = false;
 
+	if (isSearchRequested)
+		return false;
+
 	App->pathmanager->UnRegister(this);
 	GetReadyForNewSearch();
 
 	pathfindingAlgorithmType = PathfindingAlgorithmType_AStar;
 
-	Unit* u = (Unit*)entity;
-	u->isSearchComplete = false;
-
 	currentSearch = new j1PathFinding();
 
 	// Set the walkability map
-	ret = walkabilityMap->SetWalkabilityMap(currentSearch);
+	ret = navgraph.SetNavgraph(currentSearch);
 
 	// Invalidate if origin or destination are non-walkable
 	if (ret)
@@ -135,25 +130,47 @@ bool PathPlanner::RequestAStar(iPoint origin, iPoint destination)
 	return ret;
 }
 
-bool PathPlanner::RequestDijkstra(iPoint origin, iPoint destination) 
+bool PathPlanner::RequestDijkstra(iPoint origin, FindActiveTrigger::ActiveTriggerType activeTriggerType, bool isPathRequested)
 {
 	bool ret = true;
+
+	if (isSearchRequested)
+		return false;
 
 	App->pathmanager->UnRegister(this);
 	GetReadyForNewSearch();
 
 	pathfindingAlgorithmType = PathfindingAlgorithmType_Dijkstra;
 
-	Unit* u = (Unit*)entity;
-	u->isSearchComplete = false;
+	this->isPathRequested = isPathRequested;
 
 	currentSearch = new j1PathFinding();
 
-	walkabilityMap->SetWalkabilityMap(currentSearch);
+	switch (activeTriggerType) {
+
+	case FindActiveTrigger::ActiveTriggerType_Goal:
+
+		trigger = new FindActiveTrigger(activeTriggerType, entity);
+
+		break;
+
+	case FindActiveTrigger::ActiveTriggerType_Object:
+
+		trigger = new FindActiveTrigger(activeTriggerType, entity->type);
+
+		break;
+
+	case FindActiveTrigger::ActiveTriggerType_NoType:
+	default:
+
+		break;
+	}
+
+	navgraph.SetNavgraph(currentSearch);
 
 	// Invalidate if origin is non-walkable
 	if (ret)
-		ret = currentSearch->InitializeDijkstra(origin);
+		ret = currentSearch->InitializeDijkstra(origin, trigger, isPathRequested);
 
 	if (ret)
 		App->pathmanager->Register(this);
@@ -163,17 +180,18 @@ bool PathPlanner::RequestDijkstra(iPoint origin, iPoint destination)
 
 void PathPlanner::GetReadyForNewSearch()
 {
-	// Clear the waypoint list of the path (A Star)
-	path.clear();
-	// Clear the last tile found (Dijkstra)
-	tile = { 0,0 };
-
 	pathfindingAlgorithmType = PathfindingAlgorithmType_NoType;
+	isSearchCompleted = false;
+	isSearchRequested = true;
 
 	// Delete any active search
 	if (currentSearch != nullptr)
 		delete currentSearch;
 	currentSearch = nullptr;
+
+	if (trigger != nullptr)
+		delete trigger;
+	trigger = nullptr;
 }
 
 PathfindingStatus PathPlanner::CycleOnce()
@@ -191,11 +209,9 @@ PathfindingStatus PathPlanner::CycleOnce()
 			// ERROR!
 		}
 		// Let the bot know a path has been found
-		else if (result == PathfindingStatus_PathFound) {
-			path = *currentSearch->GetLastPath();
-			Unit* u = (Unit*)entity;
-			u->isSearchComplete = true;
-		}
+		else if (result == PathfindingStatus_PathFound)
+
+			isSearchCompleted = true;
 
 		break;
 
@@ -203,25 +219,14 @@ PathfindingStatus PathPlanner::CycleOnce()
 
 		result = currentSearch->CycleOnceDijkstra();
 
-		{
-			iPoint tile = currentSearch->GetLastTile();
-
-			if (trigger->isSatisfied(tile, entity)) {
-
-				this->tile = tile;
-				result = PathfindingStatus_TileFound;
-			}
-		}
-
-		// Let the bot know of the failure to find a tile
-		if (result == PathfindingStatus_TileNotFound) {
+		// Let the bot know of the failure to find a path/tile
+		if (result == PathfindingStatus_PathNotFound) {
 			// ERROR!
 		}
-		// Let the bot know a tile has been found
-		else if (result == PathfindingStatus_TileFound) {
-			Unit* u = (Unit*)entity;
-			u->isSearchComplete = true;
-		}
+		// Let the bot know a path/tile has been found
+		else if (result == PathfindingStatus_PathFound)
+
+			isSearchCompleted = true;
 
 		break;
 	}
@@ -229,37 +234,45 @@ PathfindingStatus PathPlanner::CycleOnce()
 	return result;
 }
 
-vector<iPoint> PathPlanner::GetAStarPath() const
+vector<iPoint> PathPlanner::GetPath() const
 {
-	return path;
+	if (isSearchCompleted)
+
+		if (pathfindingAlgorithmType == PathfindingAlgorithmType_AStar || (pathfindingAlgorithmType == PathfindingAlgorithmType_Dijkstra && isPathRequested))
+
+			return *currentSearch->GetLastPath();
 }
 
-iPoint PathPlanner::GetDijkstraTile() const 
+iPoint PathPlanner::GetTile() const
 {
-	return tile;
+	if (isSearchCompleted)
+
+		return currentSearch->GetLastTile();
 }
 
-// FindActiveTrigger class ---------------------------------------------------------------------------------
-
-bool FindActiveTrigger::isSatisfied(iPoint tile, Entity* entity) 
+bool PathPlanner::IsSearchCompleted() const
 {
+	return isSearchCompleted;
+}
 
-	bool isSatisfied = false;
+bool PathPlanner::IsSearchRequested() const
+{
+	return isSearchRequested;
+}
 
-	Unit* u = (Unit*)entity;
-
-	if (App->movement->IsValidTile(u->singleUnit, tile, u->singleUnit->checkEverything, u->singleUnit->checkEverything, true))
-		return isSatisfied;
+void PathPlanner::SetSearchRequested(bool isSearchRequested)
+{
+	this->isSearchRequested = isSearchRequested;
 }
 
 // WalkabilityMap struct ---------------------------------------------------------------------------------
 
-bool WalkabilityMap::CreateWalkabilityMap()
+bool Navgraph::CreateNavgraph()
 {
 	return App->map->CreateWalkabilityMap(w, h, &data);
 }
 
-bool WalkabilityMap::SetWalkabilityMap(j1PathFinding* currentSearch) const
+bool Navgraph::SetNavgraph(j1PathFinding* currentSearch) const
 {
 	if (currentSearch == nullptr)
 		return false;
@@ -267,4 +280,40 @@ bool WalkabilityMap::SetWalkabilityMap(j1PathFinding* currentSearch) const
 	currentSearch->SetMap(w, h, data);
 
 	return true;
+}
+
+// FindActiveTrigger class ---------------------------------------------------------------------------------
+
+FindActiveTrigger::FindActiveTrigger(ActiveTriggerType activeTriggerType, Entity* entity) :activeTriggerType(activeTriggerType), entity(entity) {}
+
+FindActiveTrigger::FindActiveTrigger(ActiveTriggerType activeTriggerType, EntityType entityType) : activeTriggerType(activeTriggerType), entityType(entityType) {}
+
+bool FindActiveTrigger::isSatisfied(iPoint tile) const
+{
+	bool isSatisfied = false;
+
+	Unit* u = (Unit*)entity;
+
+	switch (activeTriggerType) {
+
+	case ActiveTriggerType_Goal:
+
+		if (App->movement->IsValidTile(u->singleUnit, tile, u->singleUnit->checkEverything, u->singleUnit->checkEverything, true))
+			isSatisfied = true;
+
+		break;
+
+	case ActiveTriggerType_Object:
+
+		isSatisfied = true;
+
+		break;
+
+	case ActiveTriggerType_NoType:
+	default:
+
+		break;
+	}
+
+	return isSatisfied;
 }

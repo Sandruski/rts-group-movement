@@ -5,6 +5,7 @@
 #include "j1PathFinding.h"
 #include "j1EntityFactory.h"
 #include "j1Map.h"
+#include "j1PathManager.h"
 
 #include "Brofiler\Brofiler.h"
 
@@ -69,44 +70,10 @@ const vector<iPoint>* j1PathFinding::GetLastPath() const
 	return &last_path;
 }
 
-// PathList ------------------------------------------------------------------------
-// Looks for a node in this list and returns it's list node or NULL
-// ---------------------------------------------------------------------------------
-const PathNode* PathList::Find(const iPoint& point) const
+// To request the last tile checked by the search algorithm
+iPoint j1PathFinding::GetLastTile() const
 {
-	list<PathNode>::const_iterator item = pathNodeList.begin();
-
-	while (item != pathNodeList.end())
-	{
-		if ((*item).pos == point)
-			return &(*item);
-		item++;
-	}
-	
-	return NULL;
-}
-
-// PathList ------------------------------------------------------------------------
-// Returns the Pathnode with lowest score in this list or NULL if empty
-// ---------------------------------------------------------------------------------
-const PathNode* PathList::GetNodeLowestScore() const
-{
-	const PathNode* ret = NULL;
-	float min = INT_MAX;
-
-	list<PathNode>::const_reverse_iterator item = pathNodeList.rbegin();
-
-	while (item != pathNodeList.rend())
-	{
-		if ((*item).Score() < min)
-		{
-			min = (*item).Score();
-			ret = &(*item);
-		}
-		item++;
-	}
-
-	return ret;
+	return last_tile;
 }
 
 // PathNode -------------------------------------------------------------------------
@@ -182,16 +149,78 @@ float PathNode::Score() const
 // PathNode -------------------------------------------------------------------------
 // Calculate the F for a specific destination tile
 // ----------------------------------------------------------------------------------
-float PathNode::CalculateF(const iPoint& destination, DistanceHeuristic distanceHeuristic)
+float PathNode::CalculateF(bool h, const iPoint& destination, DistanceHeuristic distanceHeuristic)
 {
 	if (diagonal)
 		g = parent->g + 1.7f;
 	else
 		g = parent->g + 1.0f;
 
-	h = CalculateDistance(pos, destination, distanceHeuristic);
+	if (h)
+		this->h = CalculateDistance(pos, destination, distanceHeuristic);
 
-	return g + h;
+	return g + this->h;
+}
+
+// PathList ------------------------------------------------------------------------
+// Looks for a node in this list and returns it's list node or NULL
+// ---------------------------------------------------------------------------------
+const PathNode* PathList::Find(const iPoint& point) const
+{
+	list<PathNode>::const_iterator item = pathNodeList.begin();
+
+	while (item != pathNodeList.end())
+	{
+		if ((*item).pos == point)
+			return &(*item);
+		item++;
+	}
+
+	return NULL;
+}
+
+// PathList ------------------------------------------------------------------------
+// Returns the Pathnode with lowest score in this list or NULL if empty
+// ---------------------------------------------------------------------------------
+const PathNode* PathList::GetNodeLowestScore() const
+{
+	const PathNode* ret = NULL;
+	float min = INT_MAX;
+
+	list<PathNode>::const_reverse_iterator item = pathNodeList.rbegin();
+
+	while (item != pathNodeList.rend())
+	{
+		if ((*item).Score() < min)
+		{
+			min = (*item).Score();
+			ret = &(*item);
+		}
+		item++;
+	}
+
+	return ret;
+}
+
+// ---------------------------------------------------------------------------------
+
+int CalculateDistance(iPoint origin, iPoint destination, DistanceHeuristic distanceHeuristic)
+{
+	int distance = 0;
+
+	switch (distanceHeuristic) {
+	case DistanceHeuristic_DistanceTo:
+		distance = origin.DistanceTo(destination);
+		break;
+	case DistanceHeuristic_DistanceNoSqrt:
+		distance = origin.DistanceNoSqrt(destination);
+		break;
+	case DistanceHeuristic_DistanceManhattan:
+		distance = origin.DistanceManhattan(destination);
+		break;
+	}
+
+	return distance;
 }
 
 // ----------------------------------------------------------------------------------
@@ -268,7 +297,7 @@ int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, D
 						continue;
 					}
 
-					(*iterator).CalculateF(destination, distanceHeuristic);
+					(*iterator).CalculateF(true, destination, distanceHeuristic);
 					// If it is already in the open list, check if it is a better path (compare G)
 					if (open.Find((*iterator).pos) != NULL) {
 
@@ -291,23 +320,21 @@ int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, D
 	return ret;
 }
 
-int CalculateDistance(iPoint origin, iPoint destination, DistanceHeuristic distanceHeuristic)
+int j1PathFinding::BacktrackToCreatePath()
 {
-	int distance = 0;
+	// Backtrack to create the final path
+	for (PathNode iterator = close.pathNodeList.back(); iterator.parent != nullptr;
+		iterator = *close.Find(iterator.parent->pos)) {
 
-	switch (distanceHeuristic) {
-	case DistanceHeuristic_DistanceTo:
-		distance = origin.DistanceTo(destination);
-		break;
-	case DistanceHeuristic_DistanceNoSqrt:
-		distance = origin.DistanceNoSqrt(destination);
-		break;
-	case DistanceHeuristic_DistanceManhattan:
-		distance = origin.DistanceManhattan(destination);
-		break;
+		last_path.push_back(iterator.pos);
 	}
 
-	return distance;
+	last_path.push_back(close.pathNodeList.front().pos);
+
+	// Flip the path
+	reverse(last_path.begin(), last_path.end());
+
+	return last_path.size();
 }
 
 bool j1PathFinding::InitializeAStar(const iPoint& origin, const iPoint& destination, DistanceHeuristic distanceHeuristic)
@@ -320,6 +347,7 @@ bool j1PathFinding::InitializeAStar(const iPoint& origin, const iPoint& destinat
 	this->distanceHeuristic = distanceHeuristic;
 
 	last_path.clear();
+	last_tile = { -1,-1 };
 
 	// Add the origin tile to open
 	PathNode originNode(0, CalculateDistance(origin, destination, distanceHeuristic), origin, nullptr);
@@ -343,17 +371,7 @@ PathfindingStatus j1PathFinding::CycleOnceAStar()
 	// If the current node is the goal, the path has been found
 	if (curr->pos == goal) {
 
-		// Backtrack to create the final path
-		for (PathNode iterator = close.pathNodeList.back(); iterator.parent != nullptr;
-			iterator = *close.Find(iterator.parent->pos)) {
-
-			last_path.push_back(iterator.pos);
-		}
-
-		last_path.push_back(close.pathNodeList.front().pos);
-
-		// Flip the path
-		reverse(last_path.begin(), last_path.end());
+		BacktrackToCreatePath();
 
 		return PathfindingStatus_PathFound;
 	}
@@ -382,7 +400,7 @@ PathfindingStatus j1PathFinding::CycleOnceAStar()
 			continue;
 		}
 
-		(*iterator).CalculateF(goal, DistanceHeuristic_DistanceManhattan);
+		(*iterator).CalculateF(true, goal, distanceHeuristic);
 
 		// If it is already in the open list, check if it is a better path (compare G)
 		if (open.Find((*iterator).pos) != NULL) {
@@ -407,77 +425,96 @@ PathfindingStatus j1PathFinding::CycleOnceAStar()
 }
 
 // Initialize CycleOnceDijkstra
-bool j1PathFinding::InitializeDijkstra(const iPoint& origin, DistanceHeuristic distanceHeuristic) 
+bool j1PathFinding::InitializeDijkstra(const iPoint& origin, FindActiveTrigger* trigger, bool isPathRequested)
 {
 	// If origin is not walkable, return false
 	if (!IsWalkable(origin))
 		return false;
 
-	start = origin;
-	this->distanceHeuristic = distanceHeuristic;
-
 	last_path.clear();
+	last_tile = { -1,-1 };
+
+	this->trigger = trigger;
+	this->isPathRequested = isPathRequested;
 
 	// Add the origin tile to the priorityQueue
-	iPointPriority curr;
-	curr.point = origin;
-	curr.priority = curr.point.DistanceManhattan(origin);
-	priorityQueue.push(curr);
+	PathNode originNode(0, 0, origin, nullptr);
+	open.pathNodeList.push_back(originNode);
 
 	return true;
 }
 
 // CycleOnce Dijkstra
-PathfindingStatus j1PathFinding::CycleOnceDijkstra() 
+PathfindingStatus j1PathFinding::CycleOnceDijkstra()
 {
 	// If the open list is empty, the path has not been found
-	if (priorityQueue.size() == 0)
-		return PathfindingStatus_TileNotFound;
+	if (open.pathNodeList.size() == 0)
+		return PathfindingStatus_PathNotFound;
 
-	iPointPriority curr;
+	// Move the lowest score cell from open list to the closed list
+	PathNode* curr = (PathNode*)open.GetNodeLowestScore();
 
-	// Pop the first element of the priorityQueue
-	curr = priorityQueue.top();
-	priorityQueue.pop();
+	/// Push_back the lowest score cell to the closed list
+	close.pathNodeList.push_back(*curr);
 
-	iPoint neighbors[8];
-	neighbors[0].create(curr.point.x + 1, curr.point.y + 0);
-	neighbors[1].create(curr.point.x + 0, curr.point.y + 1);
-	neighbors[2].create(curr.point.x - 1, curr.point.y + 0);
-	neighbors[3].create(curr.point.x + 0, curr.point.y - 1);
-	neighbors[4].create(curr.point.x + 1, curr.point.y + 1);
-	neighbors[5].create(curr.point.x + 1, curr.point.y - 1);
-	neighbors[6].create(curr.point.x - 1, curr.point.y + 1);
-	neighbors[7].create(curr.point.x - 1, curr.point.y - 1);
+	// If the current node is the goal, the path has been found
+	if (trigger != nullptr) {
 
-	for (uint i = 0; i < 8; ++i)
-	{
-		if (App->pathfinding->IsWalkable(neighbors[i])) {
+		if (trigger->isSatisfied(curr->pos)) {
 
-			/*
-				iPointPriority priorityNeighbors;
-				priorityNeighbors.point = neighbors[i];
-				priorityNeighbors.priority = neighbors[i].DistanceManhattan(start);
+			last_tile = curr->pos;
 
-				int g = cost_so_far[curr.point.x][curr.point.y] + neighbors[i].DistanceManhattan(start);
+			if (isPathRequested)
+				BacktrackToCreatePath();
 
-				if (find(visited.begin(), visited.end(), neighbors[i]) == visited.end() || g < cost_so_far[neighbors[i].x][neighbors[i].y]) {
-
-					cost_so_far[neighbors[i].x][neighbors[i].y] = g;
-
-					priorityQueue.push(priorityNeighbors);
-
-					visited.push_back(neighbors[i]);
-				}
-			}
-			*/
+			return PathfindingStatus_PathFound;
 		}
 	}
 
-	return PathfindingStatus_SearchIncomplete;
-}
+	/// Erase the lowest score cell from the open list
+	list<PathNode>::iterator it = open.pathNodeList.begin();
+	while (it != open.pathNodeList.end()) {
 
-iPoint j1PathFinding::GetLastTile() const 
-{
-	return last_tile;
+		if (&(*it) == &(*curr))
+			break;
+		it++;
+	}
+	open.pathNodeList.erase(it);
+
+	// Fill a list of all adjancent nodes
+	PathList neighbors;
+	close.pathNodeList.back().FindWalkableAdjacents(neighbors);
+
+	list<PathNode>::iterator iterator = neighbors.pathNodeList.begin();
+
+	while (iterator != neighbors.pathNodeList.end()) {
+
+		// Ignore nodes in the closed list
+		if (close.Find((*iterator).pos) != NULL) {
+			iterator++;
+			continue;
+		}
+
+		(*iterator).CalculateF();
+
+		// If it is already in the open list, check if it is a better path (compare G)
+		if (open.Find((*iterator).pos) != NULL) {
+
+			// If it is a better path, Update the parent
+			PathNode open_node = *open.Find((*iterator).pos);
+			if ((*iterator).g < open_node.g)
+				open_node.parent = (*iterator).parent;
+		}
+		else {
+
+			// If it is NOT found, calculate its F and add it to the open list
+			open.pathNodeList.push_back(*iterator);
+		}
+
+		iterator++;
+	}
+	neighbors.pathNodeList.clear();
+
+	// There are still nodes to explore
+	return PathfindingStatus_SearchIncomplete;
 }

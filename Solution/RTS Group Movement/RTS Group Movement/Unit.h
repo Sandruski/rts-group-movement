@@ -13,7 +13,7 @@ struct SDL_Color;
 struct SingleUnit;
 
 class PathPlanner;
-class WalkabilityMap;
+class Navgraph;
 
 #define MAX_UNIT_PRIORITY 8
 
@@ -81,11 +81,10 @@ public:
 
 	UnitInfo unitInfo;
 
+	Navgraph* navgraph = nullptr;
 	PathPlanner* pathPlanner = nullptr;
-	WalkabilityMap* walkabilityMap = nullptr;
 
 	SingleUnit* singleUnit = nullptr;
-	bool isSearchComplete = false;
 
 private:
 

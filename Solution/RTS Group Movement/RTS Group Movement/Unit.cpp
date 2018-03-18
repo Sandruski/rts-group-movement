@@ -52,12 +52,11 @@ Unit::Unit(EntityInfo entityInfo, uint priority) : Entity(entityInfo)
 	singleUnit = new SingleUnit(this, nullptr);
 	App->movement->CreateGroupFromUnit(this);
 
-	walkabilityMap = new WalkabilityMap();
-
 	// Set the walkability map
-	walkabilityMap->CreateWalkabilityMap();
+	navgraph = new Navgraph();
+	navgraph->CreateNavgraph();
 
-	pathPlanner = new PathPlanner(this);
+	pathPlanner = new PathPlanner(this, *navgraph);
 }
 
 void Unit::Move(float dt)

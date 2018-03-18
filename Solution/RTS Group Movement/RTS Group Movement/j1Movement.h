@@ -86,15 +86,15 @@ public:
 	/// The new tile is searched using a Priority Queue containing the neighbors of the current tile of the unit passed as an argument
 	iPoint FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront = false) const;
 
-	// Returns a new valid goal for the unit or { -1,-1 }
-	/// The new goal is searched using BFS from the goal tile passed as an argument
-	iPoint FindNewValidGoal(SingleUnit* singleUnit, iPoint goal, bool checkEverything = false);
-
 	// Returns true if it succeeds in changing the next tile of the unit
 	bool ChangeNextTile(SingleUnit* singleUnit); /// Not const because it needs to keep track of the number of paths created at the current update
 
 	// Returns true if two units are heading towards opposite directions
 	bool IsOppositeDirection(SingleUnit* singleUnitA, SingleUnit* singleUnitB) const;
+
+	bool IsAnyUnitDoingSomething(SingleUnit* singleUnit, bool isSearching = false) const;
+
+	// -----
 
 private:
 
@@ -154,7 +154,14 @@ struct SingleUnit
 	void StopUnit();
 
 	// Resets the variables of the unit
-	void ResetVariables();
+	void ResetUnitVariables();
+
+	// Resets the collision variables of the unit
+	void ResetUnitCollisionVariables();
+
+	void GetReadyForNewMove();
+
+	void WakeUp();
 
 	// -----
 
@@ -166,9 +173,8 @@ struct SingleUnit
 	iPoint currTile = { -1,-1 }; // position of the unit in map coords
 	iPoint nextTile = { -1,-1 }; // next waypoint of the path (next tile the unit is heading to in map coords)
 
-	iPoint goal = { -1,-1 }; // current goal of the unit
-	iPoint newGoal = { -1,-1 }; // new goal of the unit
-	bool isGoalSetByUser = false;
+	iPoint goal = { -1,-1 }; // goal of the unit
+	bool isGoalChanged = false;
 	/// newGoal exists to save the new goal set for the unit and not change abruptly the current goal
 	/// The current goal will be changed when the unit has reached its next tile
 
@@ -184,8 +190,39 @@ struct SingleUnit
 	SingleUnit* waitUnit = nullptr; // conflict unit (unit whom the collision has been found with)
 	CollisionType coll = CollisionType_NoCollision; // type of collision
 
-	bool pathRequested = false;
 	bool checkEverything = false;
+
+	bool isSearching = false;
+};
+
+// ---------------------------------------------------------------------
+// Helper class to establish a priority to an iPoint
+// ---------------------------------------------------------------------
+class iPointPriority
+{
+public:
+	iPointPriority() {}
+	iPointPriority(iPoint point, int priority) :point(point), priority(priority) {}
+	iPointPriority(const iPointPriority& i)
+	{
+		point = i.point;
+		priority = i.priority;
+	}
+
+	iPoint point = { 0,0 };
+	uint priority = 0;
+};
+
+// ---------------------------------------------------------------------
+// Helper class to compare two iPoints by its priority values
+// ---------------------------------------------------------------------
+class Comparator
+{
+public:
+	int operator() (const iPointPriority a, const iPointPriority b)
+	{
+		return a.priority > b.priority;
+	}
 };
 
 #endif //__j1MOVEMENT_H__

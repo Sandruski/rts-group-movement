@@ -20,7 +20,56 @@ enum PathfindingAlgorithmType {
 
 class Entity;
 class PathPlanner;
-class FindActiveTrigger;
+
+// ---------------------------------------------------------------------
+// Helper struct to set a walkability map
+// ---------------------------------------------------------------------
+struct Navgraph
+{
+public:
+
+	// HighLevelNavgraph (used to quickly determine paths at the "room" level)
+	// LowLevelNavgraph (used to determine paths at the "point" level)
+
+	bool CreateNavgraph();
+
+	bool SetNavgraph(j1PathFinding* currentSearch) const;
+
+public:
+
+	int w = 0, h = 0;
+	uchar* data = nullptr;
+};
+
+// ---------------------------------------------------------------------
+// Helper class to determine whether a condition for termination is fulfilled
+// ---------------------------------------------------------------------
+class FindActiveTrigger
+{
+public:
+
+	enum ActiveTriggerType {
+
+		ActiveTriggerType_NoType,
+		ActiveTriggerType_Goal,
+		ActiveTriggerType_Object,
+		ActiveTriggerType_MaxTypes
+	};
+
+	FindActiveTrigger(ActiveTriggerType activeTriggerType, Entity* entity);
+	FindActiveTrigger(ActiveTriggerType activeTriggerType, EntityType entityType);
+
+	bool isSatisfied(iPoint tile) const;
+
+private:
+
+	ActiveTriggerType activeTriggerType = ActiveTriggerType_NoType;
+
+	Entity* entity = nullptr;
+	EntityType entityType = EntityType_NoType;
+};
+
+// ---------------------------------------------------------------------
 
 class j1PathManager : public j1Module
 {
@@ -63,7 +112,7 @@ class PathPlanner
 {
 public:
 
-	PathPlanner(Entity* owner);
+	PathPlanner(Entity* owner, Navgraph& navgraph);
 
 	~PathPlanner();
 
@@ -71,7 +120,7 @@ public:
 	bool RequestAStar(iPoint origin, iPoint destination);
 
 	// Creates an instance of the Dijkstra time-sliced search and registers it with the path manager
-	bool RequestDijkstra(iPoint origin, iPoint destination);
+	bool RequestDijkstra(iPoint origin, FindActiveTrigger::ActiveTriggerType activeTriggerType, bool isPathRequested = false);
 
 	// Initializes all the PathPlanner variables for the next search
 	void GetReadyForNewSearch();
@@ -80,60 +129,33 @@ public:
 	// asigned search algorithm. When a search is terminated the method messages the owner
 	PathfindingStatus CycleOnce();
 
-	// Called by an agent after it has been notified that the A* search has terminated successfully
+	// Called by an agent after it has been notified that the search algorithm has terminated successfully
 	// to request the path found
-	vector<iPoint> GetAStarPath() const;
+	vector<iPoint> GetPath() const;
 
-	// Called by an agent after it has been notified that the Dijkstra search has terminated successfully
+	// Called by an agent after it has been notified that the search algorithm (Dijkstra) has terminated successfully
 	// to request the tile found
-	iPoint GetDijkstraTile() const;
+	iPoint GetTile() const;
+
+	bool IsSearchCompleted() const;
+
+	bool IsSearchRequested() const;
+
+	void SetSearchRequested(bool isSearchRequested);
 
 private:
 
 	Entity* entity = nullptr; // a pointer to the owner of this class
+	bool isSearchRequested = false;
+	bool isSearchCompleted = false;
 
 	PathfindingAlgorithmType pathfindingAlgorithmType = PathfindingAlgorithmType_NoType;
 	j1PathFinding* currentSearch = nullptr; // a pointer to the current search
-	WalkabilityMap* walkabilityMap = nullptr; // a local reference to the navgraph
-
-	// A*
-	vector<iPoint> path; // last path
+	Navgraph& navgraph; // a local reference to the navgraph
 
 	// Dijkstra
-	iPoint tile = { -1,-1 }; // last tile
-	FindActiveTrigger* trigger; // pointer to the FindActiveTrigger class
-};
-
-// ---------------------------------------------------------------------
-// Helper class to determine whether a condition for termination is fulfilled
-// ---------------------------------------------------------------------
-
-class FindActiveTrigger
-{
-public:
-
-	static bool isSatisfied(iPoint tile, Entity* entity);
-};
-
-// ---------------------------------------------------------------------
-// Helper struct to set a walkability map
-// ---------------------------------------------------------------------
-
-struct WalkabilityMap 
-{
-public:
-
-	// HighLevelNavgraph (used to quickly determine paths at the "room" level)
-	// LowLevelNavgraph (used to determine paths at the "point" level)
-	
-	bool CreateWalkabilityMap();
-
-	bool SetWalkabilityMap(j1PathFinding* currentSearch) const;
-
-public:
-
-	int w = 0, h = 0;
-	uchar* data = nullptr;
+	FindActiveTrigger* trigger = nullptr; // a pointer to the FindActiveTrigger class
+	bool isPathRequested = false;
 };
 
 #endif //__j1PATH_MANAGER_H__
