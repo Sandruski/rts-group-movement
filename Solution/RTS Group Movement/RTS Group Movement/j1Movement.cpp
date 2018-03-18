@@ -385,7 +385,9 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 								break;
 							}
+							break;
 						}
+						break;
 					}
 
 					// IS THE UNIT REALLY CHANGING ITS NEXTTILE?
