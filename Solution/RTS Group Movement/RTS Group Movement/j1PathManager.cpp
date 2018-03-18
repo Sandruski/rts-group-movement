@@ -265,6 +265,24 @@ void PathPlanner::SetSearchRequested(bool isSearchRequested)
 	this->isSearchRequested = isSearchRequested;
 }
 
+void PathPlanner::SetCheckingCurrTile(bool isCheckingCurrTile) 
+{
+	if (trigger != nullptr)
+		trigger->isCheckingCurrTile = isCheckingCurrTile;
+}
+
+void PathPlanner::SetCheckingNextTile(bool isCheckingNextTile) 
+{
+	if (trigger != nullptr)
+		trigger->isCheckingNextTile = isCheckingNextTile;
+}
+
+void PathPlanner::SetCheckingGoalTile(bool isCheckingGoalTile) 
+{
+	if (trigger != nullptr)
+		trigger->isCheckingGoalTile = isCheckingGoalTile;
+}
+
 // WalkabilityMap struct ---------------------------------------------------------------------------------
 
 bool Navgraph::CreateNavgraph()
@@ -298,7 +316,7 @@ bool FindActiveTrigger::isSatisfied(iPoint tile) const
 
 	case ActiveTriggerType_Goal:
 
-		if (App->movement->IsValidTile(u->singleUnit, tile, u->singleUnit->checkEverything, u->singleUnit->checkEverything, true))
+		if (App->movement->IsValidTile(u->singleUnit, tile, isCheckingCurrTile, isCheckingNextTile, isCheckingGoalTile))
 			isSatisfied = true;
 
 		break;

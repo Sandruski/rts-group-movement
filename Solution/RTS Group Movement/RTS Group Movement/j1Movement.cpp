@@ -183,34 +183,7 @@ UnitGroup* j1Movement::GetGroupByUnits(list<Unit*> units) const
 	return nullptr;
 }
 
-void SingleUnit::GetReadyForNewMove()
-{
-	iPoint currTilePos = App->map->MapToWorld(currTile.x, currTile.y);
-
-	if ((int)unit->entityInfo.pos.x == currTilePos.x && (int)unit->entityInfo.pos.y == currTilePos.y) {
-
-		ResetUnitVariables();
-		StopUnit();
-		movementState = MovementState_WaitForPath;
-
-		isGoalChanged = false;
-	}
-}
-
-void SingleUnit::ResetUnitCollisionVariables()
-{
-	coll = CollisionType_NoCollision;
-	wait = false;
-
-	reversePriority = false;
-}
-
-void SingleUnit::WakeUp() 
-{
-	if (!wakeUp)
-		wakeUp = true;
-}
-
+// Returns true if another unit has any of the booleans passed as arguments to true
 bool j1Movement::IsAnyUnitDoingSomething(SingleUnit* singleUnit, bool isSearching) const
 {
 	list<UnitGroup*>::const_iterator groups;
@@ -358,8 +331,9 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 				if (singleUnit->priority >= singleUnit->waitUnit->priority || singleUnit->reversePriority) {
 
 					// 1. waitUnit moves
-					singleUnit->waitUnit->checkEverything = true;
 					singleUnit->waitUnit->unit->pathPlanner->RequestDijkstra(singleUnit->waitUnit->goal, FindActiveTrigger::ActiveTriggerType_Goal);
+					singleUnit->waitUnit->unit->pathPlanner->SetCheckingCurrTile(true);
+					singleUnit->waitUnit->unit->pathPlanner->SetCheckingNextTile(true); // TODO: trigger must be fully customizable
 
 					// ***IS THE TILE READY?***
 					if (singleUnit->waitUnit->unit->pathPlanner->IsSearchCompleted()) {
@@ -367,10 +341,11 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 						singleUnit->waitUnit->goal = singleUnit->waitUnit->unit->pathPlanner->GetTile();
 						singleUnit->waitUnit->unit->pathPlanner->SetSearchRequested(false);
 
+						singleUnit->waitUnit->GetReadyForNewMove();
 						singleUnit->waitUnit->movementState = MovementState_WaitForPath;
 
 						/// COLLISION RESOLVED
-						singleUnit->ResetUnitCollisionVariables();
+						singleUnit->ResetUnitCollisionParameters();
 
 						if (singleUnit->unit->isSelected)
 							LOG("%s: MOVED AWAY %s", singleUnit->unit->GetColorName().data(), singleUnit->waitUnit->unit->GetColorName().data());
@@ -427,7 +402,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 							singleUnit->nextTile = singleUnit->path.front();
 
 							/// COLLISION RESOLVED
-							singleUnit->ResetUnitCollisionVariables();
+							singleUnit->ResetUnitCollisionParameters();
 
 							if (singleUnit->unit->isSelected)
 								LOG("%s: MOVED AWAY %s", singleUnit->waitUnit->unit->GetColorName().data(), singleUnit->unit->GetColorName().data());
@@ -459,7 +434,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 				if (singleUnit->waitUnit->currTile != singleUnit->waitTile) {
 
-					singleUnit->ResetUnitCollisionVariables();
+					singleUnit->ResetUnitCollisionParameters();
 
 					if (singleUnit->unit->isSelected)
 						LOG("%s: RESOLVED ITS CELL", singleUnit->unit->GetColorName().data());
@@ -472,7 +447,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 				if (singleUnit->waitUnit->nextTile != singleUnit->waitTile) {
 
-					singleUnit->ResetUnitCollisionVariables();
+					singleUnit->ResetUnitCollisionParameters();
 
 					if (singleUnit->unit->isSelected)
 						LOG("%s: RESOLVED SAME CELL", singleUnit->unit->GetColorName().data());
@@ -485,7 +460,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 				if (singleUnit->waitUnit->currTile == singleUnit->waitTile) {
 
-					singleUnit->ResetUnitCollisionVariables();
+					singleUnit->ResetUnitCollisionParameters();
 
 					if (singleUnit->unit->isSelected)
 						LOG("%s: RESOLVED CROSSING", singleUnit->unit->GetColorName().data());
@@ -496,122 +471,27 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 			}
 			else if (singleUnit->coll == CollisionType_TowardsCell) {
 
-				/*
-				// The unit with the higher priority politely asks the other unit to move
-				if (singleUnit->priority >= singleUnit->waitUnit->priority || singleUnit->reversePriority) {
+				singleUnit->unit->pathPlanner->RequestDijkstra(singleUnit->goal, FindActiveTrigger::ActiveTriggerType_Goal);
+				//singleUnit->unit->pathPlanner->SetCheckingCurrTile(false); 
+				//singleUnit->unit->pathPlanner->SetCheckingNextTile(false);
+				singleUnit->unit->pathPlanner->SetCheckingGoalTile(false); // TODO: trigger must be fully customizable
 
-					// 1. waitUnit moves
-					singleUnit->waitUnit->checkEverything = true;
-					singleUnit->waitUnit->unit->pathPlanner->RequestDijkstra(singleUnit->waitUnit->goal, FindActiveTrigger::ActiveTriggerType_Goal);
+				// ***IS THE TILE READY?***
+				if (singleUnit->unit->pathPlanner->IsSearchCompleted()) {
 
-					// ***IS THE TILE READY?***
-					if (singleUnit->waitUnit->unit->pathPlanner->IsSearchCompleted()) {
+					singleUnit->goal = singleUnit->unit->pathPlanner->GetTile();
+					singleUnit->unit->pathPlanner->SetSearchRequested(false);
 
-						singleUnit->waitUnit->goal = singleUnit->waitUnit->unit->pathPlanner->GetTile();
-						singleUnit->waitUnit->unit->pathPlanner->SetSearchRequested(false);
+					singleUnit->movementState = MovementState_WaitForPath;
 
-						singleUnit->waitUnit->movementState = MovementState_WaitForPath;
-
-						/// COLLISION RESOLVED
-						singleUnit->ResetUnitCollisionVariables();
-
-						if (singleUnit->unit->isSelected)
-							LOG("%s: MOVED AWAY %s", singleUnit->unit->GetColorName().data(), singleUnit->waitUnit->unit->GetColorName().data());
-
-						break;
-					}
-					break;
-				}
-				else {
-
-					// 2. Current unit moves
-					if (!singleUnit->isSearching) {
-
-						// 1. Check only tiles in front of the unit (3)
-						iPoint newTile = FindNewValidTile(singleUnit, true);
-
-						if (newTile.x != -1 && newTile.y != -1) {
-
-							// Request a new path for the unit
-							singleUnit->unit->pathPlanner->RequestAStar(newTile, singleUnit->goal);
-
-							singleUnit->isSearching = true; /// The unit is changing its nextTile
-
-							break;
-						}
-						else {
-
-							// 2. Check all possible tiles (8)
-							newTile = FindNewValidTile(singleUnit);
-
-							if (newTile.x != -1 && newTile.y != -1) {
-
-								// Request a new path for the unit
-								singleUnit->unit->pathPlanner->RequestAStar(newTile, singleUnit->goal);
-
-								singleUnit->isSearching = true; /// The unit is changing its nextTile
-
-								break;
-							}
-						}
-					}
-
-					// IS THE UNIT REALLY CHANGING ITS NEXTTILE?
-					if (singleUnit->isSearching) {
-
-						// ***IS THE PATH READY?***
-						if (singleUnit->unit->pathPlanner->IsSearchCompleted()) {
-
-							singleUnit->path = singleUnit->unit->pathPlanner->GetPath();
-
-							singleUnit->isSearching = false;/// The unit has finished changing its nextTile
-
-															// Update the unit's nextTile
-							singleUnit->nextTile = singleUnit->path.front();
-
-							/// COLLISION RESOLVED
-							singleUnit->ResetUnitCollisionVariables();
-
-							if (singleUnit->unit->isSelected)
-								LOG("%s: MOVED AWAY %s", singleUnit->waitUnit->unit->GetColorName().data(), singleUnit->unit->GetColorName().data());
-
-							break;
-						}
-						break;
-					}
-					else {
-
-						// If the unit cannot change its nextTile, ask the waitUnit to move
-						singleUnit->reversePriority = true;
-
-						if (singleUnit->unit->isSelected)
-							LOG("%s: reversed its priority", singleUnit->waitUnit->unit->GetColorName().data());
-
-						break;
-					}
-					break;
-				}
-				*/
-
-				if (ChangeNextTile(singleUnit)) {
-
-					singleUnit->ResetUnitCollisionVariables();
+					/// COLLISION RESOLVED
+					singleUnit->ResetUnitCollisionParameters();
 
 					if (singleUnit->unit->isSelected)
 						LOG("%s: RESOLVED TOWARDS", singleUnit->unit->GetColorName().data());
 
 					break;
 				}
-				else {
-
-					// If this unit can't move away, the other unit must stop
-
-					if (singleUnit->unit->isSelected)
-						LOG("%s: Couldn't find newTile", singleUnit->unit->GetColorName().data());
-
-					break;
-				}
-
 				break;
 			}
 			break;
@@ -693,37 +573,29 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 			if ((*units) != singleUnit) {
 
 				// TOWARDS COLLISION
-				// TODO 5a: Check if two units would reach the tile of each other. Make sure that the collision would be frontal!
+				// Check if two units would reach the tile of each other. Make sure that the collision would be frontal!
+				/// The unit with the lower priority must deal with the collision
 
-				if (singleUnit->nextTile == (*units)->currTile && (*units)->nextTile == singleUnit->currTile && (*units)->coll != CollisionType_TowardsCell) {
+				if ((*units)->coll != CollisionType_TowardsCell) {
 
-					if (singleUnit->priority >= (*units)->priority) {
+					if (singleUnit->nextTile == (*units)->currTile && (*units)->nextTile == singleUnit->currTile) {
 
-						(*units)->waitUnit = singleUnit;
-						(*units)->waitTile = (*units)->nextTile;
-
-						(*units)->coll = CollisionType_TowardsCell;
-						(*units)->wait = true;
-
-						if ((*units)->unit->isSelected)
+						if (singleUnit->priority >= (*units)->priority) {
+							(*units)->SetCollisionParameters(CollisionType_TowardsCell, singleUnit, (*units)->nextTile);
 							LOG("%s: TOWARDS", (*units)->unit->GetColorName().data());
-					}
-					else {
-						singleUnit->waitUnit = *units;
-						singleUnit->waitTile = singleUnit->nextTile;
-
-						singleUnit->coll = CollisionType_TowardsCell;
-						singleUnit->wait = true;
-
-						if (singleUnit->unit->isSelected)
+						}
+						else {
+							singleUnit->SetCollisionParameters(CollisionType_TowardsCell, *units, singleUnit->nextTile);
 							LOG("%s: TOWARDS", singleUnit->unit->GetColorName().data());
+						}
 					}
 				}
 
 				if (singleUnit->coll != CollisionType_TowardsCell && (*units)->coll != CollisionType_TowardsCell) {
 
 					// ITS CELL. A reaches B's tile
-					// TODO 5b: Check if the unit would reach another unit's tile
+					// Check if the unit would reach another unit's tile
+					/// The unit who would reach another unit's tile must deal with the collision
 
 					if (singleUnit->nextTile == (*units)->currTile) {
 						
@@ -740,7 +612,8 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 					}
 
 					// SAME CELL. A and B reach the same tile
-					// TODO 5c: Check if two units would reach the same tile
+					// Check if two units would reach the same tile
+					/// The unit with the highest area inside the nextTile must deal with the collision
 
 					else if (singleUnit->nextTile == (*units)->nextTile && !(*units)->wait) {
 						
@@ -782,11 +655,10 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 							if ((*units)->unit->isSelected)
 								LOG("%s: SAME CELL", (*units)->unit->GetColorName().data());
 						}
-						
 					}
 
 					// DIAGONAL CROSSING
-					
+
 					else {
 
 						iPoint up = { (*units)->currTile.x, (*units)->currTile.y - 1 };
@@ -804,65 +676,35 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 							// We are sure than nextTile of this unit is valid, but what about the other unit's nextTile? We haven't check it yet
 							if ((*units)->nextTile == myUp && !(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
 
-								// Decide which unit waits (depending on its priority value)
-								singleUnit->waitUnit = *units;
-								singleUnit->waitTile = myUp;
-
-								if (!singleUnit->wait) {
-									singleUnit->coll = CollisionType_DiagonalCrossing;
-									singleUnit->wait = true;
-
-									if (singleUnit->unit->isSelected)
-										LOG("%s: CROSSING", singleUnit->unit->GetColorName().data());
-								}
+								singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myUp);
+								LOG("%s: Up CROSSING", singleUnit->unit->GetColorName().data());
 							}
 						}
 						else if (singleUnit->nextTile == down) {
+
+							// We are sure than nextTile of this unit is valid, but what about the other unit's nextTile? We haven't check it yet
 							if ((*units)->nextTile == myDown && !(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
 
-								// Decide which unit waits (depending on its priority value)
-								singleUnit->waitUnit = *units;
-								singleUnit->waitTile = myDown;
-
-								if (!singleUnit->wait) {
-									singleUnit->coll = CollisionType_DiagonalCrossing;
-									singleUnit->wait = true;
-
-									if (singleUnit->unit->isSelected)
-										LOG("%s: CROSSING", singleUnit->unit->GetColorName().data());
-								}
+								singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myDown);
+								LOG("%s: Down CROSSING", singleUnit->unit->GetColorName().data());
 							}
 						}
 						else if (singleUnit->nextTile == left) {
+
+							// We are sure than nextTile of this unit is valid, but what about the other unit's nextTile? We haven't check it yet
 							if ((*units)->nextTile == myLeft && !(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
 
-								// Decide which unit waits (depending on its priority value)
-								singleUnit->waitUnit = *units;
-								singleUnit->waitTile = myLeft;
-
-								if (!singleUnit->wait) {
-									singleUnit->coll = CollisionType_DiagonalCrossing;
-									singleUnit->wait = true;
-
-									if (singleUnit->unit->isSelected)
-										LOG("%s: CROSSING", singleUnit->unit->GetColorName().data());
-								}
+								singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myLeft);
+								LOG("%s: Left CROSSING", singleUnit->unit->GetColorName().data());
 							}
 						}
 						else if (singleUnit->nextTile == right) {
+
+							// We are sure than nextTile of this unit is valid, but what about the other unit's nextTile? We haven't check it yet
 							if ((*units)->nextTile == myRight && !(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
 
-								// Decide which unit waits (depending on its priority value)
-								singleUnit->waitUnit = *units;
-								singleUnit->waitTile = myRight;
-
-								if (!singleUnit->wait) {
-									singleUnit->coll = CollisionType_DiagonalCrossing;
-									singleUnit->wait = true;
-
-									if (singleUnit->unit->isSelected)
-										LOG("%s: CROSSING", singleUnit->unit->GetColorName().data());
-								}
+								singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myRight);
+								LOG("%s: Right CROSSING", singleUnit->unit->GetColorName().data());
 							}
 						}
 					}
@@ -1042,61 +884,6 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront)
 	}
 
 	return { -1,-1 };
-}
-
-// Returns true if it succeeds in changing the next tile of the unit
-bool j1Movement::ChangeNextTile(SingleUnit* singleUnit)
-{
-	if (!singleUnit->isSearching) {
-
-		// 1. Check only tiles in front of the unit (3)
-		iPoint newTile = FindNewValidTile(singleUnit, true);
-
-		if (newTile.x != -1 && newTile.y != -1) {
-
-			// Request a new path for the unit
-			singleUnit->unit->pathPlanner->RequestAStar(newTile, singleUnit->goal);
-
-			singleUnit->isSearching = true; /// The unit is changing its nextTile
-		}
-		else {
-
-			// 2. Check all possible tiles (8)
-			newTile = FindNewValidTile(singleUnit);
-
-			if (newTile.x != -1 && newTile.y != -1) {
-
-				// Request a new path for the unit
-				singleUnit->unit->pathPlanner->RequestAStar(newTile, singleUnit->goal);
-
-				singleUnit->isSearching = true; /// The unit is changing its nextTile
-			}
-		}
-	}
-
-	// IS THE UNIT REALLY CHANGING ITS NEXTTILE?
-	if (singleUnit->isSearching) {
-
-		// ***IS THE PATH READY?***
-		if (singleUnit->unit->pathPlanner->IsSearchCompleted()) {
-
-			singleUnit->path = singleUnit->unit->pathPlanner->GetPath();
-
-			singleUnit->isSearching = false;/// The unit has finished changing its nextTile
-
-			// Update the unit's nextTile
-			singleUnit->nextTile = singleUnit->path.front();
-
-			return true;
-		}
-	}
-	else {
-	
-		return false;
-	
-	}
-
-	return false;
 }
 
 // Returns true if two units are heading towards opposite directions
@@ -1337,8 +1124,8 @@ void SingleUnit::StopUnit()
 	unit->SetUnitDirection(UnitDirection_Idle);
 }
 
-// Resets the variables of the unit
-void SingleUnit::ResetUnitVariables()
+// Resets the parameters of the unit (general info)
+void SingleUnit::ResetUnitParameters()
 {
 	reversePriority = false;
 
@@ -1347,4 +1134,45 @@ void SingleUnit::ResetUnitVariables()
 	waitTile = { -1,-1 };
 	waitUnit = nullptr;
 	coll = CollisionType_NoCollision;
+}
+
+// Resets the collision parameters of the unit
+void SingleUnit::ResetUnitCollisionParameters()
+{
+	coll = CollisionType_NoCollision;
+	wait = false;
+
+	reversePriority = false;
+}
+
+// When detected a collision, to set the collision parameters of the unit
+void SingleUnit::SetCollisionParameters(CollisionType collisionType, SingleUnit* waitUnit, iPoint waitTile)
+{
+	coll = collisionType;
+
+	wait = true;
+	this->waitUnit = waitUnit;
+	this->waitTile = waitTile;
+}
+
+// Prepares the unit for its next movement cycle
+void SingleUnit::GetReadyForNewMove()
+{
+	iPoint currTilePos = App->map->MapToWorld(currTile.x, currTile.y);
+
+	if ((int)unit->entityInfo.pos.x == currTilePos.x && (int)unit->entityInfo.pos.y == currTilePos.y) {
+
+		ResetUnitParameters();
+		StopUnit();
+		movementState = MovementState_WaitForPath;
+
+		isGoalChanged = false;
+	}
+}
+
+// Sets the state of the unit to UnitState_Walk
+void SingleUnit::WakeUp()
+{
+	if (!wakeUp)
+		wakeUp = true;
 }

@@ -86,15 +86,11 @@ public:
 	/// The new tile is searched using a Priority Queue containing the neighbors of the current tile of the unit passed as an argument
 	iPoint FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront = false) const;
 
-	// Returns true if it succeeds in changing the next tile of the unit
-	bool ChangeNextTile(SingleUnit* singleUnit); /// Not const because it needs to keep track of the number of paths created at the current update
-
 	// Returns true if two units are heading towards opposite directions
 	bool IsOppositeDirection(SingleUnit* singleUnitA, SingleUnit* singleUnitB) const;
 
+	// Returns true if another unit has any of the booleans passed as arguments to true
 	bool IsAnyUnitDoingSomething(SingleUnit* singleUnit, bool isSearching = false) const;
-
-	// -----
 
 private:
 
@@ -153,14 +149,19 @@ struct SingleUnit
 	// Stops the unit
 	void StopUnit();
 
-	// Resets the variables of the unit
-	void ResetUnitVariables();
+	// Resets the parameters of the unit (general info)
+	void ResetUnitParameters();
 
-	// Resets the collision variables of the unit
-	void ResetUnitCollisionVariables();
+	// Resets the collision parameters of the unit
+	void ResetUnitCollisionParameters();
 
+	// When detected a collision, to set the collision parameters of the unit
+	void SetCollisionParameters(CollisionType collisionType, SingleUnit* waitUnit, iPoint waitTile);
+
+	// Prepares the unit for its next movement cycle
 	void GetReadyForNewMove();
 
+	// Sets the state of the unit to UnitState_Walk
 	void WakeUp();
 
 	// -----
@@ -168,31 +169,26 @@ struct SingleUnit
 	Unit* unit = nullptr;
 	UnitGroup* group = nullptr;
 	MovementState movementState = MovementState_NoState;
+	bool wakeUp = false; // sets a unit's unitState to UnitState_Walk
 
 	vector<iPoint> path; // path to the unit's goal
 	iPoint currTile = { -1,-1 }; // position of the unit in map coords
 	iPoint nextTile = { -1,-1 }; // next waypoint of the path (next tile the unit is heading to in map coords)
 
 	iPoint goal = { -1,-1 }; // goal of the unit
-	bool isGoalChanged = false;
-	/// newGoal exists to save the new goal set for the unit and not change abruptly the current goal
-	/// The current goal will be changed when the unit has reached its next tile
+	bool isGoalChanged = false; // if true, it means that the goal has been changed
+	bool isSearching = false; // if true, it means that the unit is searching a tile using Dijkstra
 
 	float speed = 1.0f; // movement speed
 	uint priority = 0; // priority of the unit in relation to the rest of the units of the group
 	bool reversePriority = false; // if true, the priority of the unit is not taken into account
 
-	// Collision avoidance
+	// COLLISION AVOIDANCE
 	bool wait = false;
-	bool wakeUp = false; // sets a unit's unitState to UnitState_Walk
 	/// If a unit is not in the UnitState_Walk and another unit needs this unit to move away, set wakeUp to true
 	iPoint waitTile = { -1,-1 }; // conflict tile (tile where the collision has been found)
 	SingleUnit* waitUnit = nullptr; // conflict unit (unit whom the collision has been found with)
 	CollisionType coll = CollisionType_NoCollision; // type of collision
-
-	bool checkEverything = false;
-
-	bool isSearching = false;
 };
 
 // ---------------------------------------------------------------------

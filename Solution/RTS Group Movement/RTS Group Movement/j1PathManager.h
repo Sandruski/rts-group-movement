@@ -64,9 +64,14 @@ public:
 private:
 
 	ActiveTriggerType activeTriggerType = ActiveTriggerType_NoType;
-
 	Entity* entity = nullptr;
+
+public:
+
 	EntityType entityType = EntityType_NoType;
+	bool isCheckingCurrTile = false;
+	bool isCheckingNextTile = false;
+	bool isCheckingGoalTile = true;
 };
 
 // ---------------------------------------------------------------------
@@ -142,6 +147,10 @@ public:
 	bool IsSearchRequested() const;
 
 	void SetSearchRequested(bool isSearchRequested);
+
+	void SetCheckingCurrTile(bool isCheckingCurrTile);
+	void SetCheckingNextTile(bool isCheckingNextTile);
+	void SetCheckingGoalTile(bool isCheckingGoalTile);
 
 private:
 
