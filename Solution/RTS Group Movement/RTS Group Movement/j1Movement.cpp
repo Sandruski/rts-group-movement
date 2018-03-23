@@ -373,6 +373,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 							// Request a new path for the unit
 							singleUnit->unit->pathPlanner->RequestAStar(newTile, singleUnit->goal);
+							singleUnit->unit->pathPlanner->SetCheckingCurrTile(true);
 
 							singleUnit->isSearching = true; /// The unit is changing its nextTile
 
@@ -387,6 +388,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 								// Request a new path for the unit
 								singleUnit->unit->pathPlanner->RequestAStar(newTile, singleUnit->goal);
+								singleUnit->unit->pathPlanner->SetCheckingCurrTile(true);
 
 								singleUnit->isSearching = true; /// The unit is changing its nextTile
 
@@ -490,6 +492,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 						// Request a new path for the unit
 						singleUnit->unit->pathPlanner->RequestAStar(newTile, singleUnit->goal);
+						singleUnit->unit->pathPlanner->SetCheckingCurrTile(true);
 
 						singleUnit->isSearching = true; /// The unit is changing its nextTile
 
@@ -504,6 +507,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 							// Request a new path for the unit
 							singleUnit->unit->pathPlanner->RequestAStar(newTile, singleUnit->goal);
+							singleUnit->unit->pathPlanner->SetCheckingCurrTile(true);
 
 							singleUnit->isSearching = true; /// The unit is changing its nextTile
 
@@ -681,7 +685,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 							singleUnit->wait = true;
 
 							if (singleUnit->unit->isSelected)
-								LOG("%s: ITS CELL", singleUnit->unit->GetColorName().data());
+								LOG("%s: ITS CELL with %s", singleUnit->unit->GetColorName().data(), (*units)->unit->GetColorName().data());
 						}
 					}
 
@@ -719,7 +723,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 								singleUnit->wait = true;
 
 								if (singleUnit->unit->isSelected)
-									LOG("%s: SAME CELL", singleUnit->unit->GetColorName().data());
+									LOG("%s: SAME CELL with %s", singleUnit->unit->GetColorName().data(), (*units)->unit->GetColorName().data());
 							}
 						}
 						else {
@@ -727,7 +731,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 							(*units)->wait = true;
 
 							if ((*units)->unit->isSelected)
-								LOG("%s: SAME CELL", (*units)->unit->GetColorName().data());
+								LOG("%s: SAME CELL with %s", (*units)->unit->GetColorName().data(), singleUnit->unit->GetColorName().data());
 						}
 					}
 
@@ -1209,6 +1213,7 @@ void SingleUnit::ResetUnitParameters()
 	wait = false;
 	wakeUp = false;
 	waitTile = { -1,-1 };
+	nextTile = { -1,-1 };
 	waitUnit = nullptr;
 	coll = CollisionType_NoCollision;
 }

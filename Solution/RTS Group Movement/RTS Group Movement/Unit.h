@@ -98,6 +98,8 @@ private:
 	float upSpeed, downSpeed, leftSpeed, rightSpeed;
 	float upLeftSpeed, upRightSpeed, downLeftSpeed, downRightSpeed;
 	float idleSpeed;
+
+	bool isFrameByFrame = false;
 };
 
 #endif //__Unit_H__

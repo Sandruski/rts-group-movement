@@ -70,6 +70,9 @@ void Unit::Move(float dt)
 
 	// ---------------------------------------------------------------------
 
+	if (App->input->GetKey(SDL_SCANCODE_I) == KEY_DOWN)
+		isFrameByFrame = !isFrameByFrame;
+
 	if (singleUnit != nullptr)
 		if ((isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) || singleUnit->wakeUp)
 			unitState = UnitState_Walk;
@@ -181,8 +184,13 @@ void Unit::UnitStateMachine(float dt)
 
 	case UnitState_Walk:
 
-		//if (App->input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN)
+		if (isFrameByFrame) {
+			if (App->input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN)
+				App->movement->MoveUnit(this, dt);
+		}
+		else
 			App->movement->MoveUnit(this, dt);
+
 
 		break;
 	}
