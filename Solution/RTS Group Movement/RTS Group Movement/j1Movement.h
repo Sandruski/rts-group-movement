@@ -178,6 +178,7 @@ struct SingleUnit
 	iPoint goal = { -1,-1 }; // goal of the unit
 	bool isGoalChanged = false; // if true, it means that the goal has been changed
 	bool isSearching = false; // if true, it means that the unit is searching a tile using Dijkstra
+	bool isGoalNeeded = false;
 
 	float speed = 1.0f; // movement speed
 	uint priority = 0; // priority of the unit in relation to the rest of the units of the group

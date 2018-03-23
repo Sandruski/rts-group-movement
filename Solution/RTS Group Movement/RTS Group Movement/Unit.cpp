@@ -181,7 +181,8 @@ void Unit::UnitStateMachine(float dt)
 
 	case UnitState_Walk:
 
-		App->movement->MoveUnit(this, dt);
+		//if (App->input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN)
+			App->movement->MoveUnit(this, dt);
 
 		break;
 	}
