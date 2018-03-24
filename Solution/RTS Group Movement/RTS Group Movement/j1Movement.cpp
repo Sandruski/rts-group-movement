@@ -12,8 +12,6 @@
 
 #include "Brofiler\Brofiler.h"
 
-#include <queue>
-
 j1Movement::j1Movement() {}
 
 j1Movement::~j1Movement() {}
@@ -234,6 +232,9 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 	case MovementState_WaitForPath:
 
+		if (singleUnit->goal.x == -2 && singleUnit->goal.y == 0)
+			LOG("NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+
 		// The goal of a unit cannot be the goal of another unit
 		if (!IsValidTile(singleUnit, singleUnit->goal, false, false, true))
 
@@ -273,7 +274,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 			if (singleUnit->unit->pathPlanner->IsSearchCompleted()) {
 
 				if (singleUnit->currTile == singleUnit->goal)
-					LOG("hi");
+					LOG("YESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
 
 				singleUnit->path = singleUnit->unit->pathPlanner->GetPath();
 				singleUnit->unit->pathPlanner->SetSearchRequested(false);
@@ -308,12 +309,15 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 		singleUnit->unit->SetUnitDirectionByValue(movePos);
 
 		// Apply the speed and the dt to the movePos
-		movePos.x *= singleUnit->speed * dt;
-		movePos.y *= singleUnit->speed * dt;
+		movePos.x *= singleUnit->unit->entityInfo.speed * dt;
+		movePos.y *= singleUnit->unit->entityInfo.speed * dt;
 
 		// ---------------------------------------------------------------------
 		// COLLISION CALCULATION
 		// ---------------------------------------------------------------------
+
+		if (singleUnit->goal.x == -2 && singleUnit->goal.y == 0)
+			LOG("NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
 
 		CheckForFutureCollision(singleUnit);
 
@@ -1156,7 +1160,6 @@ iPoint UnitGroup::GetGoal() const
 SingleUnit::SingleUnit(Unit* unit, UnitGroup* group) :unit(unit), group(group)
 {
 	currTile = goal = App->map->WorldToMap(this->unit->entityInfo.pos.x, this->unit->entityInfo.pos.y);
-	speed = this->unit->entityInfo.speed;
 
 	priority = unit->unitInfo.priority;
 }

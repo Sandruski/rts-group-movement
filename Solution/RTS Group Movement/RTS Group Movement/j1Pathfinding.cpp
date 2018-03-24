@@ -9,7 +9,7 @@
 
 #include "Brofiler\Brofiler.h"
 
-j1PathFinding::j1PathFinding() : j1Module(), walkabilityMap(NULL), last_path(DEFAULT_PATH_LENGTH), width(0), height(0)
+j1PathFinding::j1PathFinding() : j1Module(), walkabilityMap(NULL), width(0), height(0)
 {
 	name.assign("pathfinding");
 }

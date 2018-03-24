@@ -152,6 +152,7 @@ bool j1EntityFactory::Update(float dt)
 	list<Entity*>::const_iterator it = activeEntities.begin();
 
 	while (it != activeEntities.end()) {
+
 		(*it)->Move(dt);
 		it++;
 	}
@@ -167,6 +168,7 @@ bool j1EntityFactory::PostUpdate()
 	list<Entity*>::const_iterator it = activeEntities.begin();
 
 	while (it != activeEntities.end()) {
+
 		if ((*it)->remove) {
 			delete *it;
 			activeEntities.remove(*it);
@@ -241,9 +243,9 @@ void j1EntityFactory::Draw()
 }
 
 // Adds a unit to the toSpawnEntities list
-Unit* j1EntityFactory::AddUnit(const EntityInfo& entityInfo, uint priority)
+Unit* j1EntityFactory::AddUnit(const EntityInfo& entityInfo, uint priority, uint attackRadius, uint sightRadius)
 {
-	Unit* unit = new Unit(entityInfo, priority);
+	Unit* unit = new Unit(entityInfo, priority, attackRadius, sightRadius);
 	toSpawnEntities.push_back(unit);
 
 	return unit;
@@ -257,8 +259,8 @@ Unit* j1EntityFactory::GetUnitByEntity(Entity* entity)
 	return u;
 }
 
-// Returns true if there is a unit on the tile
-bool j1EntityFactory::IsUnitOnTile(iPoint tile) const
+// Returns the unit if there is a unit on the tile
+Unit* j1EntityFactory::IsUnitOnTile(iPoint tile) const
 {
 	list<Entity*>::const_iterator active = activeEntities.begin();
 
@@ -270,7 +272,7 @@ bool j1EntityFactory::IsUnitOnTile(iPoint tile) const
 			iPoint entityTile = App->map->WorldToMap((*active)->entityInfo.pos.x, (*active)->entityInfo.pos.y);
 
 			if (tile.x == entityTile.x && tile.y == entityTile.y)
-				return true;
+				return (Unit*)(*active);
 		}
 
 		active++;
@@ -287,13 +289,13 @@ bool j1EntityFactory::IsUnitOnTile(iPoint tile) const
 			iPoint entityTile = App->map->WorldToMap((*toSpawn)->entityInfo.pos.x, (*toSpawn)->entityInfo.pos.y);
 
 			if (tile.x == entityTile.x && tile.y == entityTile.y)
-				return true;
+				return (Unit*)(*active);
 		}
 
 		toSpawn++;
 	}
 
-	return false;
+	return nullptr;
 }
 
 // Selects the unit within the tile

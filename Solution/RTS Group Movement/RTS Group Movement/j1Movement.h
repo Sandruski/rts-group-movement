@@ -98,7 +98,7 @@ private:
 };
 
 // ---------------------------------------------------------------------
-// UnitGroup: struct representing a group
+// UnitGroup: struct representing a group of units
 // ---------------------------------------------------------------------
 
 struct UnitGroup
@@ -180,7 +180,6 @@ struct SingleUnit
 	bool isSearching = false; // if true, it means that the unit is searching a tile using Dijkstra
 	bool isGoalNeeded = false;
 
-	float speed = 1.0f; // movement speed
 	uint priority = 0; // priority of the unit in relation to the rest of the units of the group
 	bool reversePriority = false; // if true, the priority of the unit is not taken into account
 

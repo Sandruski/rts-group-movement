@@ -11,8 +11,8 @@ Entity::Entity(EntityInfo entityInfo) :entityInfo(entityInfo)
 
 Entity::~Entity()
 {
-	if (collider != nullptr)
-		collider->to_delete = true;
+	//if (collider != nullptr)
+		//collider->isRemove = true;
 }
 
 const Collider* Entity::GetCollider() const

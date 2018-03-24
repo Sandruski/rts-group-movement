@@ -36,13 +36,13 @@ public:
 	void Draw();
 
 	// Adds a unit to the toSpawnEntities list
-	Unit* AddUnit(const EntityInfo& entityInfo, uint priority);
+	Unit* AddUnit(const EntityInfo& entityInfo, uint priority, uint attackRadius, uint sightRadius);
 
 	// Returns a pointer to the unit by its entity
 	Unit* GetUnitByEntity(Entity* entity);
 
-	// Returns true if there is a unit on the tile
-	bool IsUnitOnTile(iPoint tile) const;
+	// Returns the unit if there is a unit on the tile
+	Unit* IsUnitOnTile(iPoint tile) const;
 
 	// Selects the unit within the tile
 	Unit* SelectUnit(iPoint tile);

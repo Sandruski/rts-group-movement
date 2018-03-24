@@ -14,12 +14,15 @@
 
 #include "Brofiler\Brofiler.h"
 
-Unit::Unit(EntityInfo entityInfo, uint priority) : Entity(entityInfo)
+Unit::Unit(EntityInfo entityInfo, uint priority, uint attackRadius, uint sightRadius) : Entity(entityInfo)
 {
 	type = EntityType_Unit;
 
 	if (priority <= MAX_UNIT_PRIORITY)
 		unitInfo.priority = priority;
+
+	unitInfo.attackRadius = attackRadius;
+	unitInfo.sightRadius = sightRadius;
 
 	UnitInfo u;
 	u = App->entities->GetUnitInfo();
@@ -46,7 +49,6 @@ Unit::Unit(EntityInfo entityInfo, uint priority) : Entity(entityInfo)
 	downRightSpeed = u.downRight.speed;
 	idleSpeed = u.idle.speed;
 
-	// TODO 1:
 	// Create a new SingleUnit for the unit
 	// Ask the Movement module to create a new group with the unit
 	singleUnit = new SingleUnit(this, nullptr);
@@ -56,7 +58,34 @@ Unit::Unit(EntityInfo entityInfo, uint priority) : Entity(entityInfo)
 	navgraph = new Navgraph();
 	navgraph->CreateNavgraph();
 
+	// Set the path planner for this unit
 	pathPlanner = new PathPlanner(this, *navgraph);
+
+	// Collision
+	/// AttackRadiusCollider
+	vector<Collider*> colliders;
+
+	iPoint currTilePos = App->map->MapToWorld(singleUnit->currTile.x, singleUnit->currTile.y);
+
+	int sign = 1;
+	for (int y = -(int)unitInfo.attackRadius + 1; y < (int)unitInfo.attackRadius; ++y) {
+
+		if (y == 0)
+			sign *= -1;
+
+		for (int x = (-sign * y) - (int)unitInfo.attackRadius + 1; x < (int)unitInfo.attackRadius + (sign * y); ++x) {
+
+			SDL_Rect rect = { currTilePos.x + x * App->map->data.tile_width, currTilePos.y + y * App->map->data.tile_height, App->map->data.tile_width, App->map->data.tile_height };
+			colliders.push_back(App->collision->CreateCollider(rect));
+		}
+	}
+	sightRadiusCollider = App->collision->CreateAndAddColliderGroup(colliders, ColliderType_PlayerSightRadius, App->entities);
+
+	/// UnitCollider
+	vector<Collider*> collider;
+	SDL_Rect rect = { entityInfo.pos.x, entityInfo.pos.y, entityInfo.size.x, entityInfo.size.y };
+	collider.push_back(App->collision->CreateCollider(rect));
+	unitCollider = App->collision->CreateAndAddColliderGroup(collider, ColliderType_PlayerUnit, App->entities);
 }
 
 void Unit::Move(float dt)
@@ -82,6 +111,30 @@ void Unit::Move(float dt)
 	// Update animations
 	UpdateAnimationsSpeed(dt);
 	ChangeAnimation();
+
+	// Update collider positions
+	vector<Collider*>::const_iterator it = sightRadiusCollider->colliders.begin();
+
+	while (it != sightRadiusCollider->colliders.end()) {
+
+		iPoint currTilePos = App->map->MapToWorld(singleUnit->currTile.x, singleUnit->currTile.y);
+
+		int sign = 1;
+		for (int y = -(int)unitInfo.attackRadius + 1; y < (int)unitInfo.attackRadius; ++y) {
+
+			if (y == 0)
+				sign *= -1;
+
+			for (int x = (-sign * y) - (int)unitInfo.attackRadius + 1; x < (int)unitInfo.attackRadius + (sign * y); ++x) {
+
+				SDL_Rect rect = { currTilePos.x + x * App->map->data.tile_width, currTilePos.y + y * App->map->data.tile_height, App->map->data.tile_width, App->map->data.tile_height };
+				(*it)->SetPos(rect.x, rect.y);
+				it++;
+			}
+		}
+	}
+
+	unitCollider->colliders.front()->SetPos(entityInfo.pos.x, entityInfo.pos.y);
 }
 
 void Unit::Draw(SDL_Texture* sprites)
@@ -108,6 +161,8 @@ void Unit::DebugDrawSelected()
 
 void Unit::OnCollision(Collider* c1, Collider* c2)
 {
+	// Sight
+	LOG("COLLISION");
 }
 
 void Unit::UpdateAnimationsSpeed(float dt)

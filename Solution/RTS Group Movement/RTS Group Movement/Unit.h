@@ -11,6 +11,7 @@ using namespace std;
 
 struct SDL_Color;
 struct SingleUnit;
+struct ColliderGroup;
 
 class PathPlanner;
 class Navgraph;
@@ -28,15 +29,20 @@ struct UnitInfo {
 	Animation idle;
 
 	uint priority = 0;
+
+	uint sightRadius = 0;
+	uint attackRadius = 0;
 };
 
 enum UnitState {
+
 	UnitState_Idle,
 	UnitState_Walk,
 	UnitState_Attack
 };
 
 enum UnitDirection {
+
 	UnitDirection_Idle,
 	UnitDirection_Up,
 	UnitDirection_Down,
@@ -52,7 +58,7 @@ class Unit : public Entity
 {
 public:
 
-	Unit(EntityInfo entityInfo, uint priority);
+	Unit(EntityInfo entityInfo, uint priority, uint attackRadius, uint sightRadius);
 	void Move(float dt);
 	void Draw(SDL_Texture* sprites);
 	void DebugDrawSelected();
@@ -85,6 +91,10 @@ public:
 	PathPlanner* pathPlanner = nullptr;
 
 	SingleUnit* singleUnit = nullptr;
+
+	// Collision
+	ColliderGroup* sightRadiusCollider = nullptr;
+	ColliderGroup* unitCollider = nullptr;
 
 private:
 

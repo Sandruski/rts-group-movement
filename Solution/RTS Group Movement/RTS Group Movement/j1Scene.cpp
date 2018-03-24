@@ -5,7 +5,6 @@
 
 #include "j1Input.h"
 #include "j1Textures.h"
-#include "j1Collision.h"
 #include "j1Render.h"
 #include "j1Window.h"
 #include "j1Map.h"
@@ -92,15 +91,15 @@ bool j1Scene::PreUpdate()
 	entityInfo.size = { App->map->data.tile_width,App->map->data.tile_height };
 	entityInfo.speed = 50.0f;
 
-	if (!App->entities->IsUnitOnTile(mouseTile) && App->pathfinding->IsWalkable(mouseTile)) {
+	if (App->entities->IsUnitOnTile(mouseTile) == nullptr && App->pathfinding->IsWalkable(mouseTile)) {
 
 		// 1: spawn a unit with priority 1
 		if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN)
-			App->entities->AddUnit(entityInfo, 1);
+			App->entities->AddUnit(entityInfo, 1, 5, 0);
 
 		// 2: spawn a unit with priority 2
 		else if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
-			App->entities->AddUnit(entityInfo, 2);
+			App->entities->AddUnit(entityInfo, 2, 10, 0);
 	}
 
 	return ret;
