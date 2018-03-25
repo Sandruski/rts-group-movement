@@ -11,9 +11,7 @@
 #include "j1Scene.h"
 #include "j1Pathfinding.h"
 #include "j1Movement.h"
-
 #include "j1EntityFactory.h"
-#include "Unit.h"
 
 #include"Brofiler\Brofiler.h"
 
@@ -86,20 +84,35 @@ bool j1Scene::PreUpdate()
 
 	// ---------------------------------------------------------------------
 
-	EntityInfo entityInfo;
-	entityInfo.pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
-	entityInfo.size = { App->map->data.tile_width,App->map->data.tile_height };
-	entityInfo.speed = 50.0f;
+	// Entities info
+	/// Entity
+	fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
+	iPoint size = { App->map->data.tile_width,App->map->data.tile_height };
+	uint maxLife = 10;
+	int currLife = (int)maxLife;
 
-	if (App->entities->IsUnitOnTile(mouseTile) == nullptr && App->pathfinding->IsWalkable(mouseTile)) {
+	/// DynamicEntity
+	UnitInfo unitInfo;
+	unitInfo.maxSpeed = 50.0f;
+	unitInfo.attackRadius = 3;
+	unitInfo.sightRadius = 6;
 
-		// 1: spawn a unit with priority 1
+	/// Footman
+	FootmanInfo footmanInfo;
+
+	/// Grunt
+	GruntInfo gruntInfo;
+
+	// Entities creation
+	if (App->entities->IsEntityOnTile(mouseTile, EntityType_DynamicEntity) == nullptr && App->pathfinding->IsWalkable(mouseTile)) {
+
+		// 1: spawn a Footman with priority 1
 		if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN)
-			App->entities->AddUnit(entityInfo, 1, 5, 0);
+			App->entities->AddDynamicEntity(DynamicEntityType_Footman, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)footmanInfo);
 
-		// 2: spawn a unit with priority 2
+		// 2: spawn a Grunt with priority 1
 		else if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
-			App->entities->AddUnit(entityInfo, 2, 10, 0);
+			App->entities->AddDynamicEntity(DynamicEntityType_Grunt, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)gruntInfo);
 	}
 
 	return ret;
@@ -119,6 +132,9 @@ bool j1Scene::Update(float dt)
 
 	// ---------------------------------------------------------------------
 
+	if (App->input->GetKey(SDL_SCANCODE_I) == KEY_DOWN)
+		isFrameByFrame = !isFrameByFrame;
+
 	if (App->input->GetKey(SDL_SCANCODE_F1) == KEY_DOWN)
 		debugDrawMovement = !debugDrawMovement;
 
@@ -137,7 +153,10 @@ bool j1Scene::Update(float dt)
 	if (App->input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_DOWN) {
 		startRectangle = mousePos;
 
-		App->entities->SelectUnit(mouseTile);
+		Entity* entity = App->entities->IsEntityOnTile(mouseTile);
+
+		if (entity != nullptr)
+			App->entities->SelectEntity(entity);
 	}
 
 	int width = mousePos.x - startRectangle.x;
@@ -160,7 +179,7 @@ bool j1Scene::Update(float dt)
 			mouseRect.h *= -1;
 		}
 
-		App->entities->SelectUnitsWithinRectangle(mouseRect);
+		App->entities->SelectEntitiesWithinRectangle(mouseRect);
 	}
 
 	// Mouse left click: select a new goal for the selected units

@@ -8,7 +8,6 @@
 #include "j1Movement.h"
 
 #include "Entity.h"
-#include "Unit.h"
 
 #include "Brofiler\Brofiler.h"
 
@@ -156,7 +155,7 @@ bool PathPlanner::RequestDijkstra(iPoint origin, FindActiveTrigger::ActiveTrigge
 
 	case FindActiveTrigger::ActiveTriggerType_Object:
 
-		trigger = new FindActiveTrigger(activeTriggerType, entity->type);
+		trigger = new FindActiveTrigger(activeTriggerType, entity->entityType);
 
 		break;
 
@@ -310,13 +309,13 @@ bool FindActiveTrigger::isSatisfied(iPoint tile) const
 {
 	bool isSatisfied = false;
 
-	Unit* u = (Unit*)entity;
+	DynamicEntity* dynamicEntity = (DynamicEntity*)entity;
 
 	switch (activeTriggerType) {
 
 	case ActiveTriggerType_Goal:
 
-		if (App->movement->IsValidTile(u->singleUnit, tile, isCheckingCurrTile, isCheckingNextTile, isCheckingGoalTile))
+		if (App->movement->IsValidTile(dynamicEntity->GetSingleUnit(), tile, isCheckingCurrTile, isCheckingNextTile, isCheckingGoalTile))
 			isSatisfied = true;
 
 		break;

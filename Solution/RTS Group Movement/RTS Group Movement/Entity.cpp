@@ -4,35 +4,107 @@
 #include "j1Collision.h"
 #include "j1Render.h"
 #include "j1Map.h"
+#include "j1EntityFactory.h"
 
-Entity::Entity(EntityInfo entityInfo) :entityInfo(entityInfo) 
+Entity::Entity(fPoint pos, iPoint size, int currLife, uint maxLife) : pos(pos), size(size), currLife(currLife), maxLife(maxLife) 
 {
+	if (this->currLife == 0)
+		this->currLife = this->maxLife;
 }
 
-Entity::~Entity()
+Entity::~Entity() 
 {
-	//if (collider != nullptr)
-		//collider->isRemove = true;
-}
-
-const Collider* Entity::GetCollider() const
-{
-	return collider;
+	// Collision
+	if (entityCollider != nullptr)
+		delete entityCollider;
+	entityCollider = nullptr;
 }
 
 void Entity::Draw(SDL_Texture* sprites)
 {
-	if (animation != nullptr)
-		App->render->Blit(sprites, entityInfo.pos.x, entityInfo.pos.y, &(animation->GetCurrentFrame()));
-
-	if (isSelected)
-		DebugDrawSelected();
 }
 
 void Entity::DebugDrawSelected()
 {
-	const SDL_Rect entitySize = { entityInfo.pos.x, entityInfo.pos.y, entityInfo.size.x, entityInfo.size.y };
-	App->render->DrawQuad(entitySize, 255, 255, 255, 255, false);
 }
 
 void Entity::OnCollision(Collider* c1, Collider* c2) {}
+
+// -------------------------------------------------------------
+
+// Position and size
+void Entity::SetPos(fPoint pos)
+{
+	this->pos = pos;
+}
+
+void Entity::AddToPos(fPoint pos) 
+{
+	this->pos.x += pos.x;
+	this->pos.y += pos.y;
+}
+
+fPoint Entity::GetPos() const
+{
+	return pos;
+}
+
+iPoint Entity::GetSize() const
+{
+	return size;
+}
+
+// Life and damage
+int Entity::GetMaxLife() const
+{
+	return maxLife;
+}
+
+void Entity::SetCurrLife(int currLife)
+{
+	this->currLife = currLife;
+}
+
+int Entity::GetCurrLife() const
+{
+	return currLife;
+}
+
+void Entity::ApplyDamage(int damage) 
+{
+	currLife -= damage;
+}
+
+// Collision
+ColliderGroup* Entity::GetEntityCollider() const
+{
+	return entityCollider;
+}
+
+bool Entity::CreateEntityCollider(EntitySide entitySide) 
+{
+	ColliderType collType = ColliderType_NoType;
+
+	if (entitySide == EntitySide_Player)
+		collType = ColliderType_PlayerUnit;
+	else if (entitySide == EntitySide_Enemy)
+		collType = ColliderType_EnemyUnit;
+
+	if (collType == ColliderType_NoType)
+		return false;
+
+	vector<Collider*> collider;
+	SDL_Rect rect = { pos.x, pos.y, size.x, size.y };
+	collider.push_back(App->collision->CreateCollider(rect));
+	entityCollider = App->collision->CreateAndAddColliderGroup(collider, collType, App->entities);
+
+	if (entityCollider != nullptr)
+		return true;
+
+	return false;
+}
+
+void Entity::UpdateEntityColliderPos() 
+{
+	entityCollider->colliders.front()->SetPos(pos.x, pos.y);
+}

@@ -87,9 +87,6 @@
     <ClInclude Include="j1Scene.h">
       <Filter>Modules\Scenes</Filter>
     </ClInclude>
-    <ClInclude Include="Unit.h">
-      <Filter>Modules\Entities</Filter>
-    </ClInclude>
     <ClInclude Include="j1Movement.h">
       <Filter>Modules</Filter>
     </ClInclude>
@@ -98,6 +95,15 @@
     </ClInclude>
     <ClInclude Include="j1PathManager.h">
       <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="DynamicEntity.h">
+      <Filter>Modules\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="Footman.h">
+      <Filter>Modules\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="Grunt.h">
+      <Filter>Modules\Entities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -149,14 +155,20 @@
     <ClCompile Include="j1Scene.cpp">
       <Filter>Modules\Scenes</Filter>
     </ClCompile>
-    <ClCompile Include="Unit.cpp">
-      <Filter>Modules\Entities</Filter>
-    </ClCompile>
     <ClCompile Include="j1Movement.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
     <ClCompile Include="j1PathManager.cpp">
       <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="DynamicEntity.cpp">
+      <Filter>Modules\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="Footman.cpp">
+      <Filter>Modules\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="Grunt.cpp">
+      <Filter>Modules\Entities</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

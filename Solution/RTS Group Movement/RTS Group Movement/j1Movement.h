@@ -34,6 +34,7 @@ struct SingleUnit;
 struct UnitGroup;
 
 class Entity;
+class DynamicEntity;
 
 class j1Movement : public j1Module
 {
@@ -52,23 +53,23 @@ public:
 	bool CleanUp();
 
 	// Creates a group from a list of units. Returns the pointer to the group created or nullptr
-	UnitGroup* CreateGroupFromUnits(list<Unit*> units);
+	UnitGroup* CreateGroupFromUnits(list<DynamicEntity*> units);
 
 	// Creates a group from a single unit. Returns the pointer to the group created or nullptr
-	UnitGroup* CreateGroupFromUnit(Unit* unit);
+	UnitGroup* CreateGroupFromUnit(DynamicEntity* unit);
 
 	// Returns the last group created or nullptr
 	UnitGroup* GetLastGroup() const;
 
 	// Returns an existing group by a pointer to one of its units or nullptr
-	UnitGroup* GetGroupByUnit(Unit* unit) const;
+	UnitGroup* GetGroupByUnit(DynamicEntity* unit) const;
 
 	// Returns an existing group by a list to all of its units or nullptr
-	UnitGroup* GetGroupByUnits(list<Unit*> units) const;
+	UnitGroup* GetGroupByUnits(list<DynamicEntity*> units) const;
 
 	// Moves a unit applying the principles of group movement. Returns the state of the unit's movement
 	/// Call this method from a unit's update
-	MovementState MoveUnit(Unit* unit, float dt); /// Not const because it needs to keep track of the number of paths created at the current update
+	MovementState MoveUnit(DynamicEntity* unit, float dt); /// Not const because it needs to keep track of the number of paths created at the current update
 
 	// -----
 
@@ -103,9 +104,9 @@ private:
 
 struct UnitGroup
 {
-	UnitGroup(Unit* unit);
+	UnitGroup(DynamicEntity* unit);
 
-	UnitGroup(list<Unit*> units);
+	UnitGroup(list<DynamicEntity*> units);
 
 	~UnitGroup();
 
@@ -139,7 +140,7 @@ struct UnitGroup
 
 struct SingleUnit
 {
-	SingleUnit(Unit* entity, UnitGroup* group);
+	SingleUnit(DynamicEntity* entity, UnitGroup* group);
 
 	// Returns true if the unit would reach its next tile during this move
 	/// nextPos is the next tile that the unit is heading to
@@ -166,7 +167,7 @@ struct SingleUnit
 
 	// -----
 
-	Unit* unit = nullptr;
+	DynamicEntity* unit = nullptr;
 	UnitGroup* group = nullptr;
 	MovementState movementState = MovementState_NoState;
 	bool wakeUp = false; // sets a unit's unitState to UnitState_Walk
@@ -180,7 +181,6 @@ struct SingleUnit
 	bool isSearching = false; // if true, it means that the unit is searching a tile using Dijkstra
 	bool isGoalNeeded = false;
 
-	uint priority = 0; // priority of the unit in relation to the rest of the units of the group
 	bool reversePriority = false; // if true, the priority of the unit is not taken into account
 
 	// COLLISION AVOIDANCE

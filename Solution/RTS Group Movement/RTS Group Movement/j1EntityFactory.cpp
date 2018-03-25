@@ -14,7 +14,6 @@
 #include "j1Collision.h"
 
 #include "Entity.h"
-#include "Unit.h"
 
 #include "Brofiler\Brofiler.h"
 
@@ -34,75 +33,289 @@ bool j1EntityFactory::Awake(pugi::xml_node& config) {
 
 	// Load spritesheets
 	pugi::xml_node spritesheets = config.child("spritesheets");
-	archerTexName = spritesheets.child("archer").attribute("name").as_string();
+	footmanTexName = spritesheets.child("footman").attribute("name").as_string();
+	gruntTexName = spritesheets.child("grunt").attribute("name").as_string();
 
 	// Load animations
-	// Archer
-	pugi::xml_node archerAnimations = config.child("animations").child("archer");
+	// Footman
+	pugi::xml_node footmanAnimations = config.child("animations").child("footman");
 	pugi::xml_node currentAnimation;
 
+	/// Walk
 	// up
-	currentAnimation = archerAnimations.child("up");
-	unitInfo.up.speed = currentAnimation.attribute("speed").as_float();
-	unitInfo.up.loop = currentAnimation.attribute("loop").as_bool();
+	currentAnimation = footmanAnimations.child("up");
+	footmanInfo.up.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.up.loop = currentAnimation.attribute("loop").as_bool();
 	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
-		unitInfo.up.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+		footmanInfo.up.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 	// down
-	currentAnimation = archerAnimations.child("down");
-	unitInfo.down.speed = currentAnimation.attribute("speed").as_float();
-	unitInfo.down.loop = currentAnimation.attribute("loop").as_bool();
+	currentAnimation = footmanAnimations.child("down");
+	footmanInfo.down.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.down.loop = currentAnimation.attribute("loop").as_bool();
 	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
-		unitInfo.down.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
-	}
-	// left
-	currentAnimation = archerAnimations.child("left");
-	unitInfo.left.speed = currentAnimation.attribute("speed").as_float();
-	unitInfo.left.loop = currentAnimation.attribute("loop").as_bool();
-	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
-		unitInfo.left.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+		footmanInfo.down.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 	// right
-	currentAnimation = archerAnimations.child("right");
-	unitInfo.right.speed = currentAnimation.attribute("speed").as_float();
-	unitInfo.right.loop = currentAnimation.attribute("loop").as_bool();
+	currentAnimation = footmanAnimations.child("right");
+	footmanInfo.right.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.right.loop = currentAnimation.attribute("loop").as_bool();
 	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
-		unitInfo.right.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+		footmanInfo.right.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
-	// up-left
-	currentAnimation = archerAnimations.child("upLeft");
-	unitInfo.upLeft.speed = currentAnimation.attribute("speed").as_float();
-	unitInfo.upLeft.loop = currentAnimation.attribute("loop").as_bool();
+	// left
+	currentAnimation = footmanAnimations.child("left");
+	footmanInfo.left.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.left.loop = currentAnimation.attribute("loop").as_bool();
 	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
-		unitInfo.upLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+		footmanInfo.left.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 	// up-right
-	currentAnimation = archerAnimations.child("upRight");
-	unitInfo.upRight.speed = currentAnimation.attribute("speed").as_float();
-	unitInfo.upRight.loop = currentAnimation.attribute("loop").as_bool();
+	currentAnimation = footmanAnimations.child("upRight");
+	footmanInfo.upRight.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.upRight.loop = currentAnimation.attribute("loop").as_bool();
 	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
-		unitInfo.upRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+		footmanInfo.upRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
-	// down-left
-	currentAnimation = archerAnimations.child("downLeft");
-	unitInfo.downLeft.speed = currentAnimation.attribute("speed").as_float();
-	unitInfo.downLeft.loop = currentAnimation.attribute("loop").as_bool();
+	// up-left
+	currentAnimation = footmanAnimations.child("upLeft");
+	footmanInfo.upLeft.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.upLeft.loop = currentAnimation.attribute("loop").as_bool();
 	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
-		unitInfo.downLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+		footmanInfo.upLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 	// down-right
-	currentAnimation = archerAnimations.child("downRight");
-	unitInfo.downRight.speed = currentAnimation.attribute("speed").as_float();
-	unitInfo.downRight.loop = currentAnimation.attribute("loop").as_bool();
+	currentAnimation = footmanAnimations.child("downRight");
+	footmanInfo.downRight.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.downRight.loop = currentAnimation.attribute("loop").as_bool();
 	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
-		unitInfo.downRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+		footmanInfo.downRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// down-left
+	currentAnimation = footmanAnimations.child("downLeft");
+	footmanInfo.downLeft.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.downLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		footmanInfo.downLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 	// idle
-	currentAnimation = archerAnimations.child("idle");
-	unitInfo.idle.speed = currentAnimation.attribute("speed").as_float();
-	unitInfo.idle.loop = currentAnimation.attribute("loop").as_bool();
+	currentAnimation = footmanAnimations.child("idle");
+	footmanInfo.idle.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.idle.loop = currentAnimation.attribute("loop").as_bool();
 	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
-		unitInfo.idle.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+		footmanInfo.idle.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+
+	/// Attack
+	// attack up
+	currentAnimation = footmanAnimations.child("attackUp");
+	footmanInfo.attackUp.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.attackUp.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		footmanInfo.attackUp.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack down
+	currentAnimation = footmanAnimations.child("attackDown");
+	footmanInfo.attackDown.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.attackDown.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		footmanInfo.attackDown.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack left
+	currentAnimation = footmanAnimations.child("attackLeft");
+	footmanInfo.attackLeft.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.attackLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		footmanInfo.attackLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack right
+	currentAnimation = footmanAnimations.child("attackRight");
+	footmanInfo.attackRight.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.attackRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		footmanInfo.attackRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack up-left
+	currentAnimation = footmanAnimations.child("attackUpLeft");
+	footmanInfo.attackUpLeft.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.attackUpLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		footmanInfo.attackUpLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack up-right
+	currentAnimation = footmanAnimations.child("attackUpRight");
+	footmanInfo.attackUpRight.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.attackUpRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		footmanInfo.attackUpRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack down-left
+	currentAnimation = footmanAnimations.child("attackDownLeft");
+	footmanInfo.attackDownLeft.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.attackDownLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		footmanInfo.attackDownLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack down-right
+	currentAnimation = footmanAnimations.child("attackDownRight");
+	footmanInfo.attackDownRight.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.attackDownRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		footmanInfo.attackDownRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// death up
+	currentAnimation = footmanAnimations.child("deathUp");
+	footmanInfo.deathUp.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.deathUp.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		footmanInfo.deathUp.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// death down
+	currentAnimation = footmanAnimations.child("deathDown");
+	footmanInfo.deathDown.speed = currentAnimation.attribute("speed").as_float();
+	footmanInfo.deathDown.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		footmanInfo.deathDown.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+
+	// Grunt
+	pugi::xml_node gruntAnimations = config.child("animations").child("grunt");
+
+	/// Walk
+	// up
+	currentAnimation = gruntAnimations.child("up");
+	gruntInfo.up.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.up.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.up.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// down
+	currentAnimation = gruntAnimations.child("down");
+	gruntInfo.down.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.down.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.down.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// left
+	currentAnimation = gruntAnimations.child("left");
+	gruntInfo.left.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.left.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.left.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// right
+	currentAnimation = gruntAnimations.child("right");
+	gruntInfo.right.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.right.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.right.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// up-left
+	currentAnimation = gruntAnimations.child("upLeft");
+	gruntInfo.upLeft.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.upLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.upLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// up-right
+	currentAnimation = gruntAnimations.child("upRight");
+	gruntInfo.upRight.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.upRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.upRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// down-left
+	currentAnimation = gruntAnimations.child("downLeft");
+	gruntInfo.downLeft.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.downLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.downLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// down-right
+	currentAnimation = gruntAnimations.child("downRight");
+	gruntInfo.downRight.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.downRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.downRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// idle
+	currentAnimation = gruntAnimations.child("idle");
+	gruntInfo.idle.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.idle.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.idle.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+
+	/// Attack
+	// attack up
+	currentAnimation = gruntAnimations.child("attackUp");
+	gruntInfo.attackUp.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.attackUp.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.attackUp.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack down
+	currentAnimation = gruntAnimations.child("attackDown");
+	gruntInfo.attackDown.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.attackDown.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.attackDown.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack left
+	currentAnimation = gruntAnimations.child("attackLeft");
+	gruntInfo.attackLeft.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.attackLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.attackLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack right
+	currentAnimation = gruntAnimations.child("attackRight");
+	gruntInfo.attackRight.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.attackRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.attackRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack up-left
+	currentAnimation = gruntAnimations.child("attackUpLeft");
+	gruntInfo.attackUpLeft.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.attackUpLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.attackUpLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack up-right
+	currentAnimation = gruntAnimations.child("attackUpRight");
+	gruntInfo.attackUpRight.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.attackUpRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.attackUpRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack down-left
+	currentAnimation = gruntAnimations.child("attackDownLeft");
+	gruntInfo.attackDownLeft.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.attackDownLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.attackDownLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack down-right
+	currentAnimation = gruntAnimations.child("attackDownRight");
+	gruntInfo.attackDownRight.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.attackDownRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.attackDownRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack death up
+	currentAnimation = gruntAnimations.child("deathUp");
+	gruntInfo.deathUp.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.deathUp.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.deathUp.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// attack death down
+	currentAnimation = gruntAnimations.child("deathDown");
+	gruntInfo.deathDown.speed = currentAnimation.attribute("speed").as_float();
+	gruntInfo.deathDown.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		gruntInfo.deathDown.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 
 	return ret;
@@ -114,7 +327,8 @@ bool j1EntityFactory::Start()
 
 	LOG("Loading entities textures");
 
-	archerTex = App->tex->Load(archerTexName.data());
+	footmanTex = App->tex->Load(footmanTexName.data());
+	gruntTex = App->tex->Load(gruntTexName.data());
 
 	return ret;
 }
@@ -129,10 +343,11 @@ bool j1EntityFactory::PreUpdate()
 	while (it != toSpawnEntities.end()) {
 
 		// Move the entity from the waiting list to the active list
-		activeEntities.push_back(*it);
+		activeDynamicEntities.push_back((DynamicEntity*)(*it));
 
-		int x = (*it)->entityInfo.pos.x * App->scene->scale;
-		int y = (*it)->entityInfo.pos.y * App->scene->scale;
+		fPoint pos = (*it)->GetPos();
+		int x = pos.x * App->scene->scale;
+		int y = pos.y * App->scene->scale;
 		iPoint spawnPos = App->map->WorldToMap(x, y);
 		LOG("Spawning entity at tile %d,%d", spawnPos.x, spawnPos.y);
 
@@ -149,9 +364,9 @@ bool j1EntityFactory::Update(float dt)
 	bool ret = true;
 
 	// Update active entities
-	list<Entity*>::const_iterator it = activeEntities.begin();
+	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
 
-	while (it != activeEntities.end()) {
+	while (it != activeDynamicEntities.end()) {
 
 		(*it)->Move(dt);
 		it++;
@@ -165,13 +380,13 @@ bool j1EntityFactory::PostUpdate()
 	bool ret = true;
 
 	// Remove entities
-	list<Entity*>::const_iterator it = activeEntities.begin();
+	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
 
-	while (it != activeEntities.end()) {
+	while (it != activeDynamicEntities.end()) {
 
-		if ((*it)->remove) {
+		if ((*it)->isRemove) {
 			delete *it;
-			activeEntities.remove(*it);
+			activeDynamicEntities.remove(*it);
 		}
 		it++;
 	}
@@ -187,15 +402,15 @@ bool j1EntityFactory::CleanUp()
 	LOG("Freeing all entities");
 
 	// Remove all entities
-	list<Entity*>::const_iterator it = activeEntities.begin();
+	list<DynamicEntity*>::const_iterator dynEnt = activeDynamicEntities.begin();
 
-	while (it != activeEntities.end()) {
-		delete *it;
-		it++;
+	while (dynEnt != activeDynamicEntities.end()) {
+		delete *dynEnt;
+		dynEnt++;
 	}
-	activeEntities.clear();
+	activeDynamicEntities.clear();
 
-	it = toSpawnEntities.begin();
+	list<Entity*>::const_iterator it = toSpawnEntities.begin();
 
 	while (it != toSpawnEntities.end()) {
 		delete *it;
@@ -205,7 +420,8 @@ bool j1EntityFactory::CleanUp()
 	unitsSelected.clear();
 
 	// Free all textures
-	App->tex->UnLoad(archerTex);
+	App->tex->UnLoad(footmanTex);
+	App->tex->UnLoad(gruntTex);
 
 	return ret;
 }
@@ -213,28 +429,34 @@ bool j1EntityFactory::CleanUp()
 void j1EntityFactory::OnCollision(Collider* c1, Collider* c2)
 {
 	// Check for collisions
-	list<Entity*>::const_iterator it = activeEntities.begin();
+	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
 
-	while (it != activeEntities.end()) {
+	/*
+	while (it != activeDynamicEntities.end()) {
 		if ((*it)->GetCollider() == c1) {
 			(*it)->OnCollision(c1, c2);
 			break;
 		}
 		it++;
 	}
+	*/
 }
 
 void j1EntityFactory::Draw()
 {
 	// Blit active entities
-	list<Entity*>::const_iterator it = activeEntities.begin();
+	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
 
-	while (it != activeEntities.end()) {
+	while (it != activeDynamicEntities.end()) {
 
-		switch ((*it)->type) {
+		switch ((*it)->dynamicEntityType) {
 
-		case EntityType_Unit:
-			(*it)->Draw(archerTex);
+		case DynamicEntityType_Footman:
+			(*it)->Draw(footmanTex);
+			break;
+
+		case DynamicEntityType_Grunt:
+			(*it)->Draw(gruntTex);
 			break;
 		}
 
@@ -242,54 +464,100 @@ void j1EntityFactory::Draw()
 	}
 }
 
-// Adds a unit to the toSpawnEntities list
-Unit* j1EntityFactory::AddUnit(const EntityInfo& entityInfo, uint priority, uint attackRadius, uint sightRadius)
+// Adds a DynamicEntity
+DynamicEntity* j1EntityFactory::AddDynamicEntity(DynamicEntityType dynamicEntityType, fPoint pos, iPoint size, uint currLife, uint maxLife, const UnitInfo& unitInfo, const EntityInfo& entityInfo)
 {
-	Unit* unit = new Unit(entityInfo, priority, attackRadius, sightRadius);
-	toSpawnEntities.push_back(unit);
+	switch (dynamicEntityType) {
 
-	return unit;
+	case DynamicEntityType_Footman:
+	{
+		Footman* footman = new Footman(pos, size, currLife, maxLife, unitInfo, (const FootmanInfo&)entityInfo);
+		footman->entityType = EntityType_DynamicEntity;
+		footman->entitySide = EntitySide_Player;
+		footman->dynamicEntityType = DynamicEntityType_Footman;
+
+		toSpawnEntities.push_back((Entity*)footman);
+		return (DynamicEntity*)footman;
+	}
+	break;
+
+	case DynamicEntityType_Grunt:
+	{
+		Grunt* grunt = new Grunt(pos, size, currLife, maxLife, unitInfo, (const GruntInfo&)entityInfo);
+		grunt->entityType = EntityType_DynamicEntity;
+		grunt->entitySide = EntitySide_Enemy;
+		grunt->dynamicEntityType = DynamicEntityType_Grunt;
+
+		toSpawnEntities.push_back((Entity*)grunt);
+		return (DynamicEntity*)grunt;
+	}
+	break;
+
+	default:
+
+		return nullptr;
+	}
 }
 
-// Returns a pointer to the unit by its entity
-Unit* j1EntityFactory::GetUnitByEntity(Entity* entity)
+// Returns a pointer to the Entity that is on the tile or nullptr
+Entity* j1EntityFactory::IsEntityOnTile(iPoint tile, EntityType entityType, EntitySide entitySide) const
 {
-	Unit* u = (Unit*)(entity);
+	list<DynamicEntity*>::const_iterator activeDyn = activeDynamicEntities.begin();
 
-	return u;
-}
+	while (activeDyn != activeDynamicEntities.end()) {
 
-// Returns the unit if there is a unit on the tile
-Unit* j1EntityFactory::IsUnitOnTile(iPoint tile) const
-{
-	list<Entity*>::const_iterator active = activeEntities.begin();
+		iPoint entityTile = App->map->WorldToMap((*activeDyn)->GetPos().x, (*activeDyn)->GetPos().y);
 
-	while (active != activeEntities.end()) {
+		switch (entitySide) {
+		
+		case EntitySide_Player:
 
-		// ONLY UNITS
-		if ((*active)->type == EntityType_Unit) {
+			if ((*activeDyn)->entitySide == EntitySide_Player)
+				if (tile.x == entityTile.x && tile.y == entityTile.y)
+					return (Entity*)(*activeDyn);
 
-			iPoint entityTile = App->map->WorldToMap((*active)->entityInfo.pos.x, (*active)->entityInfo.pos.y);
+		case EntitySide_Enemy:
 
+			if ((*activeDyn)->entitySide == EntitySide_Enemy)
+				if (tile.x == entityTile.x && tile.y == entityTile.y)
+					return (Entity*)(*activeDyn);
+
+		case EntitySide_NoSide:
+		
 			if (tile.x == entityTile.x && tile.y == entityTile.y)
-				return (Unit*)(*active);
+				return (Entity*)(*activeDyn);
 		}
 
-		active++;
+		activeDyn++;
 	}
+
+	// TODO: Add StaticEntities (and check them depending on the entityType parameter)
 
 	// We do also need to check the toSpawn list (just in case)
 	list<Entity*>::const_iterator toSpawn = toSpawnEntities.begin();
 
 	while (toSpawn != toSpawnEntities.end()) {
 
-		// ONLY UNITS
-		if ((*toSpawn)->type == EntityType_Unit) {
+		iPoint entityTile = App->map->WorldToMap((*toSpawn)->GetPos().x, (*toSpawn)->GetPos().y);
 
-			iPoint entityTile = App->map->WorldToMap((*toSpawn)->entityInfo.pos.x, (*toSpawn)->entityInfo.pos.y);
+		switch (entitySide) {
+
+		case EntitySide_Player:
+
+			if ((*activeDyn)->entitySide == EntitySide_Player)
+				if (tile.x == entityTile.x && tile.y == entityTile.y)
+					return (Entity*)(*activeDyn);
+
+		case EntitySide_Enemy:
+
+			if ((*activeDyn)->entitySide == EntitySide_Enemy)
+				if (tile.x == entityTile.x && tile.y == entityTile.y)
+					return (Entity*)(*activeDyn);
+
+		case EntitySide_NoSide:
 
 			if (tile.x == entityTile.x && tile.y == entityTile.y)
-				return (Unit*)(*active);
+				return (Entity*)(*activeDyn);
 		}
 
 		toSpawn++;
@@ -298,65 +566,63 @@ Unit* j1EntityFactory::IsUnitOnTile(iPoint tile) const
 	return nullptr;
 }
 
-// Selects the unit within the tile
-Unit* j1EntityFactory::SelectUnit(iPoint tile)
+// Selects an Entity
+bool j1EntityFactory::SelectEntity(Entity* entity)
 {
-	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+	bool ret = false;
 
-	Unit* ret = nullptr;
+	if (entity == nullptr)
+		return false;
 
-	list<Entity*>::const_iterator it = activeEntities.begin();
+	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
 
-	while (it != activeEntities.end()) {
+	while (it != activeDynamicEntities.end()) {
 
-		// ONLY UNITS
-		if ((*it)->type == EntityType_Unit) {
+		// If the unit isn't in the unitsSelected list, add it
+		if (find(unitsSelected.begin(), unitsSelected.end(), *it) == unitsSelected.end()) {
 
-			iPoint entityTile = App->map->WorldToMap((*it)->entityInfo.pos.x, (*it)->entityInfo.pos.y);
+			DynamicEntity* unit = GetDynamicEntityByEntity(*it);
+			unitsSelected.push_back(unit);
+			(*it)->isSelected = true;
 
-			if (tile.x == entityTile.x && tile.y == entityTile.y) {
+			ret = true;
+		}
+		else {
 
-				// If the unit isn't in the unitsSelected list, add it
-				if (find(unitsSelected.begin(), unitsSelected.end(), *it) == unitsSelected.end()) {
-
-					Unit* u = GetUnitByEntity(*it);
-					unitsSelected.push_back(u);
-					(*it)->isSelected = true;
-
-					ret = u;
-				}
-			}
-			else {
-
-				// If the unit is in the unitsSelected list, remove it
-				if (find(unitsSelected.begin(), unitsSelected.end(), *it) != unitsSelected.end()) {
-					unitsSelected.remove(GetUnitByEntity(*it));
-					(*it)->isSelected = false;
-				}
+			// If the unit is in the unitsSelected list, remove it
+			if (find(unitsSelected.begin(), unitsSelected.end(), *it) != unitsSelected.end()) {
+				unitsSelected.remove(GetDynamicEntityByEntity(*it));
+				(*it)->isSelected = false;
 			}
 		}
 
 		it++;
 	}
 
+	// TODO: Add StaticEntities
+
+	// Update the color of the selection of all entities (Dynamic and Static)
 	SetUnitsSelectedColor();
 
 	return ret;
 }
 
-// Selects the units within the rectangle
-void j1EntityFactory::SelectUnitsWithinRectangle(SDL_Rect rectangleRect)
+// Selects the entities within a rectangle
+/// TODO:
+/// - If units are selected, buildings cannot be selected
+/// - If a building is selected, units cannot be selected
+/// · Only 1 building can be selected at a time
+void j1EntityFactory::SelectEntitiesWithinRectangle(SDL_Rect rectangleRect, EntitySide entitySide)
 {
-	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
 
-	list<Entity*>::const_iterator it = activeEntities.begin();
+	while (it != activeDynamicEntities.end()) {
 
-	while (it != activeEntities.end()) {
+		if (entitySide == EntitySide_NoSide
+			|| (entitySide == EntitySide_Player && (*it)->entitySide == EntitySide_Player)
+			|| (entitySide == EntitySide_Enemy && (*it)->entitySide == EntitySide_Enemy)) {
 
-		// ONLY UNITS
-		if ((*it)->type == EntityType_Unit) {
-
-			SDL_Rect entityRect = { (*it)->entityInfo.pos.x, (*it)->entityInfo.pos.y, (*it)->entityInfo.size.x, (*it)->entityInfo.size.y };
+			SDL_Rect entityRect = { (*it)->GetPos().x, (*it)->GetPos().y, (*it)->GetSize().x, (*it)->GetSize().y };
 
 			// If the unit is within the selection:
 			if (SDL_HasIntersection(&entityRect, &rectangleRect)) {
@@ -366,7 +632,7 @@ void j1EntityFactory::SelectUnitsWithinRectangle(SDL_Rect rectangleRect)
 
 					// If the unit isn't in the unitsSelected list, add it
 					if (find(unitsSelected.begin(), unitsSelected.end(), *it) == unitsSelected.end()) {
-						unitsSelected.push_back(GetUnitByEntity(*it));
+						unitsSelected.push_back(GetDynamicEntityByEntity(*it));
 						(*it)->isSelected = true;
 					}
 				}
@@ -375,7 +641,7 @@ void j1EntityFactory::SelectUnitsWithinRectangle(SDL_Rect rectangleRect)
 
 				// If the unit is in the unitsSelected list, remove it
 				if (find(unitsSelected.begin(), unitsSelected.end(), *it) != unitsSelected.end()) {
-					unitsSelected.remove(GetUnitByEntity(*it));
+					unitsSelected.remove(GetDynamicEntityByEntity(*it));
 					(*it)->isSelected = false;
 				}
 			}
@@ -384,51 +650,64 @@ void j1EntityFactory::SelectUnitsWithinRectangle(SDL_Rect rectangleRect)
 		it++;
 	}
 
+	// TODO: Add StaticEntities
+
+	// Update the color of the selection of all entities (Dynamic and Static)
 	SetUnitsSelectedColor();
 }
 
+DynamicEntity* j1EntityFactory::GetDynamicEntityByEntity(Entity* entity) const
+{
+	if (entity->entityType == EntityType_DynamicEntity)
+		return (DynamicEntity*)entity;
+
+	return nullptr;
+}
+
 // Returns a list with the last units selected
-list<Unit*> j1EntityFactory::GetLastUnitsSelected() const
+list<DynamicEntity*> j1EntityFactory::GetLastUnitsSelected() const
 {
 	return unitsSelected;
 }
 
-// Changes the debug color of the units selected
+// Updates the selection color of all entities
 void j1EntityFactory::SetUnitsSelectedColor()
 {
-	SDL_Color colors[8] = { ColorYellow, ColorDarkGreen, ColorBrightBlue, ColorOrange, ColorPink, ColorPurple, ColorGrey, ColorBlack };
-	string colorNames[8] = { "Yellow", "DarkGreen", "BrightBlue", "Orange", "Pink", "Purple", "Grey", "Black" };
+	SDL_Color colors[10] = { ColorYellow, ColorDarkGreen, ColorBrightBlue, ColorOrange, ColorPink, ColorPurple, ColorGrey, ColorBlack, ColorOlive, ColorViolet };
+	string colorNames[10] = { "Yellow", "DarkGreen", "BrightBlue", "Orange", "Pink", "Purple", "Grey", "Black", "Olive", "Violet" };
 
-	list<Entity*>::const_iterator it = activeEntities.begin();
+	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
 	uint i = 0;
 
-	while (it != activeEntities.end())
+	while (it != activeDynamicEntities.end())
 	{
-		// ONLY UNITS
-		if ((*it)->type == EntityType_Unit) {
+		// If the unit is selected, change its color
+		if ((*it)->isSelected) {
 
-			Unit* u = GetUnitByEntity(*it);
+			GetDynamicEntityByEntity(*it)->SetColor(colors[i], colorNames[i]);
+			i++;
+		}
+		else {
 
-			// If the unit is selected, change its color
-			if ((*it)->isSelected) {
-				u->SetColor(colors[i], colorNames[i]);
-				i++;
-			}
-			else {
-
-				// If the unit is no longer selected, change its color to default white
-				u->SetColor(ColorWhite, "White");
-			}
+			// If the unit is no longer selected, change its color to default white
+			GetDynamicEntityByEntity(*it)->SetColor(ColorWhite, "White");
 		}
 
 		it++;
 	}
 }
 
-// Returns the unitInfo (normally read from the config file)
-UnitInfo& j1EntityFactory::GetUnitInfo()
+// Returns the entityInfo (normally read from the config file)
+EntityInfo& j1EntityFactory::GetDynamicEntityInfo(DynamicEntityType dynamicEntityType) 
 {
-	return unitInfo;
+	switch (dynamicEntityType) {
+	
+	case DynamicEntityType_Footman:
+		return (EntityInfo&)footmanInfo;
+
+	case DynamicEntityType_Grunt:
+		return (EntityInfo&)gruntInfo;
+	}
 }
 
 // -------------------------------------------------------------
@@ -440,9 +719,9 @@ bool j1EntityFactory::Load(pugi::xml_node& save)
 
 	pugi::xml_node node;
 
-	list<Entity*>::const_iterator it = activeEntities.begin();
+	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
 
-	while (it != activeEntities.end()) {
+	while (it != activeDynamicEntities.end()) {
 		// Load the entities
 		it++;
 	}
@@ -456,9 +735,9 @@ bool j1EntityFactory::Save(pugi::xml_node& save) const
 
 	pugi::xml_node node;
 
-	list<Entity*>::const_iterator it = activeEntities.begin();
+	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
 
-	while (it != activeEntities.end()) {
+	while (it != activeDynamicEntities.end()) {
 		// Save the entities
 		it++;
 	}

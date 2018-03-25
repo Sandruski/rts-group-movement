@@ -18,6 +18,8 @@
 #define ColorPink { 255,0,127,255 }
 #define ColorPurple { 127,0,255,255 }
 #define ColorGrey { 128,128,128,255 }
+#define ColorOlive { 102,204,0,255 }
+#define ColorViolet { 178,102,255,255 }
 
 /// Colliders
 #define ColorDarkBlue { 0,0,153,255 }

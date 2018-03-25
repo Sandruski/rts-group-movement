@@ -66,6 +66,8 @@ public:
 	bool debugDrawMovement = true;
 	bool debugDrawPath = false;
 	bool debugDrawMap = false;
+
+	bool isFrameByFrame = false;
 };
 
 #endif //__j1SCENE1_H__

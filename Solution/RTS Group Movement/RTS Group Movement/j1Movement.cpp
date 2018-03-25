@@ -5,6 +5,7 @@
 #include "j1Movement.h"
 #include "j1EntityFactory.h"
 #include "Entity.h"
+#include "DynamicEntity.h"
 #include "j1Map.h"
 #include "j1Render.h"
 #include "j1Scene.h"
@@ -40,7 +41,7 @@ void j1Movement::DebugDraw() const
 					// Raycast a line between the unit and the nextTile
 					iPoint offset = { App->map->data.tile_width / 2, App->map->data.tile_height / 2 };
 					iPoint nextPos = App->map->MapToWorld((*unit)->nextTile.x, (*unit)->nextTile.y);
-					App->render->DrawLine((*unit)->unit->entityInfo.pos.x + offset.x, (*unit)->unit->entityInfo.pos.y + offset.y, nextPos.x + offset.x, nextPos.y + offset.y, 255, 255, 255, 255);
+					App->render->DrawLine((*unit)->unit->GetPos().x + offset.x, (*unit)->unit->GetPos().y + offset.y, nextPos.x + offset.x, nextPos.y + offset.y, 255, 255, 255, 255);
 					App->render->DrawCircle(nextPos.x + offset.x, nextPos.y + offset.y, 10, 255, 255, 255, 255);
 
 					// Draw unit's path
@@ -80,9 +81,9 @@ bool j1Movement::CleanUp()
 }
 
 // Creates a group from a list of units. Returns the pointer to the group created or nullptr
-UnitGroup* j1Movement::CreateGroupFromUnits(list<Unit*> units)
+UnitGroup* j1Movement::CreateGroupFromUnits(list<DynamicEntity*> units)
 {
-	list<Unit*>::const_iterator it = units.begin();
+	list<DynamicEntity*>::const_iterator it = units.begin();
 	UnitGroup* group = nullptr;
 
 	while (it != units.end()) {
@@ -108,7 +109,7 @@ UnitGroup* j1Movement::CreateGroupFromUnits(list<Unit*> units)
 }
 
 // Creates a group from a single unit. Returns the pointer to the group created or nullptr
-UnitGroup* j1Movement::CreateGroupFromUnit(Unit* unit)
+UnitGroup* j1Movement::CreateGroupFromUnit(DynamicEntity* unit)
 {
 	// If a unit from the list belongs to an existing group, delete the unit from the group
 	UnitGroup* group = nullptr;
@@ -135,7 +136,7 @@ UnitGroup* j1Movement::GetLastGroup() const
 }
 
 // Returns an existing group by a pointer to one of its units or nullptr
-UnitGroup* j1Movement::GetGroupByUnit(Unit* unit) const
+UnitGroup* j1Movement::GetGroupByUnit(DynamicEntity* unit) const
 {
 	list<UnitGroup*>::const_iterator groups;
 	list<SingleUnit*>::const_iterator units;
@@ -154,9 +155,9 @@ UnitGroup* j1Movement::GetGroupByUnit(Unit* unit) const
 }
 
 // Returns an existing group by a list to all of its units or nullptr
-UnitGroup* j1Movement::GetGroupByUnits(list<Unit*> units) const
+UnitGroup* j1Movement::GetGroupByUnits(list<DynamicEntity*> units) const
 {
-	list<Unit*>::const_iterator it;
+	list<DynamicEntity*>::const_iterator it;
 	list<UnitGroup*>::const_iterator groups;
 	list<SingleUnit*>::const_iterator singleUnits;
 	uint size = 0;
@@ -205,7 +206,7 @@ bool j1Movement::IsAnyUnitDoingSomething(SingleUnit* singleUnit, bool isSearchin
 
 // Moves a unit applying the principles of group movement. Returns the state of the unit's movement
 // - Call this method from a unit's update
-MovementState j1Movement::MoveUnit(Unit* unit, float dt)
+MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 {
 	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
 
@@ -245,7 +246,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 			// Only one unit at a time can change its goal
 			if (!IsAnyUnitDoingSomething(singleUnit, true)) {
 
-				singleUnit->unit->pathPlanner->RequestDijkstra(singleUnit->group->goal, FindActiveTrigger::ActiveTriggerType_Goal);
+				singleUnit->unit->GetPathPlanner()->RequestDijkstra(singleUnit->group->goal, FindActiveTrigger::ActiveTriggerType_Goal);
 
 				singleUnit->isSearching = true; /// The unit is changing its goal
 			}
@@ -254,10 +255,10 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 		// ***IS THE TILE READY?***
 		if (singleUnit->isSearching) {
 
-			if (singleUnit->unit->pathPlanner->IsSearchCompleted()) {
+			if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
-				singleUnit->goal = singleUnit->unit->pathPlanner->GetTile();
-				singleUnit->unit->pathPlanner->SetSearchRequested(false);
+				singleUnit->goal = singleUnit->unit->GetPathPlanner()->GetTile();
+				singleUnit->unit->GetPathPlanner()->SetSearchRequested(false);
 
 				singleUnit->isSearching = false; /// The unit has finished changing its goal
 				singleUnit->isGoalNeeded = false;
@@ -268,16 +269,16 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 		if (!singleUnit->isGoalNeeded && !singleUnit->isSearching) {
 
 			// Request a new path for the unit
-			singleUnit->unit->pathPlanner->RequestAStar(singleUnit->currTile, singleUnit->goal);
+			singleUnit->unit->GetPathPlanner()->RequestAStar(singleUnit->currTile, singleUnit->goal);
 
 			// ***IS THE PATH READY?***
-			if (singleUnit->unit->pathPlanner->IsSearchCompleted()) {
+			if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
 				if (singleUnit->currTile == singleUnit->goal)
 					LOG("YESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
 
-				singleUnit->path = singleUnit->unit->pathPlanner->GetPath();
-				singleUnit->unit->pathPlanner->SetSearchRequested(false);
+				singleUnit->path = singleUnit->unit->GetPathPlanner()->GetPath();
+				singleUnit->unit->GetPathPlanner()->SetSearchRequested(false);
 
 				singleUnit->movementState = MovementState_IncreaseWaypoint;
 			}
@@ -293,7 +294,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 		// ---------------------------------------------------------------------
 
 		// Calculate the difference between the nextPos and the current position of the unit and store the result inside the temporary iPoint called movePos
-		movePos = { (float)nextPos.x - singleUnit->unit->entityInfo.pos.x, (float)nextPos.y - singleUnit->unit->entityInfo.pos.y };
+		movePos = { (float)nextPos.x - singleUnit->unit->GetPos().x, (float)nextPos.y - singleUnit->unit->GetPos().y };
 
 		// Normalize the movePos. It should be in the interval [-1,1]
 		{
@@ -309,8 +310,8 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 		singleUnit->unit->SetUnitDirectionByValue(movePos);
 
 		// Apply the speed and the dt to the movePos
-		movePos.x *= singleUnit->unit->entityInfo.speed * dt;
-		movePos.y *= singleUnit->unit->entityInfo.speed * dt;
+		movePos.x *= singleUnit->unit->GetSpeed() * dt;
+		movePos.y *= singleUnit->unit->GetSpeed() * dt;
 
 		// ---------------------------------------------------------------------
 		// COLLISION CALCULATION
@@ -339,18 +340,18 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 				singleUnit->waitUnit->WakeUp();
 
 				// The unit with the higher priority politely asks the other unit to move
-				if (singleUnit->priority >= singleUnit->waitUnit->priority || singleUnit->reversePriority) {
+				if (singleUnit->unit->GetPriority() >= singleUnit->waitUnit->unit->GetPriority() || singleUnit->reversePriority) {
 
 					// 1. waitUnit moves
-					singleUnit->waitUnit->unit->pathPlanner->RequestDijkstra(singleUnit->waitUnit->goal, FindActiveTrigger::ActiveTriggerType_Goal);
-					singleUnit->waitUnit->unit->pathPlanner->SetCheckingCurrTile(true);
-					singleUnit->waitUnit->unit->pathPlanner->SetCheckingNextTile(true); // TODO: trigger must be fully customizable
+					singleUnit->waitUnit->unit->GetPathPlanner()->RequestDijkstra(singleUnit->waitUnit->goal, FindActiveTrigger::ActiveTriggerType_Goal);
+					singleUnit->waitUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
+					singleUnit->waitUnit->unit->GetPathPlanner()->SetCheckingNextTile(true); // TODO: trigger must be fully customizable
 
 					// ***IS THE TILE READY?***
-					if (singleUnit->waitUnit->unit->pathPlanner->IsSearchCompleted()) {
+					if (singleUnit->waitUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
-						singleUnit->waitUnit->goal = singleUnit->waitUnit->unit->pathPlanner->GetTile();
-						singleUnit->waitUnit->unit->pathPlanner->SetSearchRequested(false);
+						singleUnit->waitUnit->goal = singleUnit->waitUnit->unit->GetPathPlanner()->GetTile();
+						singleUnit->waitUnit->unit->GetPathPlanner()->SetSearchRequested(false);
 
 						singleUnit->waitUnit->GetReadyForNewMove();
 						singleUnit->waitUnit->movementState = MovementState_WaitForPath;
@@ -376,8 +377,8 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 						if (newTile.x != -1 && newTile.y != -1) {
 
 							// Request a new path for the unit
-							singleUnit->unit->pathPlanner->RequestAStar(newTile, singleUnit->goal);
-							singleUnit->unit->pathPlanner->SetCheckingCurrTile(true);
+							singleUnit->unit->GetPathPlanner()->RequestAStar(newTile, singleUnit->goal);
+							singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
 
 							singleUnit->isSearching = true; /// The unit is changing its nextTile
 
@@ -391,8 +392,8 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 							if (newTile.x != -1 && newTile.y != -1) {
 
 								// Request a new path for the unit
-								singleUnit->unit->pathPlanner->RequestAStar(newTile, singleUnit->goal);
-								singleUnit->unit->pathPlanner->SetCheckingCurrTile(true);
+								singleUnit->unit->GetPathPlanner()->RequestAStar(newTile, singleUnit->goal);
+								singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
 
 								singleUnit->isSearching = true; /// The unit is changing its nextTile
 
@@ -407,9 +408,9 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 					if (singleUnit->isSearching) {
 
 						// ***IS THE PATH READY?***
-						if (singleUnit->unit->pathPlanner->IsSearchCompleted()) {
+						if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
-							singleUnit->path = singleUnit->unit->pathPlanner->GetPath();
+							singleUnit->path = singleUnit->unit->GetPathPlanner()->GetPath();
 
 							singleUnit->isSearching = false;/// The unit has finished changing its nextTile
 
@@ -495,8 +496,8 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 					if (newTile.x != -1 && newTile.y != -1) {
 
 						// Request a new path for the unit
-						singleUnit->unit->pathPlanner->RequestAStar(newTile, singleUnit->goal);
-						singleUnit->unit->pathPlanner->SetCheckingCurrTile(true);
+						singleUnit->unit->GetPathPlanner()->RequestAStar(newTile, singleUnit->goal);
+						singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
 
 						singleUnit->isSearching = true; /// The unit is changing its nextTile
 
@@ -510,8 +511,8 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 						if (newTile.x != -1 && newTile.y != -1) {
 
 							// Request a new path for the unit
-							singleUnit->unit->pathPlanner->RequestAStar(newTile, singleUnit->goal);
-							singleUnit->unit->pathPlanner->SetCheckingCurrTile(true);
+							singleUnit->unit->GetPathPlanner()->RequestAStar(newTile, singleUnit->goal);
+							singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
 
 							singleUnit->isSearching = true; /// The unit is changing its nextTile
 
@@ -526,9 +527,9 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 				if (singleUnit->isSearching) {
 
 					// ***IS THE PATH READY?***
-					if (singleUnit->unit->pathPlanner->IsSearchCompleted()) {
+					if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
-						singleUnit->path = singleUnit->unit->pathPlanner->GetPath();
+						singleUnit->path = singleUnit->unit->GetPathPlanner()->GetPath();
 
 						singleUnit->isSearching = false;/// The unit has finished changing its nextTile
 
@@ -571,14 +572,13 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 
 		{
 			// Predict where the unit will be after moving and store the result it inside the temporary fPoint called endPos
-			fPoint endPos = { singleUnit->unit->entityInfo.pos.x + movePos.x, singleUnit->unit->entityInfo.pos.y + movePos.y };
+			fPoint endPos = { singleUnit->unit->GetPos().x + movePos.x, singleUnit->unit->GetPos().y + movePos.y };
 
 			// Check if the unit would reach the nextTile during this move. If the answer is yes, then:
 			if (singleUnit->IsTileReached(nextPos, endPos)) {
 
 				// Update the unit's position with the nextPos
-				singleUnit->unit->entityInfo.pos.x = nextPos.x;
-				singleUnit->unit->entityInfo.pos.y = nextPos.y;
+				singleUnit->unit->SetPos({ (float)nextPos.x, (float)nextPos.y });
 
 				// Update the unit's currTile with the nextTile
 				singleUnit->currTile = singleUnit->nextTile;
@@ -591,8 +591,7 @@ MovementState j1Movement::MoveUnit(Unit* unit, float dt)
 		}
 
 		// Add the movePos to the unit's current position
-		singleUnit->unit->entityInfo.pos.x += movePos.x;
-		singleUnit->unit->entityInfo.pos.y += movePos.y;
+		singleUnit->unit->AddToPos(movePos);
 
 		break;
 
@@ -648,7 +647,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 
 					if (IsOppositeDirection(singleUnit, *units)) {
 
-						if (singleUnit->priority >= (*units)->priority) {
+						if (singleUnit->unit->GetPriority() >= (*units)->unit->GetPriority()) {
 
 							if (singleUnit->coll == CollisionType_TowardsCell && singleUnit->waitUnit == (*units))
 								break;
@@ -706,8 +705,8 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 						singleUnit->waitTile = singleUnit->nextTile;
 
 						// The agent that is already inside the tile has the priority. If none of them are, choose one randomly
-						SDL_Rect posA = { (int)singleUnit->unit->entityInfo.pos.x, (int)singleUnit->unit->entityInfo.pos.y, App->map->data.tile_width, App->map->data.tile_height };
-						SDL_Rect posB = { (int)(*units)->unit->entityInfo.pos.x, (int)(*units)->unit->entityInfo.pos.y,  App->map->data.tile_width, App->map->data.tile_height };
+						SDL_Rect posA = { (int)singleUnit->unit->GetPos().x, (int)singleUnit->unit->GetPos().y, App->map->data.tile_width, App->map->data.tile_height };
+						SDL_Rect posB = { (int)(*units)->unit->GetPos().x, (int)(*units)->unit->GetPos().y,  App->map->data.tile_width, App->map->data.tile_height };
 						iPoint tilePos = App->map->MapToWorld(singleUnit->nextTile.x, singleUnit->nextTile.y);
 						SDL_Rect tile = { tilePos.x, tilePos.y, App->map->data.tile_width, App->map->data.tile_height };
 						SDL_Rect resultA, resultB;
@@ -852,7 +851,7 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront)
 
 		switch (singleUnit->unit->GetUnitDirection()) {
 
-		case UnitDirection_Idle:
+		case UnitDirection_NoDirection:
 
 			neighbors[0].create(singleUnit->currTile.x + 1, singleUnit->currTile.y + 0); // Right
 			neighbors[1].create(singleUnit->currTile.x + 0, singleUnit->currTile.y + 1); // Down
@@ -1036,14 +1035,14 @@ bool j1Movement::IsOppositeDirection(SingleUnit* singleUnitA, SingleUnit* single
 
 // UnitGroup struct ---------------------------------------------------------------------------------
 
-UnitGroup::UnitGroup(Unit* unit)
+UnitGroup::UnitGroup(DynamicEntity* unit)
 {
 	AddUnit(unit->GetSingleUnit());
 }
 
-UnitGroup::UnitGroup(list<Unit*> units)
+UnitGroup::UnitGroup(list<DynamicEntity*> units)
 {
-	list<Unit*>::const_iterator it = units.begin();
+	list<DynamicEntity*>::const_iterator it = units.begin();
 
 	while (it != units.end()) {
 
@@ -1157,11 +1156,9 @@ iPoint UnitGroup::GetGoal() const
 
 // SingleUnit struct ---------------------------------------------------------------------------------
 
-SingleUnit::SingleUnit(Unit* unit, UnitGroup* group) :unit(unit), group(group)
+SingleUnit::SingleUnit(DynamicEntity* unit, UnitGroup* group) :unit(unit), group(group)
 {
-	currTile = goal = App->map->WorldToMap(this->unit->entityInfo.pos.x, this->unit->entityInfo.pos.y);
-
-	priority = unit->unitInfo.priority;
+	currTile = goal = App->map->WorldToMap(this->unit->GetPos().x, this->unit->GetPos().y);
 }
 
 // Returns true if the unit would reach its next tile during this move
@@ -1202,7 +1199,7 @@ bool SingleUnit::IsTileReached(iPoint nextPos, fPoint endPos) const
 // Stops the unit
 void SingleUnit::StopUnit()
 {
-	unit->SetUnitDirection(UnitDirection_Idle);
+	unit->SetUnitDirection(UnitDirection_NoDirection);
 }
 
 // Resets the parameters of the unit (general info)
@@ -1245,10 +1242,10 @@ void SingleUnit::GetReadyForNewMove()
 {
 	iPoint currTilePos = App->map->MapToWorld(currTile.x, currTile.y);
 
-	if ((int)unit->entityInfo.pos.x == currTilePos.x && (int)unit->entityInfo.pos.y == currTilePos.y) {
+	if ((int)unit->GetPos().x == currTilePos.x && (int)unit->GetPos().y == currTilePos.y) {
 
 		ResetUnitParameters();
-		unit->pathPlanner->SetSearchRequested(false);
+		unit->GetPathPlanner()->SetSearchRequested(false);
 		StopUnit();
 		movementState = MovementState_WaitForPath;
 

@@ -2,23 +2,31 @@
 #define __j1ENTITY_FACTORY_H__
 
 #include "j1Module.h"
-#include "Unit.h"
 
 #include "p2Point.h"
+
+// DynamicEntities (also called Units)
+#include "Footman.h"
+#include "Grunt.h"
 
 #include <string>
 #include <algorithm>
 using namespace std;
 
-#define MAX_UNITS_SELECTED 8
+#define MAX_UNITS_SELECTED 10
 
 struct SDL_Texture;
 struct SDL_Rect;
 
 class Entity;
-class Unit;
+class DynamicEntity;
 struct EntityInfo;
+enum DynamicEntityType;
+
+//
+class Unit;
 struct UnitInfo;
+//
 
 class j1EntityFactory : public j1Module
 {
@@ -35,47 +43,48 @@ public:
 	void OnCollision(Collider* c1, Collider* c2);
 	void Draw();
 
-	// Adds a unit to the toSpawnEntities list
-	Unit* AddUnit(const EntityInfo& entityInfo, uint priority, uint attackRadius, uint sightRadius);
+	// Adds a DynamicEntity
+	DynamicEntity* AddDynamicEntity(DynamicEntityType dynamicEntityType, fPoint pos, iPoint size, uint currLife, uint maxLife, const UnitInfo& unitInfo, const EntityInfo& entityInfo);
 
-	// Returns a pointer to the unit by its entity
-	Unit* GetUnitByEntity(Entity* entity);
+	// Returns a pointer to the Entity that is on the tile or nullptr
+	Entity* IsEntityOnTile(iPoint tile, EntityType entityType = EntityType_NoType, EntitySide entitySide = EntitySide_NoSide) const;
 
-	// Returns the unit if there is a unit on the tile
-	Unit* IsUnitOnTile(iPoint tile) const;
+	// Selects an Entity
+	bool SelectEntity(Entity* entity);
 
-	// Selects the unit within the tile
-	Unit* SelectUnit(iPoint tile);
+	// Selects the entities within a rectangle
+	void SelectEntitiesWithinRectangle(SDL_Rect rectangleRect, EntitySide entitySide = EntitySide_NoSide);
 
-	// Selects the units within the rectangle
-	void SelectUnitsWithinRectangle(SDL_Rect rectangleRect);
+	DynamicEntity* GetDynamicEntityByEntity(Entity* entity) const;
 
-	// Returns a list with the last units selected
-	list<Unit*> GetLastUnitsSelected() const;
+	// Returns a list with the last selected units (unitsSelected list)
+	list<DynamicEntity*> GetLastUnitsSelected() const;
 
-	// Changes the debug color of the units selected
+	// Updates the selection color of all entities
 	void SetUnitsSelectedColor();
 
-	// Returns the unitInfo (normally read from the config file)
-	UnitInfo& GetUnitInfo();
+	// Returns the entityInfo (normally read from the config file)
+	EntityInfo& GetDynamicEntityInfo(DynamicEntityType dynamicEntityType);
 
 	bool Save(pugi::xml_node& save) const;
 	bool Load(pugi::xml_node& save);
 
 private:
 
-	list<Entity*> activeEntities;
 	list<Entity*> toSpawnEntities;
-	list<Unit*> unitsSelected;
+	list<DynamicEntity*> activeDynamicEntities;
+
+	list<DynamicEntity*> unitsSelected;
 
 	// Entities textures
-	string archerTexName;
-	SDL_Texture* archerTex = nullptr;
+	string footmanTexName;
+	string gruntTexName;
+	SDL_Texture* footmanTex = nullptr;
+	SDL_Texture* gruntTex = nullptr;
 
 	// Entities info
-	UnitInfo unitInfo;
-
-	int i = 0;
+	FootmanInfo footmanInfo;
+	GruntInfo gruntInfo;
 };
 
 #endif //__j1ENTITY_FACTORY_H__
