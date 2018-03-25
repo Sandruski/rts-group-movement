@@ -40,7 +40,7 @@ public:
 	bool Update(float dt);
 	bool PostUpdate();
 	bool CleanUp();
-	void OnCollision(Collider* c1, Collider* c2);
+	void OnCollision(ColliderGroup* c1, ColliderGroup* c2);
 	void Draw();
 
 	// Adds a DynamicEntity
@@ -55,6 +55,10 @@ public:
 	// Selects the entities within a rectangle
 	void SelectEntitiesWithinRectangle(SDL_Rect rectangleRect, EntitySide entitySide = EntitySide_NoSide);
 
+	// Unselects all entities
+	void UnselectAllEntities();
+
+	// Returns a pointer to the DynamicEntity of an Entity
 	DynamicEntity* GetDynamicEntityByEntity(Entity* entity) const;
 
 	// Returns a list with the last selected units (unitsSelected list)

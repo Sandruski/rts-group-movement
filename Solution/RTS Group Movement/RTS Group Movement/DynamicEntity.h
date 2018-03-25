@@ -20,6 +20,8 @@ struct SingleUnit;
 class PathPlanner; 
 class Navgraph;
 
+enum ColliderType;
+
 enum DynamicEntityType
 {
 	DynamicEntityType_NoType,
@@ -74,7 +76,7 @@ public:
 	virtual void Move(float dt);
 	virtual void Draw(SDL_Texture* sprites);
 	virtual void DebugDrawSelected();
-	virtual void OnCollision(Collider* c1, Collider* c2);
+	virtual void OnCollision(ColliderGroup* c1, ColliderGroup* c2);
 
 	// State machine
 	void UnitStateMachine(float dt);
@@ -107,8 +109,10 @@ public:
 
 	// Collision
 	ColliderGroup* GetSightRadiusCollider() const;
-	bool CreateUnitSightCollider(EntitySide entitySide);
-	void UpdateUnitSightColliderPos();
+	ColliderGroup* GetAttackRadiusCollider() const;
+
+	ColliderGroup* CreateRhombusCollider(ColliderType colliderType, uint radius);
+	void UpdateRhombusColliderPos(ColliderGroup* collider, uint radius);
 
 public:
 
@@ -117,22 +121,27 @@ public:
 protected:
 
 	Animation* animation = nullptr;
+	UnitState unitState = UnitState_Idle;
 
 	// Movement
 	UnitInfo unitInfo;
-	UnitState unitState;
 	fPoint direction = { 0.0f,0.0f };
 
 	SingleUnit* singleUnit = nullptr;
 	PathPlanner* pathPlanner = nullptr;
 	Navgraph* navgraph = nullptr;
 
-	// Selection color
-	SDL_Color color = ColorWhite;
-	string colorName = "White";
+	// Attack
+	bool isSightSatisfied = false;
+	bool isAttackSatisfied = false;
 
 	// Collision
 	ColliderGroup* sightRadiusCollider = nullptr;
+	ColliderGroup* attackRadiusCollider = nullptr;
+
+	// Selection color
+	SDL_Color color = ColorWhite;
+	string colorName = "White";
 };
 
 #endif //__DynamicEntity_H__

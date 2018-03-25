@@ -94,8 +94,6 @@ bool j1Scene::PreUpdate()
 	/// DynamicEntity
 	UnitInfo unitInfo;
 	unitInfo.maxSpeed = 50.0f;
-	unitInfo.attackRadius = 3;
-	unitInfo.sightRadius = 6;
 
 	/// Footman
 	FootmanInfo footmanInfo;
@@ -107,11 +105,15 @@ bool j1Scene::PreUpdate()
 	if (App->entities->IsEntityOnTile(mouseTile, EntityType_DynamicEntity) == nullptr && App->pathfinding->IsWalkable(mouseTile)) {
 
 		// 1: spawn a Footman with priority 1
+		unitInfo.sightRadius = 6;
+		unitInfo.attackRadius = 3;
 		if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN)
 			App->entities->AddDynamicEntity(DynamicEntityType_Footman, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)footmanInfo);
 
 		// 2: spawn a Grunt with priority 1
-		else if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
+		unitInfo.sightRadius = 3;
+		unitInfo.attackRadius = 2;
+		if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
 			App->entities->AddDynamicEntity(DynamicEntityType_Grunt, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)gruntInfo);
 	}
 
@@ -157,6 +159,8 @@ bool j1Scene::Update(float dt)
 
 		if (entity != nullptr)
 			App->entities->SelectEntity(entity);
+		else
+			App->entities->UnselectAllEntities();
 	}
 
 	int width = mousePos.x - startRectangle.x;

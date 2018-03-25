@@ -14,10 +14,7 @@ Entity::Entity(fPoint pos, iPoint size, int currLife, uint maxLife) : pos(pos), 
 
 Entity::~Entity() 
 {
-	// Collision
-	if (entityCollider != nullptr)
-		delete entityCollider;
-	entityCollider = nullptr;
+	// Colliders are erased via the Collision module
 }
 
 void Entity::Draw(SDL_Texture* sprites)
@@ -28,7 +25,7 @@ void Entity::DebugDrawSelected()
 {
 }
 
-void Entity::OnCollision(Collider* c1, Collider* c2) {}
+void Entity::OnCollision(ColliderGroup* c1, ColliderGroup* c2) {}
 
 // -------------------------------------------------------------
 
@@ -96,7 +93,7 @@ bool Entity::CreateEntityCollider(EntitySide entitySide)
 	vector<Collider*> collider;
 	SDL_Rect rect = { pos.x, pos.y, size.x, size.y };
 	collider.push_back(App->collision->CreateCollider(rect));
-	entityCollider = App->collision->CreateAndAddColliderGroup(collider, collType, App->entities);
+	entityCollider = App->collision->CreateAndAddColliderGroup(collider, collType, App->entities, this);
 
 	if (entityCollider != nullptr)
 		return true;

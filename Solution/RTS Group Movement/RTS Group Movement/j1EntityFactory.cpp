@@ -426,20 +426,21 @@ bool j1EntityFactory::CleanUp()
 	return ret;
 }
 
-void j1EntityFactory::OnCollision(Collider* c1, Collider* c2)
+void j1EntityFactory::OnCollision(ColliderGroup* c1, ColliderGroup* c2)
 {
 	// Check for collisions
 	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
 
-	/*
 	while (it != activeDynamicEntities.end()) {
-		if ((*it)->GetCollider() == c1) {
+
+		if ((*it)->GetEntityCollider() == c1 || (*it)->GetSightRadiusCollider() == c1) {
+
 			(*it)->OnCollision(c1, c2);
 			break;
 		}
+
 		it++;
 	}
-	*/
 }
 
 void j1EntityFactory::Draw()
@@ -578,25 +579,22 @@ bool j1EntityFactory::SelectEntity(Entity* entity)
 
 	while (it != activeDynamicEntities.end()) {
 
-		// If the unit isn't in the unitsSelected list, add it
-		if (find(unitsSelected.begin(), unitsSelected.end(), *it) == unitsSelected.end()) {
-
-			DynamicEntity* unit = GetDynamicEntityByEntity(*it);
-			unitsSelected.push_back(unit);
-			(*it)->isSelected = true;
-
-			ret = true;
+		// Remove entities from the unitsSelected list
+		if ((*it) != entity) {
+			unitsSelected.remove(GetDynamicEntityByEntity(*it));
+			(*it)->isSelected = false;
 		}
-		else {
-
-			// If the unit is in the unitsSelected list, remove it
-			if (find(unitsSelected.begin(), unitsSelected.end(), *it) != unitsSelected.end()) {
-				unitsSelected.remove(GetDynamicEntityByEntity(*it));
-				(*it)->isSelected = false;
-			}
-		}
-
 		it++;
+	}
+
+	// If the unit isn't in the unitsSelected list, add it
+	if (find(unitsSelected.begin(), unitsSelected.end(), entity) == unitsSelected.end()) {
+
+		DynamicEntity* unit = GetDynamicEntityByEntity(entity);
+		unitsSelected.push_back(unit);
+		(entity)->isSelected = true;
+
+		ret = true;
 	}
 
 	// TODO: Add StaticEntities
@@ -656,6 +654,27 @@ void j1EntityFactory::SelectEntitiesWithinRectangle(SDL_Rect rectangleRect, Enti
 	SetUnitsSelectedColor();
 }
 
+// Unselects all entities
+void j1EntityFactory::UnselectAllEntities() 
+{
+	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
+
+	while (it != activeDynamicEntities.end()) {
+	
+		if ((*it)->isSelected) {
+
+			(*it)->isSelected = false;
+
+			// If the entity is in the unitsSelected list, remove it
+			if (find(unitsSelected.begin(), unitsSelected.end(), *it) != unitsSelected.end())
+				unitsSelected.remove(GetDynamicEntityByEntity(*it));
+		}
+
+		it++;
+	}
+}
+
+// Returns a pointer to the DynamicEntity of an Entity
 DynamicEntity* j1EntityFactory::GetDynamicEntityByEntity(Entity* entity) const
 {
 	if (entity->entityType == EntityType_DynamicEntity)

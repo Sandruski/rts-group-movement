@@ -26,7 +26,7 @@ public:
 	void Move(float dt);
 	void Draw(SDL_Texture* sprites);
 	void DebugDrawSelected();
-	void OnCollision(Collider* c1, Collider* c2);
+	void OnCollision(ColliderGroup* c1, ColliderGroup* c2);
 
 	// State machine
 	void UnitStateMachine(float dt);

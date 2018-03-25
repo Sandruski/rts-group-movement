@@ -47,8 +47,9 @@ Grunt::Grunt(fPoint pos, iPoint size, int currLife, uint maxLife, const UnitInfo
 	LoadAnimationsSpeed();
 
 	// Collisions
-	CreateUnitSightCollider(EntitySide_Enemy);
 	CreateEntityCollider(EntitySide_Enemy);
+	sightRadiusCollider = CreateRhombusCollider(ColliderType_EnemySightRadius, unitInfo.sightRadius);
+	attackRadiusCollider = CreateRhombusCollider(ColliderType_EnemyAttackRadius, unitInfo.attackRadius);
 }
 
 void Grunt::Move(float dt)
@@ -74,7 +75,8 @@ void Grunt::Move(float dt)
 
 	// Update colliders
 	UpdateEntityColliderPos();
-	UpdateUnitSightColliderPos();
+	UpdateRhombusColliderPos(sightRadiusCollider, unitInfo.sightRadius);
+	UpdateRhombusColliderPos(attackRadiusCollider, unitInfo.attackRadius);
 }
 
 void Grunt::Draw(SDL_Texture* sprites) 
@@ -99,9 +101,12 @@ void Grunt::DebugDrawSelected()
 	}
 }
 
-void Grunt::OnCollision(Collider* c1, Collider* c2) 
+void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2)
 {
-
+	// An player is within the sight of this enemy unit
+	if (c1->colliderType == ColliderType_EnemySightRadius && c2->colliderType == ColliderType_PlayerUnit) {
+		LOG("ATTACK THE ALLIANCE!");
+	}
 }
 
 // State machine

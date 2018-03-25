@@ -17,9 +17,12 @@ enum ColliderType {
 	ColliderType_EnemyUnit,
 	ColliderType_PlayerSightRadius,
 	ColliderType_EnemySightRadius,
+	ColliderType_PlayerAttackRadius,
+	ColliderType_EnemyAttackRadius,
 	ColliderType_MaxColliders
 };
 
+struct Entity;
 struct Collider;
 struct ColliderGroup;
 
@@ -36,7 +39,7 @@ public:
 	void DebugDraw();
 
 	// ColliderGroups
-	ColliderGroup* CreateAndAddColliderGroup(vector<Collider*> colliders, ColliderType colliderType, j1Module* callback);
+	ColliderGroup* CreateAndAddColliderGroup(vector<Collider*> colliders, ColliderType colliderType, j1Module* callback, Entity* entity = nullptr);
 	bool EraseColliderGroup(ColliderGroup* colliderGroup);
 
 	// Colliders
@@ -53,7 +56,7 @@ public:
 private:
 
 	list<ColliderGroup*> colliderGroups;
-	bool debug = true;
+	bool isDebug = true;
 };
 
 // ---------------------------------------------------------------------
@@ -62,7 +65,7 @@ private:
 
 struct ColliderGroup
 {
-	ColliderGroup(vector<Collider*> colliders, ColliderType colliderType, j1Module* callback);
+	ColliderGroup(vector<Collider*> colliders, ColliderType colliderType, j1Module* callback, Entity* entity = nullptr);
 
 	~ColliderGroup();
 
@@ -71,10 +74,11 @@ struct ColliderGroup
 	// -----
 
 	ColliderType colliderType = ColliderType_NoType;
-	j1Module* callback = nullptr;
 	bool isRemove = false;
-
 	vector<Collider*> colliders;
+
+	j1Module* callback = nullptr;
+	Entity* entity = nullptr;
 };
 
 // ---------------------------------------------------------------------
@@ -95,8 +99,7 @@ struct Collider
 	// -----
 
 	SDL_Rect colliderRect = { 0,0,0,0 };
-
-	ColliderGroup* colliderGroup = nullptr;
+	ColliderGroup* colliderGroup = nullptr; // parent
 };
 
 #endif //__j1COLLISION_H__

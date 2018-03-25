@@ -36,10 +36,7 @@ DynamicEntity::DynamicEntity(fPoint pos, iPoint size, int currLife, uint maxLife
 
 DynamicEntity::~DynamicEntity() 
 {
-	// Collision
-	if (sightRadiusCollider != nullptr)
-		delete sightRadiusCollider;
-	sightRadiusCollider = nullptr;
+	// Colliders are erased via the Collision module
 }
 
 void DynamicEntity::Move(float dt) {}
@@ -59,7 +56,7 @@ void DynamicEntity::DebugDrawSelected()
 	App->render->DrawQuad(entitySize, 255, 255, 255, 255, false);
 }
 
-void DynamicEntity::OnCollision(Collider* c1, Collider* c2) {}
+void DynamicEntity::OnCollision(ColliderGroup* c1, ColliderGroup* c2) {}
 
 // -------------------------------------------------------------
 
@@ -237,57 +234,47 @@ ColliderGroup* DynamicEntity::GetSightRadiusCollider() const
 	return sightRadiusCollider;
 }
 
-
-bool DynamicEntity::CreateUnitSightCollider(EntitySide entitySide) 
+ColliderGroup* DynamicEntity::GetAttackRadiusCollider() const 
 {
-	ColliderType collType = ColliderType_NoType;
+	return attackRadiusCollider;
+}
 
-	if (entitySide == EntitySide_Player)
-		collType = ColliderType_PlayerUnit;
-	else if (entitySide == EntitySide_Enemy)
-		collType = ColliderType_EnemyUnit;
-
-	if (collType == ColliderType_NoType)
-		return false;
-
+ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, uint radius)
+{
 	vector<Collider*> colliders;
 	iPoint currTilePos = App->map->MapToWorld(singleUnit->currTile.x, singleUnit->currTile.y);
 
 	int sign = 1;
-	for (int y = -(int)unitInfo.attackRadius + 1; y < (int)unitInfo.attackRadius; ++y) {
+	for (int y = -(int)radius + 1; y < (int)radius; ++y) {
 
 		if (y == 0)
 			sign *= -1;
 
-		for (int x = (-sign * y) - (int)unitInfo.attackRadius + 1; x < (int)unitInfo.attackRadius + (sign * y); ++x) {
+		for (int x = (-sign * y) - (int)radius + 1; x < (int)radius + (sign * y); ++x) {
 
 			SDL_Rect rect = { currTilePos.x + x * App->map->data.tile_width, currTilePos.y + y * App->map->data.tile_height, App->map->data.tile_width, App->map->data.tile_height };
 			colliders.push_back(App->collision->CreateCollider(rect));
 		}
 	}
-	sightRadiusCollider = App->collision->CreateAndAddColliderGroup(colliders, collType, App->entities);
-
-	if (sightRadiusCollider != nullptr)
-		return true;
-		
-	return false;
+	
+	return App->collision->CreateAndAddColliderGroup(colliders, colliderType, App->entities, this);
 }
 
-void DynamicEntity::UpdateUnitSightColliderPos() 
+void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radius)
 {
-	vector<Collider*>::const_iterator it = sightRadiusCollider->colliders.begin();
+	vector<Collider*>::const_iterator it = collider->colliders.begin();
 
-	while (it != sightRadiusCollider->colliders.end()) {
+	while (it != collider->colliders.end()) {
 
 		iPoint currTilePos = App->map->MapToWorld(singleUnit->currTile.x, singleUnit->currTile.y);
 
 		int sign = 1;
-		for (int y = -(int)unitInfo.attackRadius + 1; y < (int)unitInfo.attackRadius; ++y) {
+		for (int y = -(int)radius + 1; y < (int)radius; ++y) {
 
 			if (y == 0)
 				sign *= -1;
 
-			for (int x = (-sign * y) - (int)unitInfo.attackRadius + 1; x < (int)unitInfo.attackRadius + (sign * y); ++x) {
+			for (int x = (-sign * y) - (int)radius + 1; x < (int)radius + (sign * y); ++x) {
 
 				SDL_Rect rect = { currTilePos.x + x * App->map->data.tile_width, currTilePos.y + y * App->map->data.tile_height, App->map->data.tile_width, App->map->data.tile_height };
 				(*it)->SetPos(rect.x, rect.y);

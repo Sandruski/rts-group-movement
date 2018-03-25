@@ -6,6 +6,7 @@
 #include "j1Collision.h"
 #include "j1Input.h"
 #include "j1Render.h"
+#include "Entity.h"
 
 j1Collision::j1Collision()
 {
@@ -28,13 +29,13 @@ j1Collision::j1Collision()
 	matrix[ColliderType_PlayerSightRadius][ColliderType_PlayerSightRadius] = false;
 	matrix[ColliderType_PlayerSightRadius][ColliderType_EnemySightRadius] = false;
 	matrix[ColliderType_PlayerSightRadius][ColliderType_PlayerUnit] = false;
-	matrix[ColliderType_PlayerSightRadius][ColliderType_EnemyUnit] = false;
+	matrix[ColliderType_PlayerSightRadius][ColliderType_EnemyUnit] = true;
 
 	/// EnemyAttackRadius
 	matrix[ColliderType_EnemySightRadius][ColliderType_EnemySightRadius] = false;
 	matrix[ColliderType_EnemySightRadius][ColliderType_PlayerSightRadius] = false;
 	matrix[ColliderType_EnemySightRadius][ColliderType_EnemyUnit] = false;
-	matrix[ColliderType_EnemySightRadius][ColliderType_PlayerUnit] = false;
+	matrix[ColliderType_EnemySightRadius][ColliderType_PlayerUnit] = true;
 
 	// DEBUG COLORS
 	debugColors[ColliderType_PlayerUnit] = ColorDarkBlue;
@@ -95,10 +96,10 @@ bool j1Collision::Update(float dt)
 					if (c1->CheckCollision(c2->colliderRect))
 					{
 						if (matrix[c1->colliderGroup->colliderType][c2->colliderGroup->colliderType] && c1->colliderGroup->callback != nullptr)
-							c1->colliderGroup->callback->OnCollision(c1, c2);
+							c1->colliderGroup->callback->OnCollision(c1->colliderGroup, c2->colliderGroup);
 
 						if (matrix[c2->colliderGroup->colliderType][c1->colliderGroup->colliderType] && c2->colliderGroup->callback != nullptr)
-							c2->colliderGroup->callback->OnCollision(c2, c1);
+							c2->colliderGroup->callback->OnCollision(c2->colliderGroup, c1->colliderGroup);
 					}
 				}
 				J++;
@@ -110,22 +111,6 @@ bool j1Collision::Update(float dt)
 	DebugDraw();
 
 	return ret;
-}
-
-void j1Collision::DebugDraw()
-{
-	Uint8 alpha = 80;
-
-	list<ColliderGroup*>::const_iterator it = colliderGroups.begin();
-
-	while (it != colliderGroups.end()) {
-
-		for (uint i = 0; i < (*it)->colliders.size(); ++i)
-
-			App->render->DrawQuad((*it)->colliders[i]->colliderRect, debugColors[(*it)->colliderType].r, debugColors[(*it)->colliderType].g, debugColors[(*it)->colliderType].b, alpha);
-		
-		it++;
-	}
 }
 
 // Called before quitting
@@ -147,13 +132,32 @@ bool j1Collision::CleanUp()
 	return ret;
 }
 
+void j1Collision::DebugDraw()
+{
+	Uint8 alpha = 80;
+	SDL_Color color;
+
+	list<ColliderGroup*>::const_iterator it = colliderGroups.begin();
+
+	while (it != colliderGroups.end()) {
+
+		color = debugColors[(*it)->colliderType];
+
+		for (uint i = 0; i < (*it)->colliders.size(); ++i)
+
+			App->render->DrawQuad((*it)->colliders[i]->colliderRect, color.r, color.g, color.b, alpha);
+
+		it++;
+	}
+}
+
 // ColliderGroups
-ColliderGroup* j1Collision::CreateAndAddColliderGroup(vector<Collider*> colliders, ColliderType colliderType, j1Module* callback)
+ColliderGroup* j1Collision::CreateAndAddColliderGroup(vector<Collider*> colliders, ColliderType colliderType, j1Module* callback, Entity* entity)
 {
 	if (callback == nullptr)
 		return nullptr;
 
-	ColliderGroup* collGroup = new ColliderGroup(colliders, colliderType, callback);
+	ColliderGroup* collGroup = new ColliderGroup(colliders, colliderType, callback, entity);
 
 	for (uint i = 0; i < colliders.size(); ++i)
 		colliders[i]->SetColliderGroup(collGroup);
@@ -227,7 +231,7 @@ bool Collider::CheckCollision(const SDL_Rect& r) const
 
 // ColliderGroup struct ---------------------------------------------------------------------------------
 
-ColliderGroup::ColliderGroup(vector<Collider*> colliders, ColliderType colliderType, j1Module* callback) :colliders(colliders), colliderType(colliderType), callback(callback) {}
+ColliderGroup::ColliderGroup(vector<Collider*> colliders, ColliderType colliderType, j1Module* callback, Entity* entity) :colliders(colliders), colliderType(colliderType), callback(callback), entity(entity) {}
 
 ColliderGroup::~ColliderGroup() 
 {

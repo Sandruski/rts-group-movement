@@ -38,7 +38,7 @@ public:
 	virtual ~Entity();
 	virtual void Draw(SDL_Texture* sprites);
 	virtual void DebugDrawSelected();
-	virtual void OnCollision(Collider* c1, Collider* c2);
+	virtual void OnCollision(ColliderGroup* c1, ColliderGroup* c2);
 
 	// Position and size
 	void SetPos(fPoint pos);

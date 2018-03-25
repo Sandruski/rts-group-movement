@@ -12,7 +12,9 @@
 using namespace std;
 
 class j1App;
+
 struct Collider;
+struct ColliderGroup;
 
 class UIElement;
 enum UIEvents;
@@ -76,7 +78,7 @@ public:
 	}
 
 	// Collision
-	virtual void OnCollision(Collider*, Collider*) {}
+	virtual void OnCollision(ColliderGroup*, ColliderGroup*) {}
 
 	virtual void OnUIEvent(UIElement* UIelem, UIEvents UIevent) {}
 

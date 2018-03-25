@@ -47,8 +47,9 @@ Footman::Footman(fPoint pos, iPoint size, int currLife, uint maxLife, const Unit
 	LoadAnimationsSpeed();
 
 	// Collisions
-	CreateUnitSightCollider(EntitySide_Player);
 	CreateEntityCollider(EntitySide_Player);
+	sightRadiusCollider = CreateRhombusCollider(ColliderType_PlayerSightRadius, unitInfo.sightRadius);
+	attackRadiusCollider = CreateRhombusCollider(ColliderType_PlayerAttackRadius, unitInfo.attackRadius);
 }
 
 void Footman::Move(float dt)
@@ -74,7 +75,12 @@ void Footman::Move(float dt)
 
 	// Update colliders
 	UpdateEntityColliderPos();
-	UpdateUnitSightColliderPos();
+	UpdateRhombusColliderPos(sightRadiusCollider, unitInfo.sightRadius);
+	UpdateRhombusColliderPos(attackRadiusCollider, unitInfo.attackRadius);
+
+	// Reset attack parameters
+	isAttackSatisfied = false;
+	isSightSatisfied = false;
 }
 
 void Footman::Draw(SDL_Texture* sprites)
@@ -99,9 +105,19 @@ void Footman::DebugDrawSelected()
 	}
 }
 
-void Footman::OnCollision(Collider* c1, Collider* c2)
+void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2)
 {
+	// An enemy is within the sight of this player unit
+	if (c1->colliderType == ColliderType_PlayerSightRadius && c2->colliderType == ColliderType_EnemyUnit) {
 
+		LOG("The Horde is within the SIGHT radius");
+		isSightSatisfied = true;
+	}
+	else if (c1->colliderType == ColliderType_PlayerAttackRadius && c2->colliderType == ColliderType_EnemyUnit) {
+	
+		LOG("The Horde is within the ATTACK radius");
+		isAttackSatisfied = true;
+	}
 }
 
 // State machine
@@ -121,6 +137,22 @@ void Footman::UnitStateMachine(float dt)
 		}
 		else
 			App->movement->MoveUnit(this, dt);
+
+		break;
+
+	case UnitState_Attack:
+
+		// The unit is ordered to attack (this happens when the sight distance is satisfied)
+
+		// 1. The attack distance is not satisfied
+			// Move until the attack distance is satisfied
+
+		// 2. The attack distance is satisfied
+			// Attack the other unit until killed
+
+		// The unit stops attacking this unit if:
+			// a) The sight distance is no longer satisfied
+			// b) The other unit is killed
 
 		break;
 	}
