@@ -81,8 +81,12 @@ bool j1Collision::PreUpdate()
 
 	while (it != colliderGroups.end()) {
 
-		if ((*it)->isRemove)
+		if ((*it)->isRemove) {
 			colliderGroups.erase(remove(colliderGroups.begin(), colliderGroups.end(), *it), colliderGroups.end());
+
+			it = colliderGroups.begin();
+			continue;
+		}
 
 		it++;
 	}
@@ -211,6 +215,7 @@ bool j1Collision::CleanUp()
 	list<ColliderGroup*>::iterator it = colliderGroups.begin();
 
 	while (it != colliderGroups.end()) {
+
 		colliderGroups.erase(remove(colliderGroups.begin(), colliderGroups.end(), *it), colliderGroups.end());
 
 		it++;

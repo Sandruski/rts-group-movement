@@ -65,6 +65,10 @@ void Grunt::Move(float dt)
 
 	// ---------------------------------------------------------------------
 
+	// Is the unit dead?
+	if (currLife <= 0)
+		isDead = true;
+
 	if (singleUnit != nullptr)
 		if ((isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) || singleUnit->wakeUp)
 			unitState = UnitState_Walk;
@@ -130,6 +134,14 @@ void Grunt::UnitStateMachine(float dt)
 			App->movement->MoveUnit(this, dt);
 
 		break;
+
+	case UnitState_Die:
+
+		// Remove the corpse when a certain time is reached
+		if (deadTimer.ReadSec() >= 5.0f)
+			isRemove = true;
+
+		break;
 	}
 }
 
@@ -163,6 +175,7 @@ void Grunt::LoadAnimationsSpeed()
 
 void Grunt::UpdateAnimationsSpeed(float dt)
 {
+	gruntInfo.idle.speed = idleSpeed * dt;
 	gruntInfo.up.speed = upSpeed * dt;
 	gruntInfo.down.speed = downSpeed * dt;
 	gruntInfo.left.speed = leftSpeed * dt;
@@ -171,58 +184,185 @@ void Grunt::UpdateAnimationsSpeed(float dt)
 	gruntInfo.upRight.speed = upRightSpeed * dt;
 	gruntInfo.downLeft.speed = downLeftSpeed * dt;
 	gruntInfo.downRight.speed = downRightSpeed * dt;
-	gruntInfo.idle.speed = idleSpeed * dt;
+
+	gruntInfo.attackUp.speed = attackUpSpeed * dt;
+	gruntInfo.attackDown.speed = attackDownSpeed * dt;
+	gruntInfo.attackLeft.speed = attackLeftSpeed * dt;
+	gruntInfo.attackRight.speed = attackRightSpeed * dt;
+	gruntInfo.attackUpLeft.speed = attackUpLeftSpeed * dt;
+	gruntInfo.attackUpRight.speed = attackUpRightSpeed * dt;
+	gruntInfo.attackDownLeft.speed = attackDownLeftSpeed * dt;
+	gruntInfo.attackDownRight.speed = attackDownRightSpeed * dt;
+
+	gruntInfo.deathUp.speed = deathUpSpeed * dt;
+	gruntInfo.deathDown.speed = deathDownSpeed * dt;
 }
 
 bool Grunt::ChangeAnimation()
 {
-	switch (GetUnitDirection()) {
+	bool ret = false;
 
-	case UnitDirection_NoDirection:
+	// The unit is dead
+	if (isDead) {
 
-		animation = &gruntInfo.idle;
-		break;
+		UnitDirection dir = GetUnitDirection();
 
-	case UnitDirection_Up:
+		if (dir == UnitDirection_Up ||dir == UnitDirection_Up || dir == UnitDirection_UpLeft || dir == UnitDirection_UpRight
+			|| dir == UnitDirection_Left || dir == UnitDirection_Right || dir == UnitDirection_NoDirection) {
 
-		animation = &gruntInfo.up;
-		break;
+			if (animation->Finished() && unitState != UnitState_Die) {
+				unitState = UnitState_Die;
+				deadTimer.Start();
+			}
 
-	case UnitDirection_Down:
+			animation = &gruntInfo.deathUp;
+			ret = true;
+		}
+		else if (dir == UnitDirection_Down || dir == UnitDirection_DownLeft || dir == UnitDirection_DownRight) {
 
-		animation = &gruntInfo.down;
-		break;
+			if (animation->Finished() && unitState != UnitState_Die) {
+				unitState = UnitState_Die;
+				deadTimer.Start();
+			}
 
-	case UnitDirection_Left:
+			animation = &gruntInfo.deathDown;
+			ret = true;
+		}
 
-		animation = &gruntInfo.left;
-		break;
-
-	case UnitDirection_Right:
-
-		animation = &gruntInfo.right;
-		break;
-
-	case UnitDirection_UpLeft:
-
-		animation = &gruntInfo.upLeft;
-		break;
-
-	case UnitDirection_UpRight:
-
-		animation = &gruntInfo.upRight;
-		break;
-
-	case UnitDirection_DownLeft:
-
-		animation = &gruntInfo.downLeft;
-		break;
-
-	case UnitDirection_DownRight:
-
-		animation = &gruntInfo.downRight;
-		break;
+		return ret;
 	}
 
-	return true;
+	if (!isAttacking) {
+
+		// The unit is in UnitState_Walk
+		switch (GetUnitDirection()) {
+
+		case UnitDirection_NoDirection:
+
+			animation = &gruntInfo.idle;
+			ret = true;
+			break;
+
+		case UnitDirection_Up:
+
+			animation = &gruntInfo.up;
+			ret = true;
+			break;
+
+		case UnitDirection_Down:
+
+			animation = &gruntInfo.down;
+			ret = true;
+			break;
+
+		case UnitDirection_Left:
+
+			animation = &gruntInfo.left;
+			ret = true;
+			break;
+
+		case UnitDirection_Right:
+
+			animation = &gruntInfo.right;
+			ret = true;
+			break;
+
+		case UnitDirection_UpLeft:
+
+			animation = &gruntInfo.upLeft;
+			ret = true;
+			break;
+
+		case UnitDirection_UpRight:
+
+			animation = &gruntInfo.upRight;
+			ret = true;
+			break;
+
+		case UnitDirection_DownLeft:
+
+			animation = &gruntInfo.downLeft;
+			ret = true;
+			break;
+
+		case UnitDirection_DownRight:
+
+			animation = &gruntInfo.downRight;
+			ret = true;
+			break;
+		}
+
+		return ret;
+	}
+	else {
+
+		// The unit is in UnitState_Attack
+
+		// Set the direction of the unit as the orientation towards the attacking target
+		fPoint orientation = { attackingTarget->GetPos().x - pos.x, (float)attackingTarget->GetPos().y - pos.y };
+
+		float m = sqrtf(pow(orientation.x, 2.0f) + pow(orientation.y, 2.0f));
+
+		if (m > 0.0f) {
+			orientation.x /= m;
+			orientation.y /= m;
+		}
+
+		SetUnitDirectionByValue(orientation);
+
+		switch (GetUnitDirection()) {
+
+		case UnitDirection_Up:
+
+			animation = &gruntInfo.attackUp;
+			ret = true;
+			break;
+
+		case UnitDirection_Down:
+
+			animation = &gruntInfo.attackDown;
+			ret = true;
+			break;
+
+		case UnitDirection_Left:
+
+			animation = &gruntInfo.attackLeft;
+			ret = true;
+			break;
+
+		case UnitDirection_Right:
+
+			animation = &gruntInfo.attackRight;
+			ret = true;
+			break;
+
+		case UnitDirection_UpLeft:
+
+			animation = &gruntInfo.attackUpLeft;
+			ret = true;
+			break;
+
+		case UnitDirection_UpRight:
+
+			animation = &gruntInfo.attackUpRight;
+			ret = true;
+			break;
+
+		case UnitDirection_DownLeft:
+
+			animation = &gruntInfo.attackDownLeft;
+			ret = true;
+			break;
+
+		case UnitDirection_DownRight:
+
+			animation = &gruntInfo.attackDownRight;
+			ret = true;
+			break;
+		}
+
+		return ret;
+	}
+
+	return ret;
 }

@@ -3,6 +3,7 @@
 
 #include "p2Point.h"
 #include "Animation.h"
+#include "j1Timer.h"
 
 #include "Entity.h"
 
@@ -146,6 +147,7 @@ protected:
 
 	// Death
 	bool isDead = false;
+	j1Timer deadTimer;
 
 	// Selection color
 	SDL_Color color = ColorWhite;

@@ -94,7 +94,7 @@ bool j1Scene::PreUpdate()
 	/// DynamicEntity
 	UnitInfo unitInfo;
 	unitInfo.maxSpeed = 50.0f;
-	unitInfo.damage = 1;
+	unitInfo.damage = 2;
 
 	/// Footman
 	FootmanInfo footmanInfo;

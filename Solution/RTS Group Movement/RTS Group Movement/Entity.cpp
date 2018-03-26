@@ -14,7 +14,9 @@ Entity::Entity(fPoint pos, iPoint size, int currLife, uint maxLife) : pos(pos), 
 
 Entity::~Entity() 
 {
-	// Colliders are erased via the Collision module
+	if (entityCollider != nullptr)
+		entityCollider->isRemove = true;
+	entityCollider = nullptr;
 }
 
 void Entity::Draw(SDL_Texture* sprites)

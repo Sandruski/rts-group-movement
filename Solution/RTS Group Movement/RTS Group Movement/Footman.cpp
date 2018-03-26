@@ -195,6 +195,15 @@ void Footman::UnitStateMachine(float dt)
 	case UnitState_Attack:
 
 		// The unit is ordered to attack (this happens when the sight distance is satisfied)
+		{
+			DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
+
+			if (dynamicEntity->GetUnitState() == UnitState_Die) {
+				SetUnitDirection(UnitDirection_NoDirection);
+				isAttacking = false;
+				break;
+			}
+		}
 
 		// 1. The attack distance is satisfied
 		if (isAttackSatisfied 
@@ -204,7 +213,10 @@ void Footman::UnitStateMachine(float dt)
 			singleUnit->movementState = MovementState_GoalReached;
 
 			// Attack the other unit until killed
-			attackingTarget->ApplyDamage(unitInfo.damage);
+			if (animation->Finished()) {
+				attackingTarget->ApplyDamage(unitInfo.damage);
+				animation->Reset();
+			}
 			isAttacking = true;
 		}
 

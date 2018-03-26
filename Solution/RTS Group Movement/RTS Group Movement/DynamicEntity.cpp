@@ -36,7 +36,14 @@ DynamicEntity::DynamicEntity(fPoint pos, iPoint size, int currLife, uint maxLife
 
 DynamicEntity::~DynamicEntity() 
 {
-	// Colliders are erased via the Collision module
+	// Colliders
+	if (sightRadiusCollider != nullptr)
+		sightRadiusCollider->isRemove = true;
+	sightRadiusCollider = nullptr;
+
+	if (attackRadiusCollider != nullptr)
+		attackRadiusCollider->isRemove = true;
+	attackRadiusCollider = nullptr;
 }
 
 void DynamicEntity::Move(float dt) {}

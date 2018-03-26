@@ -385,9 +385,13 @@ bool j1EntityFactory::PostUpdate()
 	while (it != activeDynamicEntities.end()) {
 
 		if ((*it)->isRemove) {
-			delete *it;
-			activeDynamicEntities.remove(*it);
+
+			activeDynamicEntities.erase(it);
+
+			it = activeDynamicEntities.begin();
+			continue;
 		}
+
 		it++;
 	}
 
