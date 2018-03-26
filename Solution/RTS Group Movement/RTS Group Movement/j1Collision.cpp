@@ -18,24 +18,48 @@ j1Collision::j1Collision()
 	matrix[ColliderType_PlayerUnit][ColliderType_EnemyUnit] = false;
 	matrix[ColliderType_PlayerUnit][ColliderType_PlayerSightRadius] = false;
 	matrix[ColliderType_PlayerUnit][ColliderType_EnemySightRadius] = true;
+	matrix[ColliderType_PlayerUnit][ColliderType_PlayerAttackRadius] = false;
+	matrix[ColliderType_PlayerUnit][ColliderType_EnemyAttackRadius] = true;
 
 	/// EnemyUnit
 	matrix[ColliderType_EnemyUnit][ColliderType_EnemyUnit] = false;
 	matrix[ColliderType_EnemyUnit][ColliderType_PlayerUnit] = false;
 	matrix[ColliderType_EnemyUnit][ColliderType_EnemySightRadius] = false;
 	matrix[ColliderType_EnemyUnit][ColliderType_PlayerSightRadius] = true;
+	matrix[ColliderType_EnemyUnit][ColliderType_EnemyAttackRadius] = false;
+	matrix[ColliderType_EnemyUnit][ColliderType_PlayerAttackRadius] = true;
 
-	/// PlayerAttackRadius
+	/// PlayerSightRadius
 	matrix[ColliderType_PlayerSightRadius][ColliderType_PlayerSightRadius] = false;
 	matrix[ColliderType_PlayerSightRadius][ColliderType_EnemySightRadius] = false;
 	matrix[ColliderType_PlayerSightRadius][ColliderType_PlayerUnit] = false;
 	matrix[ColliderType_PlayerSightRadius][ColliderType_EnemyUnit] = true;
+	matrix[ColliderType_PlayerSightRadius][ColliderType_PlayerAttackRadius] = false;
+	matrix[ColliderType_PlayerSightRadius][ColliderType_EnemyAttackRadius] = false;
 
-	/// EnemyAttackRadius
+	/// EnemySightRadius
 	matrix[ColliderType_EnemySightRadius][ColliderType_EnemySightRadius] = false;
 	matrix[ColliderType_EnemySightRadius][ColliderType_PlayerSightRadius] = false;
 	matrix[ColliderType_EnemySightRadius][ColliderType_EnemyUnit] = false;
 	matrix[ColliderType_EnemySightRadius][ColliderType_PlayerUnit] = true;
+	matrix[ColliderType_EnemySightRadius][ColliderType_EnemyAttackRadius] = false;
+	matrix[ColliderType_EnemySightRadius][ColliderType_PlayerAttackRadius] = false;
+
+	/// PlayerAttackRadius
+	matrix[ColliderType_PlayerAttackRadius][ColliderType_PlayerAttackRadius] = false;
+	matrix[ColliderType_PlayerAttackRadius][ColliderType_EnemyAttackRadius] = false;
+	matrix[ColliderType_PlayerAttackRadius][ColliderType_PlayerSightRadius] = false;
+	matrix[ColliderType_PlayerAttackRadius][ColliderType_EnemySightRadius] = false;
+	matrix[ColliderType_PlayerAttackRadius][ColliderType_PlayerUnit] = false;
+	matrix[ColliderType_PlayerAttackRadius][ColliderType_EnemyUnit] = true;
+
+	/// EnemyAttackRadius
+	matrix[ColliderType_EnemyAttackRadius][ColliderType_EnemyAttackRadius] = false;
+	matrix[ColliderType_EnemyAttackRadius][ColliderType_PlayerAttackRadius] = false;
+	matrix[ColliderType_EnemyAttackRadius][ColliderType_EnemySightRadius] = false;
+	matrix[ColliderType_EnemyAttackRadius][ColliderType_PlayerSightRadius] = false;
+	matrix[ColliderType_EnemyAttackRadius][ColliderType_EnemyUnit] = false;
+	matrix[ColliderType_EnemyAttackRadius][ColliderType_PlayerUnit] = true;
 
 	// DEBUG COLORS
 	debugColors[ColliderType_PlayerUnit] = ColorDarkBlue;
@@ -93,13 +117,47 @@ bool j1Collision::Update(float dt)
 					c2 = (*J)->colliders[j];
 
 					// Check for the collision
-					if (c1->CheckCollision(c2->colliderRect))
-					{
-						if (matrix[c1->colliderGroup->colliderType][c2->colliderGroup->colliderType] && c1->colliderGroup->callback != nullptr)
-							c1->colliderGroup->callback->OnCollision(c1->colliderGroup, c2->colliderGroup);
+					if (c1->CheckCollision(c2->colliderRect)) {
 
-						if (matrix[c2->colliderGroup->colliderType][c1->colliderGroup->colliderType] && c2->colliderGroup->callback != nullptr)
-							c2->colliderGroup->callback->OnCollision(c2->colliderGroup, c1->colliderGroup);
+						if (matrix[c1->colliderGroup->colliderType][c2->colliderGroup->colliderType] && c1->colliderGroup->callback != nullptr) {
+
+							if (c1->colliderGroup->isTrigger) {
+
+								if (find(c1->colliderGroup->collidingGroups.begin(), c1->colliderGroup->collidingGroups.end(), c2->colliderGroup) == c1->colliderGroup->collidingGroups.end()) {
+
+									c1->colliderGroup->collidingGroups.push_back(c2->colliderGroup);
+									c1->colliderGroup->lastCollidingGroups.push_back(c2->colliderGroup);
+
+									// Collision!
+									c1->colliderGroup->callback->OnCollision(c1->colliderGroup, c2->colliderGroup, CollisionState_OnEnter);
+									break;
+								}
+								else
+									c1->colliderGroup->lastCollidingGroups.push_back(c2->colliderGroup);
+							}
+							else
+								c1->colliderGroup->callback->OnCollision(c1->colliderGroup, c2->colliderGroup, CollisionState_OnEnter);
+						}
+
+						if (matrix[c2->colliderGroup->colliderType][c1->colliderGroup->colliderType] && c2->colliderGroup->callback != nullptr) {
+
+							if (c2->colliderGroup->isTrigger) {
+
+								if (find(c2->colliderGroup->collidingGroups.begin(), c2->colliderGroup->collidingGroups.end(), c1->colliderGroup) == c2->colliderGroup->collidingGroups.end()) {
+
+									c2->colliderGroup->collidingGroups.push_back(c1->colliderGroup);
+									c2->colliderGroup->lastCollidingGroups.push_back(c1->colliderGroup);
+
+									// Collision!
+									c2->colliderGroup->callback->OnCollision(c2->colliderGroup, c1->colliderGroup, CollisionState_OnEnter);
+									break;
+								}
+								else
+									c2->colliderGroup->lastCollidingGroups.push_back(c1->colliderGroup);
+							}
+							else
+								c2->colliderGroup->callback->OnCollision(c2->colliderGroup, c1->colliderGroup, CollisionState_OnEnter);
+						}
 					}
 				}
 				J++;
@@ -108,9 +166,39 @@ bool j1Collision::Update(float dt)
 		I++;
 	}
 
+	HandleTriggers();
+
 	DebugDraw();
 
 	return ret;
+}
+
+void j1Collision::HandleTriggers()
+{
+	list<ColliderGroup*>::const_iterator groups = colliderGroups.begin();
+
+	while (groups != colliderGroups.end()) {
+
+		list<ColliderGroup*>::const_iterator collisions = (*groups)->collidingGroups.begin();
+
+		while (collisions != (*groups)->collidingGroups.end()) {
+
+			if (find((*groups)->lastCollidingGroups.begin(), (*groups)->lastCollidingGroups.end(), *collisions) == (*groups)->lastCollidingGroups.end()) {
+
+				// Not collision anymore...
+				(*groups)->callback->OnCollision(*groups, *collisions, CollisionState_OnExit);
+
+				(*groups)->collidingGroups.remove(*collisions);
+				collisions = (*groups)->collidingGroups.begin();
+				continue;
+			}
+			else
+				(*groups)->lastCollidingGroups.remove(*collisions);
+
+			collisions++;
+		}
+		groups++;
+	}
 }
 
 // Called before quitting

@@ -50,6 +50,8 @@ Footman::Footman(fPoint pos, iPoint size, int currLife, uint maxLife, const Unit
 	CreateEntityCollider(EntitySide_Player);
 	sightRadiusCollider = CreateRhombusCollider(ColliderType_PlayerSightRadius, unitInfo.sightRadius);
 	attackRadiusCollider = CreateRhombusCollider(ColliderType_PlayerAttackRadius, unitInfo.attackRadius);
+	sightRadiusCollider->isTrigger = true;
+	attackRadiusCollider->isTrigger = true;
 }
 
 void Footman::Move(float dt)
@@ -63,9 +65,25 @@ void Footman::Move(float dt)
 
 	// ---------------------------------------------------------------------
 
-	if (singleUnit != nullptr)
-		if ((isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) || singleUnit->wakeUp)
+	// Is the unit dead?
+	if (currLife <= 0) {
+		isDead = true;
+		unitState = UnitState_Die;
+	}
+
+	if (!isDead) {
+
+		/// UnitState_Walk
+		if (singleUnit != nullptr)
+			if ((isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) || singleUnit->wakeUp)
+				unitState = UnitState_Walk;
+
+		/// UnitState_Attack
+		if (isSightSatisfied)
+			unitState = UnitState_Attack;
+		else
 			unitState = UnitState_Walk;
+	}
 
 	UnitStateMachine(dt);
 
@@ -73,14 +91,13 @@ void Footman::Move(float dt)
 	UpdateAnimationsSpeed(dt);
 	ChangeAnimation();
 
-	// Update colliders
-	UpdateEntityColliderPos();
-	UpdateRhombusColliderPos(sightRadiusCollider, unitInfo.sightRadius);
-	UpdateRhombusColliderPos(attackRadiusCollider, unitInfo.attackRadius);
+	if (!isDead) {
 
-	// Reset attack parameters
-	isAttackSatisfied = false;
-	isSightSatisfied = false;
+		// Update colliders
+		UpdateEntityColliderPos();
+		UpdateRhombusColliderPos(sightRadiusCollider, unitInfo.sightRadius);
+		UpdateRhombusColliderPos(attackRadiusCollider, unitInfo.attackRadius);
+	}
 }
 
 void Footman::Draw(SDL_Texture* sprites)
@@ -105,18 +122,53 @@ void Footman::DebugDrawSelected()
 	}
 }
 
-void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2)
+void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState collisionState)
 {
-	// An enemy is within the sight of this player unit
-	if (c1->colliderType == ColliderType_PlayerSightRadius && c2->colliderType == ColliderType_EnemyUnit) {
+	switch (collisionState) {
 
-		LOG("The Horde is within the SIGHT radius");
-		isSightSatisfied = true;
-	}
-	else if (c1->colliderType == ColliderType_PlayerAttackRadius && c2->colliderType == ColliderType_EnemyUnit) {
-	
-		LOG("The Horde is within the ATTACK radius");
-		isAttackSatisfied = true;
+	case CollisionState_OnEnter:
+
+		// An enemy is within the sight of this player unit
+		if (c1->colliderType == ColliderType_PlayerSightRadius && c2->colliderType == ColliderType_EnemyUnit) {
+
+			// The Horde is within the SIGHT radius
+			isSightSatisfied = true;
+			attackingTarget = c2->entity;
+
+			// Go attack the Horde
+			list<DynamicEntity*> unit;
+			unit.push_back(this);
+			UnitGroup* group = App->movement->CreateGroupFromUnits(unit);
+
+			/// Chase the attackingTarget
+			DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
+			group->SetGoal(dynamicEntity->GetSingleUnit()->currTile);
+		}
+		else if (c1->colliderType == ColliderType_PlayerAttackRadius && c2->colliderType == ColliderType_EnemyUnit) {
+
+			// The Horde is within the ATTACK radius
+			isAttackSatisfied = true;
+		}
+
+		break;
+
+	case CollisionState_OnExit:
+
+		// Reset attack parameters
+		if (c1->colliderType == ColliderType_PlayerSightRadius && c2->colliderType == ColliderType_EnemyUnit) {
+
+			// The Horde is NO longer within the SIGHT radius
+			isSightSatisfied = false;
+			attackingTarget = nullptr;
+		}
+		else if (c1->colliderType == ColliderType_PlayerAttackRadius && c2->colliderType == ColliderType_EnemyUnit) {
+
+			// The Horde is NO longer within the ATTACK radius
+			isAttackSatisfied = false;
+			isAttacking = false;
+		}
+
+		break;
 	}
 }
 
@@ -131,7 +183,7 @@ void Footman::UnitStateMachine(float dt)
 
 	case UnitState_Walk:
 
-		if (App->scene->isFrameByFrame) {
+		if (App->scene->isFrameByFrame) { /// debug
 			if (App->input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN)
 				App->movement->MoveUnit(this, dt);
 		}
@@ -144,15 +196,44 @@ void Footman::UnitStateMachine(float dt)
 
 		// The unit is ordered to attack (this happens when the sight distance is satisfied)
 
-		// 1. The attack distance is not satisfied
-			// Move until the attack distance is satisfied
+		// 1. The attack distance is satisfied
+		if (isAttackSatisfied 
+			&& singleUnit->coll == CollisionType_NoCollision 
+			&& singleUnit->movementState != MovementState_FollowPath && singleUnit->movementState != MovementState_NoState) {
 
-		// 2. The attack distance is satisfied
+			singleUnit->movementState = MovementState_GoalReached;
+
 			// Attack the other unit until killed
+			attackingTarget->ApplyDamage(unitInfo.damage);
+			isAttacking = true;
+		}
+
+		// 2. The attack distance is not satisfied
+		else {
+
+			// The unit has reached the goal but the attack distance is not satisfied. The attacking target may have moved
+			if (singleUnit->movementState == MovementState_GoalReached) {
+
+				/// Keep chasing the attackingTarget
+				DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
+				singleUnit->group->SetGoal(dynamicEntity->GetSingleUnit()->currTile);
+			}
+
+			App->movement->MoveUnit(this, dt);
+			isAttacking = false;
+		}
 
 		// The unit stops attacking this unit if:
 			// a) The sight distance is no longer satisfied
 			// b) The other unit is killed
+
+		break;
+
+	case UnitState_Die:
+
+		// The unit is dead
+
+		// Perform the dead animation
 
 		break;
 	}
@@ -188,6 +269,7 @@ void Footman::LoadAnimationsSpeed()
 
 void Footman::UpdateAnimationsSpeed(float dt)
 {
+	footmanInfo.idle.speed = idleSpeed * dt;
 	footmanInfo.up.speed = upSpeed * dt;
 	footmanInfo.down.speed = downSpeed * dt;
 	footmanInfo.left.speed = leftSpeed * dt;
@@ -196,56 +278,175 @@ void Footman::UpdateAnimationsSpeed(float dt)
 	footmanInfo.upRight.speed = upRightSpeed * dt;
 	footmanInfo.downLeft.speed = downLeftSpeed * dt;
 	footmanInfo.downRight.speed = downRightSpeed * dt;
-	footmanInfo.idle.speed = idleSpeed * dt;
+
+	footmanInfo.attackUp.speed = attackUpSpeed * dt;
+	footmanInfo.attackDown.speed = attackDownSpeed * dt;
+	footmanInfo.attackLeft.speed = attackLeftSpeed * dt;
+	footmanInfo.attackRight.speed = attackRightSpeed * dt;
+	footmanInfo.attackUpLeft.speed = attackUpLeftSpeed * dt;
+	footmanInfo.attackUpRight.speed = attackUpRightSpeed * dt;
+	footmanInfo.attackDownLeft.speed = attackDownLeftSpeed * dt;
+	footmanInfo.attackDownRight.speed = attackDownRightSpeed * dt;
+
+	footmanInfo.deathUp.speed = deathUpSpeed * dt;
+	footmanInfo.deathDown.speed = deathDownSpeed * dt;
 }
 
-void Footman::ChangeAnimation()
+bool Footman::ChangeAnimation()
 {
-	switch (GetUnitDirection()) {
+	bool ret = false;
 
-	case UnitDirection_NoDirection:
+	// The unit is dead
+	if (isDead) {
+	
+		UnitDirection dir = GetUnitDirection();
 
-		animation = &footmanInfo.idle;
-		break;
+		if (dir == UnitDirection_Up || dir == UnitDirection_UpLeft || dir == UnitDirection_UpRight
+			|| dir == UnitDirection_Left || dir == UnitDirection_Right) {
 
-	case UnitDirection_Up:
+			animation = &footmanInfo.deathUp;
+			ret = true;
+		}
+		else if (dir == UnitDirection_Down || dir == UnitDirection_DownLeft || dir == UnitDirection_DownRight) {
+		
+			animation = &footmanInfo.deathDown;
+			ret = true;
+		}
 
-		animation = &footmanInfo.up;
-		break;
-
-	case UnitDirection_Down:
-
-		animation = &footmanInfo.down;
-		break;
-
-	case UnitDirection_Left:
-
-		animation = &footmanInfo.left;
-		break;
-
-	case UnitDirection_Right:
-
-		animation = &footmanInfo.right;
-		break;
-
-	case UnitDirection_UpLeft:
-
-		animation = &footmanInfo.upLeft;
-		break;
-
-	case UnitDirection_UpRight:
-
-		animation = &footmanInfo.upRight;
-		break;
-
-	case UnitDirection_DownLeft:
-
-		animation = &footmanInfo.downLeft;
-		break;
-
-	case UnitDirection_DownRight:
-
-		animation = &footmanInfo.downRight;
-		break;
+		return ret;
 	}
+
+	if (!isAttacking) {
+
+		// The unit is in UnitState_Walk
+		switch (GetUnitDirection()) {
+
+		case UnitDirection_NoDirection:
+
+			animation = &footmanInfo.idle;
+			ret = true;
+			break;
+
+		case UnitDirection_Up:
+
+			animation = &footmanInfo.up;
+			ret = true;
+			break;
+
+		case UnitDirection_Down:
+
+			animation = &footmanInfo.down;
+			ret = true;
+			break;
+
+		case UnitDirection_Left:
+
+			animation = &footmanInfo.left;
+			ret = true;
+			break;
+
+		case UnitDirection_Right:
+
+			animation = &footmanInfo.right;
+			ret = true;
+			break;
+
+		case UnitDirection_UpLeft:
+
+			animation = &footmanInfo.upLeft;
+			ret = true;
+			break;
+
+		case UnitDirection_UpRight:
+
+			animation = &footmanInfo.upRight;
+			ret = true;
+			break;
+
+		case UnitDirection_DownLeft:
+
+			animation = &footmanInfo.downLeft;
+			ret = true;
+			break;
+
+		case UnitDirection_DownRight:
+
+			animation = &footmanInfo.downRight;
+			ret = true;
+			break;
+		}
+
+		return ret;
+	}
+	else {
+
+		// The unit is in UnitState_Attack
+
+		// Set the direction of the unit as the orientation towards the attacking target
+		fPoint orientation = { attackingTarget->GetPos().x - pos.x, (float)attackingTarget->GetPos().y - pos.y };
+
+		float m = sqrtf(pow(orientation.x, 2.0f) + pow(orientation.y, 2.0f));
+
+		if (m > 0.0f) {
+			orientation.x /= m;
+			orientation.y /= m;
+		}
+
+		SetUnitDirectionByValue(orientation);
+
+		switch (GetUnitDirection()) {
+
+		case UnitDirection_Up:
+
+			animation = &footmanInfo.attackUp;
+			ret = true;
+			break;
+
+		case UnitDirection_Down:
+
+			animation = &footmanInfo.attackDown;
+			ret = true;
+			break;
+
+		case UnitDirection_Left:
+
+			animation = &footmanInfo.attackLeft;
+			ret = true;
+			break;
+
+		case UnitDirection_Right:
+
+			animation = &footmanInfo.attackRight;
+			ret = true;
+			break;
+
+		case UnitDirection_UpLeft:
+
+			animation = &footmanInfo.attackUpLeft;
+			ret = true;
+			break;
+
+		case UnitDirection_UpRight:
+
+			animation = &footmanInfo.attackUpRight;
+			ret = true;
+			break;
+
+		case UnitDirection_DownLeft:
+
+			animation = &footmanInfo.attackDownLeft;
+			ret = true;
+			break;
+
+		case UnitDirection_DownRight:
+
+			animation = &footmanInfo.attackDownRight;
+			ret = true;
+			break;
+		}
+
+		return ret;
+	}
+
+	return ret;
 }

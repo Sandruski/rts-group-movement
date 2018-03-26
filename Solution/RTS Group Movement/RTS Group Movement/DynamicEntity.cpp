@@ -56,7 +56,7 @@ void DynamicEntity::DebugDrawSelected()
 	App->render->DrawQuad(entitySize, 255, 255, 255, 255, false);
 }
 
-void DynamicEntity::OnCollision(ColliderGroup* c1, ColliderGroup* c2) {}
+void DynamicEntity::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState collisionState) {}
 
 // -------------------------------------------------------------
 
@@ -99,7 +99,7 @@ void DynamicEntity::LoadAnimationsSpeed() {}
 
 void DynamicEntity::UpdateAnimationsSpeed(float dt) {}
 
-void DynamicEntity::ChangeAnimation() {}
+bool DynamicEntity::ChangeAnimation() { return true; }
 
 // Direction
 void DynamicEntity::SetUnitDirection(UnitDirection unitDirection)

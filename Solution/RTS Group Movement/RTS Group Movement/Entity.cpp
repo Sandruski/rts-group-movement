@@ -25,7 +25,7 @@ void Entity::DebugDrawSelected()
 {
 }
 
-void Entity::OnCollision(ColliderGroup* c1, ColliderGroup* c2) {}
+void Entity::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState collisionState) {}
 
 // -------------------------------------------------------------
 

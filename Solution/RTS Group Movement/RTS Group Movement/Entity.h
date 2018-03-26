@@ -12,6 +12,8 @@ struct SDL_Texture;
 struct Collider;
 struct ColliderGroup;
 
+enum CollisionState;
+
 enum EntityType
 {
 	EntityType_NoType,
@@ -38,7 +40,7 @@ public:
 	virtual ~Entity();
 	virtual void Draw(SDL_Texture* sprites);
 	virtual void DebugDrawSelected();
-	virtual void OnCollision(ColliderGroup* c1, ColliderGroup* c2);
+	virtual void OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState collisionState);
 
 	// Position and size
 	void SetPos(fPoint pos);

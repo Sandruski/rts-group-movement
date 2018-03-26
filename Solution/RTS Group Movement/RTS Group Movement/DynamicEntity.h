@@ -21,6 +21,7 @@ class PathPlanner;
 class Navgraph;
 
 enum ColliderType;
+enum CollisionState;
 
 enum DynamicEntityType
 {
@@ -39,7 +40,8 @@ enum UnitState
 {
 	UnitState_Idle,
 	UnitState_Walk,
-	UnitState_Attack
+	UnitState_Attack,
+	UnitState_Die
 };
 
 enum UnitDirection 
@@ -62,6 +64,7 @@ struct UnitInfo
 
 	uint sightRadius = 0;
 	uint attackRadius = 0;
+	uint damage = 0;
 
 	float maxSpeed = 0.0f;
 	float currSpeed = 0.0f;
@@ -76,7 +79,7 @@ public:
 	virtual void Move(float dt);
 	virtual void Draw(SDL_Texture* sprites);
 	virtual void DebugDrawSelected();
-	virtual void OnCollision(ColliderGroup* c1, ColliderGroup* c2);
+	virtual void OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState collisionState);
 
 	// State machine
 	void UnitStateMachine(float dt);
@@ -93,7 +96,7 @@ public:
 	// Animations
 	virtual void LoadAnimationsSpeed();
 	virtual void UpdateAnimationsSpeed(float dt);
-	virtual void ChangeAnimation();
+	virtual bool ChangeAnimation();
 
 	// Direction
 	void SetUnitDirection(UnitDirection unitDirection);
@@ -134,10 +137,15 @@ protected:
 	// Attack
 	bool isSightSatisfied = false;
 	bool isAttackSatisfied = false;
+	bool isAttacking = false;
+	Entity* attackingTarget = nullptr;
 
 	// Collision
 	ColliderGroup* sightRadiusCollider = nullptr;
 	ColliderGroup* attackRadiusCollider = nullptr;
+
+	// Death
+	bool isDead = false;
 
 	// Selection color
 	SDL_Color color = ColorWhite;

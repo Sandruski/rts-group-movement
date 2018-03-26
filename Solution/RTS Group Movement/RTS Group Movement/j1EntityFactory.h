@@ -40,7 +40,7 @@ public:
 	bool Update(float dt);
 	bool PostUpdate();
 	bool CleanUp();
-	void OnCollision(ColliderGroup* c1, ColliderGroup* c2);
+	void OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState collisionState);
 	void Draw();
 
 	// Adds a DynamicEntity

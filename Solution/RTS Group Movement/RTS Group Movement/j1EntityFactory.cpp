@@ -426,16 +426,16 @@ bool j1EntityFactory::CleanUp()
 	return ret;
 }
 
-void j1EntityFactory::OnCollision(ColliderGroup* c1, ColliderGroup* c2)
+void j1EntityFactory::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState collisionState)
 {
 	// Check for collisions
 	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
 
 	while (it != activeDynamicEntities.end()) {
 
-		if ((*it)->GetEntityCollider() == c1 || (*it)->GetSightRadiusCollider() == c1) {
+		if ((*it)->GetEntityCollider() == c1 || (*it)->GetSightRadiusCollider() == c1 || (*it)->GetAttackRadiusCollider() == c1) {
 
-			(*it)->OnCollision(c1, c2);
+			(*it)->OnCollision(c1, c2, collisionState);
 			break;
 		}
 

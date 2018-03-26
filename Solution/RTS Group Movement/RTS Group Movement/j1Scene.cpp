@@ -94,6 +94,7 @@ bool j1Scene::PreUpdate()
 	/// DynamicEntity
 	UnitInfo unitInfo;
 	unitInfo.maxSpeed = 50.0f;
+	unitInfo.damage = 1;
 
 	/// Footman
 	FootmanInfo footmanInfo;
@@ -107,12 +108,14 @@ bool j1Scene::PreUpdate()
 		// 1: spawn a Footman with priority 1
 		unitInfo.sightRadius = 6;
 		unitInfo.attackRadius = 3;
+
 		if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN)
 			App->entities->AddDynamicEntity(DynamicEntityType_Footman, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)footmanInfo);
 
 		// 2: spawn a Grunt with priority 1
 		unitInfo.sightRadius = 3;
 		unitInfo.attackRadius = 2;
+
 		if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
 			App->entities->AddDynamicEntity(DynamicEntityType_Grunt, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)gruntInfo);
 	}

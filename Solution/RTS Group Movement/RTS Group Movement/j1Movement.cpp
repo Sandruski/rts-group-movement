@@ -330,17 +330,94 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 				break;
 
 			// ---------------------------------------------------------------------
-			// SPECIAL CASE
+			// SPECIAL CASES
 			// ---------------------------------------------------------------------
 
-			// The waitUnit is still on its goal
+			// a) The other unit is attacking and won't respond to any movement order
+			if (singleUnit->waitUnit->unit->GetUnitState() == UnitState_Attack) {
+			
+				// Current unit must react to the collision
+				// Current unit moves
+				if (!singleUnit->isSearching) {
+
+					// 1. Check only tiles in front of the unit (3)
+					iPoint newTile = FindNewValidTile(singleUnit, true);
+
+					if (newTile.x != -1 && newTile.y != -1) {
+
+						// Request a new path for the unit
+						singleUnit->unit->GetPathPlanner()->RequestAStar(newTile, singleUnit->goal);
+						singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
+
+						singleUnit->isSearching = true; /// The unit is changing its nextTile
+
+						break;
+					}
+					else {
+
+						// 2. Check all possible tiles (8)
+						newTile = FindNewValidTile(singleUnit);
+
+						if (newTile.x != -1 && newTile.y != -1) {
+
+							// Request a new path for the unit
+							singleUnit->unit->GetPathPlanner()->RequestAStar(newTile, singleUnit->goal);
+							singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
+
+							singleUnit->isSearching = true; /// The unit is changing its nextTile
+
+							break;
+						}
+						break;
+					}
+					break;
+				}
+
+				// IS THE UNIT REALLY CHANGING ITS NEXTTILE?
+				if (singleUnit->isSearching) {
+
+					// ***IS THE PATH READY?***
+					if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
+
+						singleUnit->path = singleUnit->unit->GetPathPlanner()->GetPath();
+
+						singleUnit->isSearching = false;/// The unit has finished changing its nextTile
+
+						// Update the unit's nextTile
+						singleUnit->nextTile = singleUnit->path.front();
+
+						/// COLLISION RESOLVED
+						singleUnit->ResetUnitCollisionParameters();
+
+						if (singleUnit->unit->isSelected)
+							LOG("%s: MOVED AWAY %s", singleUnit->waitUnit->unit->GetColorName().data(), singleUnit->unit->GetColorName().data());
+
+						break;
+					}
+					break;
+				}
+				else {
+
+					// WARNING: THIS IS NOT BEING USED!!!
+					// If the unit cannot change its nextTile, ask the waitUnit to move
+					singleUnit->reversePriority = true;
+
+					if (singleUnit->unit->isSelected)
+						LOG("%s: reversed its priority", singleUnit->waitUnit->unit->GetColorName().data());
+
+					break;
+				}
+				break;
+			}
+
+			// b) The waitUnit is still on its goal
 			if (singleUnit->nextTile == singleUnit->waitUnit->goal && singleUnit->waitUnit->currTile == singleUnit->waitUnit->goal) {
 
 				// Wake up the unit (it may not be in the UnitState_Walk state)
 				singleUnit->waitUnit->WakeUp();
 
 				// The unit with the higher priority politely asks the other unit to move
-				if (singleUnit->unit->GetPriority() >= singleUnit->waitUnit->unit->GetPriority() || singleUnit->reversePriority) {
+				if ((singleUnit->unit->GetPriority() >= singleUnit->waitUnit->unit->GetPriority() || singleUnit->reversePriority)) {
 
 					// 1. waitUnit moves
 					singleUnit->waitUnit->unit->GetPathPlanner()->RequestDijkstra(singleUnit->waitUnit->goal, FindActiveTrigger::ActiveTriggerType_Goal);
@@ -549,6 +626,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 				}
 				else {
 
+					// WARNING: THIS IS NOT BEING USED!!!
 					// If the unit cannot change its nextTile, change the collision with the waitUnit
 					singleUnit->reversePriority = true;
 

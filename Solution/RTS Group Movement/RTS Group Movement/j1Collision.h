@@ -22,6 +22,13 @@ enum ColliderType {
 	ColliderType_MaxColliders
 };
 
+enum CollisionState {
+
+	CollisionState_NoCollision,
+	CollisionState_OnEnter,
+	CollisionState_OnExit
+};
+
 struct Entity;
 struct Collider;
 struct ColliderGroup;
@@ -37,6 +44,8 @@ public:
 	bool Update(float dt);
 	bool CleanUp();
 	void DebugDraw();
+
+	void HandleTriggers();
 
 	// ColliderGroups
 	ColliderGroup* CreateAndAddColliderGroup(vector<Collider*> colliders, ColliderType colliderType, j1Module* callback, Entity* entity = nullptr);
@@ -75,7 +84,10 @@ struct ColliderGroup
 
 	ColliderType colliderType = ColliderType_NoType;
 	bool isRemove = false;
+	bool isTrigger = false;
 	vector<Collider*> colliders;
+	list<ColliderGroup*> collidingGroups;
+	list<ColliderGroup*> lastCollidingGroups;
 
 	j1Module* callback = nullptr;
 	Entity* entity = nullptr;

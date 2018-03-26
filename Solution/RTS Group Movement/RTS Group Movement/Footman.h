@@ -3,7 +3,13 @@
 
 #include "DynamicEntity.h"
 
+#include <list>
+using namespace std;
+
 struct Collider;
+struct ColliderGroup;
+
+enum CollisionState;
 
 struct FootmanInfo
 {
@@ -26,7 +32,7 @@ public:
 	void Move(float dt);
 	void Draw(SDL_Texture* sprites);
 	void DebugDrawSelected();
-	void OnCollision(ColliderGroup* c1, ColliderGroup* c2);
+	void OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState collisionState);
 
 	// State machine
 	void UnitStateMachine(float dt);
@@ -34,7 +40,7 @@ public:
 	// Animations
 	void LoadAnimationsSpeed();
 	void UpdateAnimationsSpeed(float dt);
-	void ChangeAnimation();
+	bool ChangeAnimation();
 
 private:
 
