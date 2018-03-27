@@ -53,6 +53,13 @@ public:
 	uint height = 0;
 	uint scale = 0;
 
+	// Movement
+	bool debugDrawMovement = true;
+	bool debugDrawPath = false;
+	bool debugDrawMap = false;
+
+	bool isFrameByFrame = false;
+
 private:
 
 	// Map
@@ -62,14 +69,6 @@ private:
 
 	// Draw rectangle
 	iPoint startRectangle = { 0,0 };
-
-public:
-
-	bool debugDrawMovement = true;
-	bool debugDrawPath = false;
-	bool debugDrawMap = false;
-
-	bool isFrameByFrame = false;
 };
 
 #endif //__j1SCENE1_H__

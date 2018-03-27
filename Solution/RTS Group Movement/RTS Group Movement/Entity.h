@@ -22,7 +22,7 @@ enum EntityType
 	EntityType_MaxTypes
 };
 
-enum EntitySide 
+enum EntitySide
 {
 	EntitySide_NoSide,
 	EntitySide_Player,
