@@ -8,6 +8,8 @@
 #include "j1Render.h"
 #include "Entity.h"
 
+#include "Brofiler\Brofiler.h"
+
 j1Collision::j1Collision()
 {
 	name.assign("collision");
@@ -97,6 +99,8 @@ bool j1Collision::PreUpdate()
 // Called before render is available
 bool j1Collision::Update(float dt)
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	bool ret = true;
 
 	Collider* c1 = nullptr;
@@ -116,9 +120,15 @@ bool j1Collision::Update(float dt)
 
 			while (J != colliderGroups.end()) {
 
+				if (!matrix[(*I)->colliderType][(*J)->colliderType]
+					&& !matrix[(*J)->colliderType][(*I)->colliderType])
+					break;
+
 				for (uint j = 0; j < (*J)->colliders.size(); ++j) {
 
 					c2 = (*J)->colliders[j];
+
+					bool isCollision = false;
 
 					// Check for the collision
 					if (c1->CheckCollision(c2->colliderRect)) {
@@ -134,10 +144,12 @@ bool j1Collision::Update(float dt)
 
 									// Collision!
 									c1->colliderGroup->callback->OnCollision(c1->colliderGroup, c2->colliderGroup, CollisionState_OnEnter);
-									break;
+									isCollision = true;
 								}
-								else
+								else {
 									c1->colliderGroup->lastCollidingGroups.push_back(c2->colliderGroup);
+									isCollision = true;
+								}
 							}
 							else
 								c1->colliderGroup->callback->OnCollision(c1->colliderGroup, c2->colliderGroup, CollisionState_OnEnter);
@@ -154,14 +166,19 @@ bool j1Collision::Update(float dt)
 
 									// Collision!
 									c2->colliderGroup->callback->OnCollision(c2->colliderGroup, c1->colliderGroup, CollisionState_OnEnter);
-									break;
+									isCollision = true;
 								}
-								else
+								else {
 									c2->colliderGroup->lastCollidingGroups.push_back(c1->colliderGroup);
+									isCollision = true;
+								}
 							}
 							else
 								c2->colliderGroup->callback->OnCollision(c2->colliderGroup, c1->colliderGroup, CollisionState_OnEnter);
 						}
+
+						if (isCollision)
+							break;
 					}
 				}
 				J++;
@@ -172,7 +189,11 @@ bool j1Collision::Update(float dt)
 
 	HandleTriggers();
 
-	DebugDraw();
+	if (App->input->GetKey(SDL_SCANCODE_D) == KEY_DOWN)
+		isDebug = !isDebug;
+
+	if (isDebug)
+		DebugDraw();
 
 	return ret;
 }
@@ -216,8 +237,7 @@ bool j1Collision::CleanUp()
 
 	while (it != colliderGroups.end()) {
 
-		colliderGroups.erase(remove(colliderGroups.begin(), colliderGroups.end(), *it), colliderGroups.end());
-
+		delete *it;
 		it++;
 	}
 	colliderGroups.clear();

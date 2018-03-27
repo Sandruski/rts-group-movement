@@ -1111,6 +1111,28 @@ bool j1Movement::IsOppositeDirection(SingleUnit* singleUnitA, SingleUnit* single
 	}
 }
 
+bool j1Movement::IsNeighborTile(iPoint tile, iPoint neighbor) 
+{
+	iPoint neighbors[8] = { { -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 },{ -1,-1 } };
+
+	neighbors[0].create(tile.x + 1, tile.y + 0); // Right
+	neighbors[1].create(tile.x + 0, tile.y + 1); // Down
+	neighbors[2].create(tile.x - 1, tile.y + 0); // Left
+	neighbors[3].create(tile.x + 0, tile.y - 1); // Up
+	neighbors[4].create(tile.x + 1, tile.y + 1); // DownRight
+	neighbors[5].create(tile.x + 1, tile.y - 1); // UpRight
+	neighbors[6].create(tile.x - 1, tile.y + 1); // DownLeft
+	neighbors[7].create(tile.x - 1, tile.y - 1); // UpLeft
+
+	for (uint i = 0; i < 8; ++i) {
+	
+		if (neighbors[i] == neighbor)
+			return true;
+	}
+
+	return false;
+}
+
 // UnitGroup struct ---------------------------------------------------------------------------------
 
 UnitGroup::UnitGroup(DynamicEntity* unit)
@@ -1230,6 +1252,99 @@ bool UnitGroup::SetGoal(iPoint goal)
 iPoint UnitGroup::GetGoal() const
 {
 	return goal;
+}
+
+bool UnitGroup::DrawShapedGoal(iPoint mouseTile)
+{
+	bool ret = false;
+
+	// There must be as many goals as units in the group
+	if (shapedGoal.size() <= units.size()) {
+
+		if (shapedGoal.size() > 0) {
+
+			// mouseTile must be close to the last tile added
+			if (App->movement->IsNeighborTile(shapedGoal.back(), mouseTile)) {
+
+				// Under the mouseTile there cannot be units nor buildings
+				// mouseTile must be walkable
+				if (!App->entities->IsEntityOnTile(mouseTile) && App->pathfinding->IsWalkable(mouseTile)) {
+
+					vector<iPoint>::iterator it = find(shapedGoal.begin(), shapedGoal.end(), mouseTile);
+
+					if (it != shapedGoal.end())
+
+						// Remove the goal tiles until reaching mouseTile						
+						shapedGoal.erase(it, shapedGoal.end());
+
+					else if (it == shapedGoal.end())
+
+						// Push the mouseTile
+						if (shapedGoal.size() < units.size())
+							shapedGoal.push_back(mouseTile);
+				}
+				else {
+				
+					// Draw the invalid goal
+					SDL_Color col = ColorRed;
+
+					iPoint goalTilePos = App->map->MapToWorld(mouseTile.x, mouseTile.y);
+					const SDL_Rect goalRect = { goalTilePos.x, goalTilePos.y, App->map->data.tile_width, App->map->data.tile_height };
+					App->render->DrawQuad(goalRect, col.r, col.g, col.b, 255, false);			
+				}
+			}
+			else if (find(shapedGoal.begin(), shapedGoal.end(), mouseTile) != shapedGoal.end()
+				&& shapedGoal.back() != mouseTile) {
+			
+				// Remove the goal tiles until reaching mouseTile						
+				shapedGoal.erase(find(shapedGoal.begin(), shapedGoal.end(), mouseTile), shapedGoal.end());			
+			}
+		}
+		else {
+
+			if (!App->entities->IsEntityOnTile(mouseTile) && App->pathfinding->IsWalkable(mouseTile))
+				shapedGoal.push_back(mouseTile);
+		}
+	}
+
+	if (shapedGoal.size() == units.size()) {
+
+		/// The goals are ready!
+		ret = true;
+	}
+
+	// Draw the goals
+	SDL_Color col;
+
+	if (!ret)
+		/// Goals are not ready: ORANGE
+		col = ColorOrange;
+	else
+		/// Goals are ready: GREEN
+		col = ColorGreen;
+
+	for (uint i = 0; i < shapedGoal.size(); ++i) {
+		iPoint goalTilePos = App->map->MapToWorld(shapedGoal[i].x, shapedGoal[i].y);
+		const SDL_Rect goalRect = { goalTilePos.x, goalTilePos.y, App->map->data.tile_width, App->map->data.tile_height };
+		App->render->DrawQuad(goalRect, col.r, col.g, col.b, 255, false);
+	}
+
+	return ret;
+}
+
+bool UnitGroup::SetShapedGoal()
+{
+	bool ret = false;
+
+	if (shapedGoal.size() == units.size()) {
+	
+		// Assign the different goals to the units
+
+		shapedGoal.clear();
+		ret = true;
+	}
+
+	return ret;
 }
 
 // SingleUnit struct ---------------------------------------------------------------------------------

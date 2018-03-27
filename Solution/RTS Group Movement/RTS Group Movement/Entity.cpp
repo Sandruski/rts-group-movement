@@ -12,7 +12,7 @@ Entity::Entity(fPoint pos, iPoint size, int currLife, uint maxLife) : pos(pos), 
 		this->currLife = this->maxLife;
 }
 
-Entity::~Entity() 
+Entity::~Entity()
 {
 	if (entityCollider != nullptr)
 		entityCollider->isRemove = true;

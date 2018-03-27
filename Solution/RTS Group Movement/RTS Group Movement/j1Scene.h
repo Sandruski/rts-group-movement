@@ -7,6 +7,8 @@
 #include <string>
 using namespace std;
 
+class DynamicEntity;
+
 #define RECTANGLE_MIN_AREA 5
 
 struct SDL_Texture;

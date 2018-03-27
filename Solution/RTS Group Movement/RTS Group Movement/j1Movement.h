@@ -93,6 +93,8 @@ public:
 	// Returns true if another unit has any of the booleans passed as arguments to true
 	bool IsAnyUnitDoingSomething(SingleUnit* singleUnit, bool isSearching = false) const;
 
+	bool IsNeighborTile(iPoint tile, iPoint neighbor);
+
 private:
 
 	list<UnitGroup*> unitGroups; // contains all the existing groups
@@ -128,10 +130,15 @@ struct UnitGroup
 	// Returns the destination tile (goal) of the group
 	iPoint GetGoal() const;
 
+	bool DrawShapedGoal(iPoint mouseTile);
+
+	bool SetShapedGoal();
+
 	// -----
 
 	list<SingleUnit*> units; // contains all the units of a given group
 	iPoint goal = { -1,-1 }; // current goal of the group
+	vector<iPoint> shapedGoal;
 };
 
 // ---------------------------------------------------------------------
