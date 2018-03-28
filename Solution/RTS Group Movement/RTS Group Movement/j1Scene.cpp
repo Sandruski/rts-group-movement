@@ -89,7 +89,7 @@ bool j1Scene::PreUpdate()
 	/// Entity
 	fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
 	iPoint size = { App->map->data.tile_width,App->map->data.tile_height };
-	uint maxLife = 10;
+	uint maxLife = 20;
 	int currLife = (int)maxLife;
 
 	/// DynamicEntity
@@ -218,7 +218,7 @@ bool j1Scene::Update(float dt)
 			App->movement->CreateGroupFromUnits(App->entities->GetLastUnitsSelected());
 
 		UnitGroup* group = App->movement->GetGroupByUnits(App->entities->GetLastUnitsSelected());
-		
+	
 		if (!group->SetShapedGoal())
 			group->SetGoal(mouseTile);
 	}

@@ -212,10 +212,7 @@ void Grunt::UnitStateMachine(float dt)
 			LOG("Player killed!");
 
 			// Reset the attack parameters (they will also be reseted later when the attackingTarget is removed)
-			attackingTarget = nullptr;
-			isSightSatisfied = false;
-			isAttackSatisfied = false;
-			isAttacking = false;
+			ResetUnitAttackParameters();
 
 			/// The goal tile of this unit must be their currTile
 			singleUnit->group->SetGoal(singleUnit->currTile);

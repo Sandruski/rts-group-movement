@@ -45,6 +45,7 @@ enum UnitState
 	UnitState_Idle,
 	UnitState_Walk,
 	UnitState_Attack,
+	UnitState_Patrol,
 	UnitState_Die
 };
 
@@ -121,12 +122,16 @@ public:
 	ColliderGroup* CreateRhombusCollider(ColliderType colliderType, uint radius);
 	void UpdateRhombusColliderPos(ColliderGroup* collider, uint radius);
 
+	// Attack
+	void ResetUnitAttackParameters();
+	void IsUnitWantingAttack(bool isWantingAttack);
+
 public:
 
 	DynamicEntityType dynamicEntityType = DynamicEntityType_NoType;
 
 	// Dead
-	bool isDead = false;
+	bool isDead = false; // if true, the unit is performing their dead animation
 
 protected:
 
@@ -142,9 +147,10 @@ protected:
 	Navgraph* navgraph = nullptr;
 
 	// Attack
-	bool isSightSatisfied = false;
-	bool isAttackSatisfied = false;
-	bool isAttacking = false;
+	bool isWantingAttack = true; // if true, the unit wants to attack
+	bool isSightSatisfied = false; // if true, sight distance is satisfied
+	bool isAttackSatisfied = false; // if true, attack distance is satisfied
+	bool isAttacking = false; // if true, the unit is attacking
 	Entity* attackingTarget = nullptr;
 
 	// Collision

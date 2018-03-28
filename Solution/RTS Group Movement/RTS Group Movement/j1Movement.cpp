@@ -243,9 +243,10 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 	iPoint newGoal;
 
 	// HAS THE GOAL BEEN CHANGED?
-	if (singleUnit->isGoalChanged)
+	if (singleUnit->isGoalChanged) {
 
 		singleUnit->GetReadyForNewMove();
+	}
 
 	switch (singleUnit->movementState) {
 
@@ -1519,7 +1520,8 @@ void SingleUnit::WakeUp()
 
 bool SingleUnit::IsUnitGoingSomewhere() const
 {
-	return goal.x != -1 && goal.y != -1 && (movementState == MovementState_WaitForPath || movementState == MovementState_FollowPath || movementState == MovementState_IncreaseWaypoint);
+	return (goal.x != -1 && goal.y != -1 && (movementState == MovementState_WaitForPath || movementState == MovementState_FollowPath))
+		|| isGoalChanged;
 }
 
 bool SingleUnit::IsFittingTile() const 

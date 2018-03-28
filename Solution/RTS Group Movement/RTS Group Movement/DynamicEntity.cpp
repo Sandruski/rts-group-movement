@@ -308,3 +308,18 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 		}
 	}
 }
+
+// Attack
+void DynamicEntity::ResetUnitAttackParameters() 
+{
+	attackingTarget = nullptr;
+
+	isSightSatisfied = false;
+	isAttackSatisfied = false;
+	isAttacking = false;
+}
+
+void DynamicEntity::IsUnitWantingAttack(bool isWantingAttack) 
+{
+	this->isWantingAttack = isWantingAttack;
+}

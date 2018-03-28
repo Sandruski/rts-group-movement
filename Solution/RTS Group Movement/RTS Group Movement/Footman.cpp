@@ -91,11 +91,11 @@ void Footman::Move(float dt)
 				unitState = UnitState_Walk;
 
 		// UnitState_Attack
-		/// The unit only attacks automatically if it isn't going anywhere
-		if (isSightSatisfied && !singleUnit->IsUnitGoingSomewhere())
-			unitState = UnitState_Attack;
-		else
-			unitState = UnitState_Walk;
+		if (isSightSatisfied) {
+		
+			if (isWantingAttack)
+				unitState = UnitState_Attack;
+		}
 	}
 
 	UnitStateMachine(dt);
@@ -151,7 +151,7 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 
 			// Go attack the Horde
 			/// The unit only attacks automatically if it isn't going anywhere
-			if (isSightSatisfied && !singleUnit->IsUnitGoingSomewhere()) {
+			if (isWantingAttack) {
 
 				list<DynamicEntity*> unit;
 				unit.push_back(this);
@@ -198,6 +198,8 @@ void Footman::UnitStateMachine(float dt)
 
 	case UnitState_Walk:
 
+		isWantingAttack = false;
+
 		if (App->scene->isFrameByFrame) { /// debug
 			if (App->input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN)
 				App->movement->MoveUnit(this, dt);
@@ -209,63 +211,63 @@ void Footman::UnitStateMachine(float dt)
 
 	case UnitState_Attack:
 
-	// The unit is ordered to attack (this happens when the sight distance is satisfied)
-	{
-		DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
+		// The unit is ordered to attack (this happens when the sight distance is satisfied)
 
-		if (dynamicEntity->GetUnitState() == UnitState_Die) {
+		// The attackingTarget has died. Stop chasing and/or attacking
+		if (((DynamicEntity*)attackingTarget)->isDead) {
 
-			LOG("Enemy killed!");
-			unitState = UnitState_Walk;
-			SetUnitDirection(UnitDirection_NoDirection);
+			LOG("Player killed!");
 
-			// Reset the attack parameters
-			attackingTarget = nullptr;
-			isSightSatisfied = false;
-			isAttackSatisfied = false;
-			isAttacking = false;
+			// Reset the attack parameters (they will also be reseted later when the attackingTarget is removed)
+			ResetUnitAttackParameters();
+
+			/// The goal tile of this unit must be their currTile
+			singleUnit->group->SetGoal(singleUnit->currTile);
+
 			break;
 		}
-	}
 
-	// 1. The attack distance is satisfied
-	if (isAttackSatisfied
-		&& singleUnit->coll == CollisionType_NoCollision
-		&& singleUnit->movementState != MovementState_FollowPath && singleUnit->movementState != MovementState_NoState) {
+		// 1. The attack distance is satisfied
+		if (isAttackSatisfied
+			&& singleUnit->coll == CollisionType_NoCollision
+			&& singleUnit->movementState != MovementState_FollowPath && singleUnit->movementState != MovementState_NoState) {
 
-		singleUnit->movementState = MovementState_GoalReached;
+			singleUnit->movementState = MovementState_GoalReached;
 
-		// Attack the other unit until killed
-		if (animation->Finished()) {
-			attackingTarget->ApplyDamage(unitInfo.damage);
-			LOG("Enemy: IT HURTS!");
-			animation->Reset();
-		}
-		isAttacking = true;
-	}
-
-	// 2. The attack distance is not satisfied
-	else {
-
-		// The unit has reached the goal but the attack distance is not satisfied. The attacking target may have moved
-		if (singleUnit->movementState == MovementState_GoalReached) {
-
-			/// Keep chasing the attackingTarget
-			DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
-			singleUnit->group->SetGoal(dynamicEntity->GetSingleUnit()->currTile);
+			// Attack the other unit until killed
+			if (animation->Finished()) {
+				attackingTarget->ApplyDamage(unitInfo.damage);
+				LOG("Enemy: IT HURTS!");
+				animation->Reset();
+			}
+			isAttacking = true;
 		}
 
-		App->movement->MoveUnit(this, dt);
-		isAttacking = false;
-	}
+		// 2. The attack distance is not satisfied
+		else {
 
-	// The unit stops attacking this unit if:
-		// a) The sight distance is no longer satisfied
-		// b) The other unit is killed
+			// The unit has reached the goal but the attack distance is not satisfied. The attacking target may have moved
+			if (singleUnit->movementState == MovementState_GoalReached) {
+
+				/// Keep chasing the attackingTarget
+				singleUnit->group->SetGoal(((DynamicEntity*)attackingTarget)->GetSingleUnit()->currTile);
+			}
+
+			App->movement->MoveUnit(this, dt);
+			isAttacking = false;
+		}
 
 	break;
 
+	case UnitState_Patrol:
+
+		isWantingAttack = true;
+
+		break;
+
 	case UnitState_Die:
+
+		isWantingAttack = false;
 
 		// Remove the corpse when a certain time is reached
 		if (deadTimer.ReadSec() >= TIME_REMOVE_CORPSE)
