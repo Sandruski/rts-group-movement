@@ -178,6 +178,10 @@ struct SingleUnit
 	// Sets the state of the unit to UnitState_Walk
 	void WakeUp();
 
+	bool IsUnitGoingSomewhere() const;
+
+	bool IsFittingTile() const;
+
 	// -----
 
 	DynamicEntity* unit = nullptr;

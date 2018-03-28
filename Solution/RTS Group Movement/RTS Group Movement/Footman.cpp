@@ -74,19 +74,25 @@ void Footman::Move(float dt)
 
 	// Is the unit dead?
 	if (currLife <= 0 && unitState != UnitState_Die) {
-		isDead = true;
-		unitState = UnitState_NoState;
+
+		/// The unit must fit the tile (it is more attractive for the player)
+		if (singleUnit->IsFittingTile()) {
+
+			isDead = true;
+			unitState = UnitState_NoState;
+		}
 	}
 
 	if (!isDead) {
 
-		/// UnitState_Walk
+		// UnitState_Walk
 		if (singleUnit != nullptr)
 			if ((isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) || singleUnit->wakeUp)
 				unitState = UnitState_Walk;
 
-		/// UnitState_Attack
-		if (isSightSatisfied)
+		// UnitState_Attack
+		/// The unit only attacks automatically if it isn't going anywhere
+		if (isSightSatisfied && !singleUnit->IsUnitGoingSomewhere())
 			unitState = UnitState_Attack;
 		else
 			unitState = UnitState_Walk;
@@ -144,13 +150,17 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 			attackingTarget = c2->entity;
 
 			// Go attack the Horde
-			list<DynamicEntity*> unit;
-			unit.push_back(this);
-			UnitGroup* group = App->movement->CreateGroupFromUnits(unit);
+			/// The unit only attacks automatically if it isn't going anywhere
+			if (isSightSatisfied && !singleUnit->IsUnitGoingSomewhere()) {
 
-			/// Chase the attackingTarget
-			DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
-			group->SetGoal(dynamicEntity->GetSingleUnit()->currTile);
+				list<DynamicEntity*> unit;
+				unit.push_back(this);
+				UnitGroup* group = App->movement->CreateGroupFromUnits(unit);
+
+				/// Chase the attackingTarget
+				DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
+				group->SetGoal(dynamicEntity->GetSingleUnit()->currTile);
+			}
 		}
 		else if (c1->colliderType == ColliderType_PlayerAttackRadius && c2->colliderType == ColliderType_EnemyUnit) {
 
@@ -206,7 +216,7 @@ void Footman::UnitStateMachine(float dt)
 		if (dynamicEntity->GetUnitState() == UnitState_Die) {
 
 			LOG("Enemy killed!");
-			unitState = UnitState_Idle;
+			unitState = UnitState_Walk;
 			SetUnitDirection(UnitDirection_NoDirection);
 
 			// Reset the attack parameters
@@ -228,6 +238,7 @@ void Footman::UnitStateMachine(float dt)
 		// Attack the other unit until killed
 		if (animation->Finished()) {
 			attackingTarget->ApplyDamage(unitInfo.damage);
+			LOG("Enemy: IT HURTS!");
 			animation->Reset();
 		}
 		isAttacking = true;

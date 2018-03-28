@@ -215,7 +215,6 @@ void j1Collision::HandleTriggers()
 				(*groups)->callback->OnCollision(*groups, *collisions, CollisionState_OnExit);
 
 				(*groups)->collidingGroups.remove(*collisions);
-				(*groups)->lastCollidingGroups.remove(*collisions);
 				collisions = (*groups)->collidingGroups.begin();
 				continue;
 			}

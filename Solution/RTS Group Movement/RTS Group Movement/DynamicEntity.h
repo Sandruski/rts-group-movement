@@ -125,6 +125,9 @@ public:
 
 	DynamicEntityType dynamicEntityType = DynamicEntityType_NoType;
 
+	// Dead
+	bool isDead = false;
+
 protected:
 
 	Animation* animation = nullptr;
@@ -150,7 +153,6 @@ protected:
 	bool isSpawned = false; // the colliders must start working once the unit has been spawned
 
 	// Death
-	bool isDead = false;
 	j1Timer deadTimer;
 
 	// Selection color

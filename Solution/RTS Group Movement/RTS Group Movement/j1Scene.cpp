@@ -89,7 +89,7 @@ bool j1Scene::PreUpdate()
 	/// Entity
 	fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
 	iPoint size = { App->map->data.tile_width,App->map->data.tile_height };
-	uint maxLife = 20;
+	uint maxLife = 10;
 	int currLife = (int)maxLife;
 
 	/// DynamicEntity

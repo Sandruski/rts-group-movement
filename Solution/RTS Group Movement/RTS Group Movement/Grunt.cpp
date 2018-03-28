@@ -74,8 +74,13 @@ void Grunt::Move(float dt)
 
 	// Is the unit dead?
 	if (currLife <= 0 && unitState != UnitState_Die) {
-		isDead = true;
-		unitState = UnitState_NoState;
+
+		/// The unit must fit the tile (it is more attractive for the player)
+		if (singleUnit->IsFittingTile()) {
+
+			isDead = true;
+			unitState = UnitState_NoState;
+		}
 	}
 
 	if (!isDead) {
@@ -229,6 +234,7 @@ void Grunt::UnitStateMachine(float dt)
 		// Attack the other unit until killed
 		if (animation->Finished()) {
 			attackingTarget->ApplyDamage(unitInfo.damage);
+			LOG("Player: IT HURTS!");
 			animation->Reset();
 		}
 		isAttacking = true;

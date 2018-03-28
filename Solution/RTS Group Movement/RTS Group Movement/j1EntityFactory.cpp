@@ -379,25 +379,41 @@ bool j1EntityFactory::PostUpdate()
 {
 	bool ret = true;
 
+	// Dead entities cannot be selected. Remove them from the unitsSelected list
+	list<DynamicEntity*>::iterator unit = unitsSelected.begin();
+
+	while (unit != unitsSelected.end()) {
+
+		if ((*unit)->isDead) {
+
+			if (find(unitsSelected.begin(), unitsSelected.end(), *unit) != unitsSelected.end()) {
+
+				(*unit)->isSelected = false;
+				unitsSelected.remove(*unit);
+
+				unit = unitsSelected.begin();
+				continue;
+			}
+		}
+
+		unit++;
+	}
+
 	// Remove entities
-	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
+	list<DynamicEntity*>::iterator dynEnt = activeDynamicEntities.begin();
 
-	while (it != activeDynamicEntities.end()) {
+	while (dynEnt != activeDynamicEntities.end()) {
 
-		if ((*it)->isRemove) {
+		if ((*dynEnt)->isRemove) {
 
-			// The entity may be in the unitsSelected list
-			if (find(unitsSelected.begin(), unitsSelected.end(), *it) != unitsSelected.end())
-				unitsSelected.remove(*it);
+			delete *dynEnt;
+			activeDynamicEntities.erase(dynEnt);
 
-			delete *it;
-			activeDynamicEntities.erase(it);
-
-			it = activeDynamicEntities.begin();
+			dynEnt = activeDynamicEntities.begin();
 			continue;
 		}
 
-		it++;
+		dynEnt++;
 	}
 
 	return ret;
@@ -518,7 +534,7 @@ Entity* j1EntityFactory::IsEntityOnTile(iPoint tile, EntityType entityType, Enti
 	while (activeDyn != activeDynamicEntities.end()) {
 		
 		// The unit cannot be dead
-		if ((*activeDyn)->GetUnitState() != UnitState_Die) {
+		if (!(*activeDyn)->isDead) {
 
 			iPoint entityTile = App->map->WorldToMap((*activeDyn)->GetPos().x, (*activeDyn)->GetPos().y);
 

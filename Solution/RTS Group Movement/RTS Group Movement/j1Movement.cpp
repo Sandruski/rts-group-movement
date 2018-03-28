@@ -344,8 +344,20 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 
 			singleUnit->StopUnit();
 
-			if (singleUnit->waitUnit == nullptr)
+			// waitUnit doesn't exist
+			if (singleUnit->waitUnit == nullptr) {
+			
+				// If waitUnit doesn't exist, there cannot be a collision...
+				singleUnit->ResetUnitCollisionParameters();
 				break;
+			}
+
+			// waitUnit is dead
+			if (singleUnit->waitUnit->unit->isRemove) {
+
+				singleUnit->waitUnit = nullptr;
+				break;
+			}
 
 			// ---------------------------------------------------------------------
 			// SPECIAL CASES
@@ -1402,9 +1414,9 @@ SingleUnit::SingleUnit(DynamicEntity* unit, UnitGroup* group) :unit(unit), group
 
 SingleUnit::~SingleUnit() 
 {
-	//unit = nullptr;
 	group->RemoveUnit(this);
 	group = nullptr;
+	unit = nullptr;
 	waitUnit = nullptr;
 }
 
@@ -1487,9 +1499,7 @@ void SingleUnit::SetCollisionParameters(CollisionType collisionType, SingleUnit*
 // Prepares the unit for its next movement cycle
 void SingleUnit::GetReadyForNewMove()
 {
-	iPoint currTilePos = App->map->MapToWorld(currTile.x, currTile.y);
-
-	if ((int)unit->GetPos().x == currTilePos.x && (int)unit->GetPos().y == currTilePos.y) {
+	if (IsFittingTile()) {
 
 		ResetUnitParameters();
 		unit->GetPathPlanner()->SetSearchRequested(false);
@@ -1505,4 +1515,16 @@ void SingleUnit::WakeUp()
 {
 	if (!wakeUp)
 		wakeUp = true;
+}
+
+bool SingleUnit::IsUnitGoingSomewhere() const
+{
+	return goal.x != -1 && goal.y != -1 && (movementState == MovementState_WaitForPath || movementState == MovementState_FollowPath || movementState == MovementState_IncreaseWaypoint);
+}
+
+bool SingleUnit::IsFittingTile() const 
+{
+	iPoint currTilePos = App->map->MapToWorld(currTile.x, currTile.y);
+
+	return (int)unit->GetPos().x == currTilePos.x && (int)unit->GetPos().y == currTilePos.y;
 }
