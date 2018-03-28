@@ -113,7 +113,7 @@ private:
 	j1PerfTimer timer; // timer to keep track of the ms spent on each update
 };
 
-class PathPlanner 
+class PathPlanner
 {
 public:
 
@@ -157,6 +157,7 @@ private:
 	Entity* entity = nullptr; // a pointer to the owner of this class
 	bool isSearchRequested = false;
 	bool isSearchCompleted = false;
+	bool isPathRequested = false;
 
 	PathfindingAlgorithmType pathfindingAlgorithmType = PathfindingAlgorithmType_NoType;
 	j1PathFinding* currentSearch = nullptr; // a pointer to the current search
@@ -164,7 +165,6 @@ private:
 
 	// Dijkstra
 	FindActiveTrigger* trigger = nullptr; // a pointer to the FindActiveTrigger class
-	bool isPathRequested = false;
 };
 
 #endif //__j1PATH_MANAGER_H__

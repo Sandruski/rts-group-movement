@@ -89,7 +89,7 @@ bool j1Scene::PreUpdate()
 	/// Entity
 	fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
 	iPoint size = { App->map->data.tile_width,App->map->data.tile_height };
-	uint maxLife = 10;
+	uint maxLife = 20;
 	int currLife = (int)maxLife;
 
 	/// DynamicEntity
@@ -114,8 +114,8 @@ bool j1Scene::PreUpdate()
 			App->entities->AddDynamicEntity(DynamicEntityType_Footman, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)footmanInfo);
 
 		// 2: spawn a Grunt with priority 1
-		unitInfo.sightRadius = 3;
-		unitInfo.attackRadius = 2;
+		unitInfo.sightRadius = 4;
+		unitInfo.attackRadius = 3;
 
 		if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
 			App->entities->AddDynamicEntity(DynamicEntityType_Grunt, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)gruntInfo);
@@ -151,7 +151,7 @@ bool j1Scene::Update(float dt)
 		debugDrawMap = !debugDrawMap;
 
 	if (App->input->GetKey(SDL_SCANCODE_F4) == KEY_DOWN)
-		debugDrawMap = !debugDrawAttack;
+		debugDrawAttack = !debugDrawAttack;
 
 	// Draw
 	App->map->Draw(); // map
@@ -159,6 +159,9 @@ bool j1Scene::Update(float dt)
 
 	if (debugDrawAttack)
 		App->collision->DebugDraw(); // debug draw collisions
+
+	if (debugDrawMovement)
+		App->movement->DebugDraw(); // debug draw movement
 
 	App->render->Blit(debugTex, mouseTilePos.x, mouseTilePos.y); // tile under the mouse pointer
 

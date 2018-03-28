@@ -45,14 +45,6 @@ Footman::Footman(fPoint pos, iPoint size, int currLife, uint maxLife, const Unit
 	this->footmanInfo.deathDown = info.deathDown;
 
 	LoadAnimationsSpeed();
-
-	// Collisions
-	CreateEntityCollider(EntitySide_Player);
-	sightRadiusCollider = CreateRhombusCollider(ColliderType_PlayerSightRadius, unitInfo.sightRadius);
-	attackRadiusCollider = CreateRhombusCollider(ColliderType_PlayerAttackRadius, unitInfo.attackRadius);
-	entityCollider->isTrigger = true;
-	sightRadiusCollider->isTrigger = true;
-	attackRadiusCollider->isTrigger = true;
 }
 
 void Footman::Move(float dt)
@@ -63,6 +55,20 @@ void Footman::Move(float dt)
 	iPoint mousePos = App->render->ScreenToWorld(x, y);
 	iPoint mouseTile = App->map->WorldToMap(mousePos.x, mousePos.y);
 	iPoint mouseTilePos = App->map->MapToWorld(mouseTile.x, mouseTile.y);
+
+	// Create colliders
+	if (!isSpawned) {
+
+		// Collisions
+		CreateEntityCollider(EntitySide_Player);
+		sightRadiusCollider = CreateRhombusCollider(ColliderType_PlayerSightRadius, unitInfo.sightRadius);
+		attackRadiusCollider = CreateRhombusCollider(ColliderType_PlayerAttackRadius, unitInfo.attackRadius);
+		entityCollider->isTrigger = true;
+		sightRadiusCollider->isTrigger = true;
+		attackRadiusCollider->isTrigger = true;
+
+		isSpawned = true;
+	}
 
 	// ---------------------------------------------------------------------
 
@@ -132,6 +138,7 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 		// An enemy is within the sight of this player unit
 		if (c1->colliderType == ColliderType_PlayerSightRadius && c2->colliderType == ColliderType_EnemyUnit) {
 
+			LOG("Player Sight Radius");
 			// The Horde is within the SIGHT radius
 			isSightSatisfied = true;
 			attackingTarget = c2->entity;
@@ -147,6 +154,7 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 		}
 		else if (c1->colliderType == ColliderType_PlayerAttackRadius && c2->colliderType == ColliderType_EnemyUnit) {
 
+			LOG("Player Attack Radius");
 			// The Horde is within the ATTACK radius
 			isAttackSatisfied = true;
 		}
@@ -197,6 +205,7 @@ void Footman::UnitStateMachine(float dt)
 
 		if (dynamicEntity->GetUnitState() == UnitState_Die) {
 
+			LOG("Enemy killed!");
 			unitState = UnitState_Idle;
 			SetUnitDirection(UnitDirection_NoDirection);
 

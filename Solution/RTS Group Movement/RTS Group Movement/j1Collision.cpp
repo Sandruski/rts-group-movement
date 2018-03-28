@@ -128,11 +128,11 @@ bool j1Collision::Update(float dt)
 
 				c1 = (*I)->colliders[i];
 
+				bool isCollision = false;
+
 				for (uint j = 0; j < (*J)->colliders.size(); ++j) {
 
 					c2 = (*J)->colliders[j];
-
-					bool isCollision = false;
 
 					// Check for the collision
 					if (c1->CheckCollision(c2->colliderRect)) {
@@ -180,11 +180,14 @@ bool j1Collision::Update(float dt)
 							else
 								c2->colliderGroup->callback->OnCollision(c2->colliderGroup, c1->colliderGroup, CollisionState_OnEnter);
 						}
-
-						if (isCollision)
-							break;
 					}
+
+					if (isCollision)
+						break;
 				}
+
+				if (isCollision)
+					break;
 			}
 			J++;
 		}
@@ -212,6 +215,7 @@ void j1Collision::HandleTriggers()
 				(*groups)->callback->OnCollision(*groups, *collisions, CollisionState_OnExit);
 
 				(*groups)->collidingGroups.remove(*collisions);
+				(*groups)->lastCollidingGroups.remove(*collisions);
 				collisions = (*groups)->collidingGroups.begin();
 				continue;
 			}

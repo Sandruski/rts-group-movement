@@ -147,6 +147,7 @@ protected:
 	// Collision
 	ColliderGroup* sightRadiusCollider = nullptr;
 	ColliderGroup* attackRadiusCollider = nullptr;
+	bool isSpawned = false; // the colliders must start working once the unit has been spawned
 
 	// Death
 	bool isDead = false;

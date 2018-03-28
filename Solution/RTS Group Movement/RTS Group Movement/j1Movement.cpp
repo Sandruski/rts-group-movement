@@ -21,9 +21,6 @@ bool j1Movement::Update(float dt)
 {
 	bool ret = true;
 
-	if (App->scene->debugDrawMovement)
-		DebugDraw();
-
 	return ret;
 }
 
@@ -1181,7 +1178,6 @@ UnitGroup::UnitGroup(list<DynamicEntity*> units)
 		it++;
 	}
 }
-
 
 UnitGroup::~UnitGroup() 
 {

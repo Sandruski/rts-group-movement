@@ -386,6 +386,10 @@ bool j1EntityFactory::PostUpdate()
 
 		if ((*it)->isRemove) {
 
+			// The entity may be in the unitsSelected list
+			if (find(unitsSelected.begin(), unitsSelected.end(), *it) != unitsSelected.end())
+				unitsSelected.remove(*it);
+
 			delete *it;
 			activeDynamicEntities.erase(it);
 
@@ -438,7 +442,8 @@ void j1EntityFactory::OnCollision(ColliderGroup* c1, ColliderGroup* c2, Collisio
 
 	while (it != activeDynamicEntities.end()) {
 
-		if ((*it)->GetEntityCollider() == c1 || (*it)->GetSightRadiusCollider() == c1 || (*it)->GetAttackRadiusCollider() == c1) {
+		// - SightRadiusCollider and AttackRadiusCollider call their owner as the c1 Collider
+		if ((*it)->GetSightRadiusCollider() == c1 || (*it)->GetAttackRadiusCollider() == c1) {
 
 			(*it)->OnCollision(c1, c2, collisionState);
 			break;
@@ -511,27 +516,31 @@ Entity* j1EntityFactory::IsEntityOnTile(iPoint tile, EntityType entityType, Enti
 	list<DynamicEntity*>::const_iterator activeDyn = activeDynamicEntities.begin();
 
 	while (activeDyn != activeDynamicEntities.end()) {
-
-		iPoint entityTile = App->map->WorldToMap((*activeDyn)->GetPos().x, (*activeDyn)->GetPos().y);
-
-		switch (entitySide) {
 		
-		case EntitySide_Player:
+		// The unit cannot be dead
+		if ((*activeDyn)->GetUnitState() != UnitState_Die) {
 
-			if ((*activeDyn)->entitySide == EntitySide_Player)
+			iPoint entityTile = App->map->WorldToMap((*activeDyn)->GetPos().x, (*activeDyn)->GetPos().y);
+
+			switch (entitySide) {
+
+			case EntitySide_Player:
+
+				if ((*activeDyn)->entitySide == EntitySide_Player)
+					if (tile.x == entityTile.x && tile.y == entityTile.y)
+						return (Entity*)(*activeDyn);
+
+			case EntitySide_Enemy:
+
+				if ((*activeDyn)->entitySide == EntitySide_Enemy)
+					if (tile.x == entityTile.x && tile.y == entityTile.y)
+						return (Entity*)(*activeDyn);
+
+			case EntitySide_NoSide:
+
 				if (tile.x == entityTile.x && tile.y == entityTile.y)
 					return (Entity*)(*activeDyn);
-
-		case EntitySide_Enemy:
-
-			if ((*activeDyn)->entitySide == EntitySide_Enemy)
-				if (tile.x == entityTile.x && tile.y == entityTile.y)
-					return (Entity*)(*activeDyn);
-
-		case EntitySide_NoSide:
-		
-			if (tile.x == entityTile.x && tile.y == entityTile.y)
-				return (Entity*)(*activeDyn);
+			}
 		}
 
 		activeDyn++;
