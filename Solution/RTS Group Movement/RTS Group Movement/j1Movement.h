@@ -138,7 +138,9 @@ struct UnitGroup
 
 	list<SingleUnit*> units; // contains all the units of a given group
 	iPoint goal = { -1,-1 }; // current goal of the group
+
 	vector<iPoint> shapedGoal;
+	bool isShapedGoal = false;
 };
 
 // ---------------------------------------------------------------------
@@ -184,6 +186,7 @@ struct SingleUnit
 	iPoint nextTile = { -1,-1 }; // next waypoint of the path (next tile the unit is heading to in map coords)
 
 	iPoint goal = { -1,-1 }; // goal of the unit
+	iPoint shapedGoal = { -1,-1 };
 	bool isGoalChanged = false; // if true, it means that the goal has been changed
 	bool isSearching = false; // if true, it means that the unit is searching a tile using Dijkstra
 	bool isGoalNeeded = false;
