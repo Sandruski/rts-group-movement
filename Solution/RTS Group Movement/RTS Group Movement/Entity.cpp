@@ -14,6 +14,7 @@ Entity::Entity(fPoint pos, iPoint size, int currLife, uint maxLife) : pos(pos), 
 
 Entity::~Entity()
 {
+	// Remove Colliders
 	if (entityCollider != nullptr)
 		entityCollider->isRemove = true;
 	entityCollider = nullptr;

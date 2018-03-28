@@ -19,14 +19,23 @@ j1PathManager::j1PathManager(double msSearchPerUpdate) : j1Module(), msSearchPer
 // Destructor
 j1PathManager::~j1PathManager()
 {
-
 }
 
 // Called before quitting
 bool j1PathManager::CleanUp()
 {
+	bool ret = true;
 
-	return true;
+	list<PathPlanner*>::const_iterator it = searchRequests.begin();
+
+	while (it != searchRequests.end()) {
+	
+		delete *it;
+		it++;
+	}
+	searchRequests.clear();
+
+	return ret;
 }
 
 bool j1PathManager::Update(float dt) 
@@ -91,15 +100,19 @@ PathPlanner::PathPlanner(Entity* owner, Navgraph& navgraph) :entity(owner), navg
 
 PathPlanner::~PathPlanner()
 {
+	entity = nullptr;
+
+	// Remove Current Search
+	App->pathmanager->UnRegister(this);
+
 	if (currentSearch != nullptr)
 		delete currentSearch;
 	currentSearch = nullptr;
 
+	// Remove Trigger
 	if (trigger != nullptr)
 		delete trigger;
 	trigger = nullptr;
-
-	entity = nullptr;
 }
 
 bool PathPlanner::RequestAStar(iPoint origin, iPoint destination)

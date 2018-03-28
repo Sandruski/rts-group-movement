@@ -84,7 +84,8 @@ bool j1Collision::PreUpdate()
 	while (it != colliderGroups.end()) {
 
 		if ((*it)->isRemove) {
-			colliderGroups.erase(remove(colliderGroups.begin(), colliderGroups.end(), *it), colliderGroups.end());
+
+			EraseColliderGroup(*it);
 
 			it = colliderGroups.begin();
 			continue;
@@ -110,19 +111,22 @@ bool j1Collision::Update(float dt)
 
 	while (I != colliderGroups.end()) {
 
-		for (uint i = 0; i < (*I)->colliders.size(); ++i) {
+		list<ColliderGroup*>::const_iterator J = I;
+		J++;
 
-			c1 = (*I)->colliders[i];
+		// Avoid checking collisions already checked
+		while (J != colliderGroups.end()) {
 
-			// Avoid checking collisions already checked
-			list<ColliderGroup*>::const_iterator J = I;
-			J++;
+			if (!matrix[(*I)->colliderType][(*J)->colliderType]
+				&& !matrix[(*J)->colliderType][(*I)->colliderType]) {
 
-			while (J != colliderGroups.end()) {
+				J++;
+				continue;
+			}
 
-				if (!matrix[(*I)->colliderType][(*J)->colliderType]
-					&& !matrix[(*J)->colliderType][(*I)->colliderType])
-					break;
+			for (uint i = 0; i < (*I)->colliders.size(); ++i) {
+
+				c1 = (*I)->colliders[i];
 
 				for (uint j = 0; j < (*J)->colliders.size(); ++j) {
 
@@ -181,19 +185,13 @@ bool j1Collision::Update(float dt)
 							break;
 					}
 				}
-				J++;
 			}
+			J++;
 		}
 		I++;
 	}
 
 	HandleTriggers();
-
-	if (App->input->GetKey(SDL_SCANCODE_D) == KEY_DOWN)
-		isDebug = !isDebug;
-
-	if (isDebug)
-		DebugDraw();
 
 	return ret;
 }
@@ -282,10 +280,19 @@ ColliderGroup* j1Collision::CreateAndAddColliderGroup(vector<Collider*> collider
 
 bool j1Collision::EraseColliderGroup(ColliderGroup* colliderGroup) 
 {
-	if (colliderGroups.erase(remove(colliderGroups.begin(), colliderGroups.end(), colliderGroup), colliderGroups.end()) != colliderGroups.end())
-		return true;
+	bool ret = false;
 
-	return false;
+	if (colliderGroup != nullptr) {
+
+		delete colliderGroup;
+
+		if (colliderGroups.erase(remove(colliderGroups.begin(), colliderGroups.end(), colliderGroup), colliderGroups.end()) != colliderGroups.end())
+			ret = true;
+
+		colliderGroup = nullptr;
+	}
+
+	return ret;
 }
 
 // Colliders
@@ -311,10 +318,18 @@ bool j1Collision::AddColliderToAColliderGroup(ColliderGroup* colliderGroup, Coll
 
 bool j1Collision::EraseColliderFromAColliderGroup(ColliderGroup* colliderGroup, Collider* collider) 
 {
-	if (colliderGroup->colliders.erase(remove(colliderGroup->colliders.begin(), colliderGroup->colliders.end(), collider), colliderGroup->colliders.end()) != colliderGroup->colliders.end())
-		return true;
+	bool ret = false;
 
-	return false;
+	if (collider != nullptr) {
+
+		delete collider;
+
+		if (colliderGroup->colliders.erase(remove(colliderGroup->colliders.begin(), colliderGroup->colliders.end(), collider), colliderGroup->colliders.end()) != colliderGroup->colliders.end())
+			ret = true;
+
+		collider = nullptr;
+	}
+	return ret;
 }
 
 // Collider struct ---------------------------------------------------------------------------------
@@ -349,11 +364,15 @@ ColliderGroup::ColliderGroup(vector<Collider*> colliders, ColliderType colliderT
 ColliderGroup::~ColliderGroup() 
 {
 	callback = nullptr;
+	entity = nullptr;
 
 	// Remove all colliders
 	for (uint i = 0; i < colliders.size(); ++i)
 
 		colliders.erase(remove(colliders.begin(), colliders.end(), colliders[i]), colliders.end());
+
+	collidingGroups.clear();
+	lastCollidingGroups.clear();
 }
 
 bool ColliderGroup::IsColliderInGroup(Collider* collider) 

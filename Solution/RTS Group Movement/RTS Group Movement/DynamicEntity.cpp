@@ -36,7 +36,25 @@ DynamicEntity::DynamicEntity(fPoint pos, iPoint size, int currLife, uint maxLife
 
 DynamicEntity::~DynamicEntity() 
 {
-	// Colliders
+	animation = nullptr;
+
+	// Remove Movement
+	if (pathPlanner != nullptr)
+		delete pathPlanner;
+	pathPlanner = nullptr;
+
+	if (navgraph != nullptr)
+		delete navgraph;
+	navgraph = nullptr;
+
+	if (singleUnit != nullptr)
+		delete singleUnit;
+	singleUnit = nullptr;
+
+	// Remove Attack
+	attackingTarget = nullptr;
+
+	// Remove Colliders
 	if (sightRadiusCollider != nullptr)
 		sightRadiusCollider->isRemove = true;
 	sightRadiusCollider = nullptr;

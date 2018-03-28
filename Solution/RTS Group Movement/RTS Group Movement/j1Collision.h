@@ -65,7 +65,6 @@ public:
 private:
 
 	list<ColliderGroup*> colliderGroups;
-	bool isDebug = false;
 };
 
 // ---------------------------------------------------------------------
@@ -115,5 +114,3 @@ struct Collider
 };
 
 #endif //__j1COLLISION_H__
-
-

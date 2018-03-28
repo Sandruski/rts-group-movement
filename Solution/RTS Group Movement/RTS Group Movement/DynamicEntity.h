@@ -24,6 +24,8 @@ class Navgraph;
 enum ColliderType;
 enum CollisionState;
 
+#define TIME_REMOVE_CORPSE 3.0
+
 enum DynamicEntityType
 {
 	DynamicEntityType_NoType,
@@ -39,6 +41,7 @@ enum DynamicEntityType
 
 enum UnitState 
 {
+	UnitState_NoState,
 	UnitState_Idle,
 	UnitState_Walk,
 	UnitState_Attack,

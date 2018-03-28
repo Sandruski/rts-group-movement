@@ -67,6 +67,8 @@ public:
 	// Returns an existing group by a list to all of its units or nullptr
 	UnitGroup* GetGroupByUnits(list<DynamicEntity*> units) const;
 
+	bool RemoveGroup(UnitGroup* unitGroup);
+
 	// Moves a unit applying the principles of group movement. Returns the state of the unit's movement
 	/// Call this method from a unit's update
 	MovementState MoveUnit(DynamicEntity* unit, float dt); /// Not const because it needs to keep track of the number of paths created at the current update
@@ -150,6 +152,8 @@ struct UnitGroup
 struct SingleUnit
 {
 	SingleUnit(DynamicEntity* entity, UnitGroup* group);
+
+	~SingleUnit();
 
 	// Returns true if the unit would reach its next tile during this move
 	/// nextPos is the next tile that the unit is heading to

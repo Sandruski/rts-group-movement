@@ -12,6 +12,7 @@
 #include "j1Pathfinding.h"
 #include "j1Movement.h"
 #include "j1EntityFactory.h"
+#include "j1Collision.h"
 
 #include"Brofiler\Brofiler.h"
 
@@ -149,9 +150,16 @@ bool j1Scene::Update(float dt)
 	if (App->input->GetKey(SDL_SCANCODE_F3) == KEY_DOWN)
 		debugDrawMap = !debugDrawMap;
 
+	if (App->input->GetKey(SDL_SCANCODE_F4) == KEY_DOWN)
+		debugDrawMap = !debugDrawAttack;
+
 	// Draw
 	App->map->Draw(); // map
 	App->entities->Draw(); // entities
+
+	if (debugDrawAttack)
+		App->collision->DebugDraw(); // debug draw collisions
+
 	App->render->Blit(debugTex, mouseTilePos.x, mouseTilePos.y); // tile under the mouse pointer
 
 	// Select units by mouse click

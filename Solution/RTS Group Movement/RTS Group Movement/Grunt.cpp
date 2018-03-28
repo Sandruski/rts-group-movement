@@ -50,6 +50,7 @@ Grunt::Grunt(fPoint pos, iPoint size, int currLife, uint maxLife, const UnitInfo
 	CreateEntityCollider(EntitySide_Enemy);
 	sightRadiusCollider = CreateRhombusCollider(ColliderType_EnemySightRadius, unitInfo.sightRadius);
 	attackRadiusCollider = CreateRhombusCollider(ColliderType_EnemyAttackRadius, unitInfo.attackRadius);
+	entityCollider->isTrigger = true;
 	sightRadiusCollider->isTrigger = true;
 	attackRadiusCollider->isTrigger = true;
 }
@@ -66,12 +67,24 @@ void Grunt::Move(float dt)
 	// ---------------------------------------------------------------------
 
 	// Is the unit dead?
-	if (currLife <= 0)
+	if (currLife <= 0 && unitState != UnitState_Die) {
 		isDead = true;
+		unitState = UnitState_NoState;
+	}
 
-	if (singleUnit != nullptr)
-		if ((isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) || singleUnit->wakeUp)
+	if (!isDead) {
+
+		/// UnitState_Walk
+		if (singleUnit != nullptr)
+			if ((isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) || singleUnit->wakeUp)
+				unitState = UnitState_Walk;
+
+		/// UnitState_Attack
+		if (isSightSatisfied)
+			unitState = UnitState_Attack;
+		else
 			unitState = UnitState_Walk;
+	}
 
 	UnitStateMachine(dt);
 
@@ -79,10 +92,13 @@ void Grunt::Move(float dt)
 	UpdateAnimationsSpeed(dt);
 	ChangeAnimation();
 
-	// Update colliders
-	UpdateEntityColliderPos();
-	UpdateRhombusColliderPos(sightRadiusCollider, unitInfo.sightRadius);
-	UpdateRhombusColliderPos(attackRadiusCollider, unitInfo.attackRadius);
+	if (!isDead) {
+
+		// Update colliders
+		UpdateEntityColliderPos();
+		UpdateRhombusColliderPos(sightRadiusCollider, unitInfo.sightRadius);
+		UpdateRhombusColliderPos(attackRadiusCollider, unitInfo.attackRadius);
+	}
 }
 
 void Grunt::Draw(SDL_Texture* sprites) 
@@ -109,9 +125,51 @@ void Grunt::DebugDrawSelected()
 
 void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState collisionState)
 {
-	// An player is within the sight of this enemy unit
-	if (c1->colliderType == ColliderType_EnemySightRadius && c2->colliderType == ColliderType_PlayerUnit) {
-		//LOG("ATTACK THE ALLIANCE!");
+	switch (collisionState) {
+
+	case CollisionState_OnEnter:
+
+		// An player is within the sight of this enemy unit
+		if (c1->colliderType == ColliderType_EnemySightRadius && c2->colliderType == ColliderType_PlayerUnit) {
+
+			// The Alliance is within the SIGHT radius
+			isSightSatisfied = true;
+			attackingTarget = c2->entity;
+
+			// Go attack the Alliance
+			list<DynamicEntity*> unit;
+			unit.push_back(this);
+			UnitGroup* group = App->movement->CreateGroupFromUnits(unit);
+
+			/// Chase the attackingTarget
+			DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
+			group->SetGoal(dynamicEntity->GetSingleUnit()->currTile);
+		}
+		else if (c1->colliderType == ColliderType_EnemyAttackRadius && c2->colliderType == ColliderType_PlayerUnit) {
+
+			// The Alliance is within the ATTACK radius
+			isAttackSatisfied = true;
+		}
+
+		break;
+
+	case CollisionState_OnExit:
+
+		// Reset attack parameters
+		if (c1->colliderType == ColliderType_EnemySightRadius && c2->colliderType == ColliderType_PlayerUnit) {
+
+			// The Alliance is NO longer within the SIGHT radius
+			isSightSatisfied = false;
+			attackingTarget = nullptr;
+		}
+		else if (c1->colliderType == ColliderType_EnemyAttackRadius && c2->colliderType == ColliderType_PlayerUnit) {
+
+			// The Alliance is NO longer within the ATTACK radius
+			isAttackSatisfied = false;
+			isAttacking = false;
+		}
+
+		break;
 	}
 }
 
@@ -120,13 +178,9 @@ void Grunt::UnitStateMachine(float dt)
 {
 	switch (unitState) {
 
-	case UnitState_Idle:
-
-		break;
-
 	case UnitState_Walk:
 
-		if (App->scene->isFrameByFrame) {
+		if (App->scene->isFrameByFrame) { /// debug
 			if (App->input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN)
 				App->movement->MoveUnit(this, dt);
 		}
@@ -135,11 +189,73 @@ void Grunt::UnitStateMachine(float dt)
 
 		break;
 
+	case UnitState_Attack:
+
+	// The unit is ordered to attack (this happens when the sight distance is satisfied)
+	{
+		DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
+
+		if (dynamicEntity->GetUnitState() == UnitState_Die) {
+
+			unitState = UnitState_Idle;
+			SetUnitDirection(UnitDirection_NoDirection);
+
+			// Reset the attack parameters
+			attackingTarget = nullptr;
+			isSightSatisfied = false;
+			isAttackSatisfied = false;
+			isAttacking = false;
+			break;
+		}
+	}
+
+	// 1. The attack distance is satisfied
+	if (isAttackSatisfied
+		&& singleUnit->coll == CollisionType_NoCollision
+		&& singleUnit->movementState != MovementState_FollowPath && singleUnit->movementState != MovementState_NoState) {
+
+		singleUnit->movementState = MovementState_GoalReached;
+
+		// Attack the other unit until killed
+		if (animation->Finished()) {
+			attackingTarget->ApplyDamage(unitInfo.damage);
+			animation->Reset();
+		}
+		isAttacking = true;
+	}
+
+	// 2. The attack distance is not satisfied
+	else {
+
+		// The unit has reached the goal but the attack distance is not satisfied. The attacking target may have moved
+		if (singleUnit->movementState == MovementState_GoalReached) {
+
+			/// Keep chasing the attackingTarget
+			DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
+			singleUnit->group->SetGoal(dynamicEntity->GetSingleUnit()->currTile);
+		}
+
+		App->movement->MoveUnit(this, dt);
+		isAttacking = false;
+	}
+
+	// The unit stops attacking this unit if:
+	// a) The sight distance is no longer satisfied
+	// b) The other unit is killed
+
+	break;
+
 	case UnitState_Die:
 
 		// Remove the corpse when a certain time is reached
-		if (deadTimer.ReadSec() >= 5.0f)
+		if (deadTimer.ReadSec() >= TIME_REMOVE_CORPSE)
 			isRemove = true;
+
+		break;
+
+	case UnitState_Idle:
+	case UnitState_NoState:
+	default:
 
 		break;
 	}

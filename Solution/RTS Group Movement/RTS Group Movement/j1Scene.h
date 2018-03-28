@@ -57,6 +57,7 @@ public:
 	bool debugDrawMovement = true;
 	bool debugDrawPath = false;
 	bool debugDrawMap = false;
+	bool debugDrawAttack = true;
 
 	bool isFrameByFrame = false;
 

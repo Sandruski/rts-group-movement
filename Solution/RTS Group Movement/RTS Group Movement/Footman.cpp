@@ -50,6 +50,7 @@ Footman::Footman(fPoint pos, iPoint size, int currLife, uint maxLife, const Unit
 	CreateEntityCollider(EntitySide_Player);
 	sightRadiusCollider = CreateRhombusCollider(ColliderType_PlayerSightRadius, unitInfo.sightRadius);
 	attackRadiusCollider = CreateRhombusCollider(ColliderType_PlayerAttackRadius, unitInfo.attackRadius);
+	entityCollider->isTrigger = true;
 	sightRadiusCollider->isTrigger = true;
 	attackRadiusCollider->isTrigger = true;
 }
@@ -66,9 +67,9 @@ void Footman::Move(float dt)
 	// ---------------------------------------------------------------------
 
 	// Is the unit dead?
-	if (currLife <= 0) {
+	if (currLife <= 0 && unitState != UnitState_Die) {
 		isDead = true;
-		unitState = UnitState_Die;
+		unitState = UnitState_NoState;
 	}
 
 	if (!isDead) {
@@ -177,10 +178,6 @@ void Footman::UnitStateMachine(float dt)
 {
 	switch (unitState) {
 
-	case UnitState_Idle:
-
-		break;
-
 	case UnitState_Walk:
 
 		if (App->scene->isFrameByFrame) { /// debug
@@ -194,58 +191,71 @@ void Footman::UnitStateMachine(float dt)
 
 	case UnitState_Attack:
 
-		// The unit is ordered to attack (this happens when the sight distance is satisfied)
-		{
-			DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
+	// The unit is ordered to attack (this happens when the sight distance is satisfied)
+	{
+		DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
 
-			if (dynamicEntity->GetUnitState() == UnitState_Die) {
-				SetUnitDirection(UnitDirection_NoDirection);
-				isAttacking = false;
-				break;
-			}
-		}
+		if (dynamicEntity->GetUnitState() == UnitState_Die) {
 
-		// 1. The attack distance is satisfied
-		if (isAttackSatisfied 
-			&& singleUnit->coll == CollisionType_NoCollision 
-			&& singleUnit->movementState != MovementState_FollowPath && singleUnit->movementState != MovementState_NoState) {
+			unitState = UnitState_Idle;
+			SetUnitDirection(UnitDirection_NoDirection);
 
-			singleUnit->movementState = MovementState_GoalReached;
-
-			// Attack the other unit until killed
-			if (animation->Finished()) {
-				attackingTarget->ApplyDamage(unitInfo.damage);
-				animation->Reset();
-			}
-			isAttacking = true;
-		}
-
-		// 2. The attack distance is not satisfied
-		else {
-
-			// The unit has reached the goal but the attack distance is not satisfied. The attacking target may have moved
-			if (singleUnit->movementState == MovementState_GoalReached) {
-
-				/// Keep chasing the attackingTarget
-				DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
-				singleUnit->group->SetGoal(dynamicEntity->GetSingleUnit()->currTile);
-			}
-
-			App->movement->MoveUnit(this, dt);
+			// Reset the attack parameters
+			attackingTarget = nullptr;
+			isSightSatisfied = false;
+			isAttackSatisfied = false;
 			isAttacking = false;
+			break;
+		}
+	}
+
+	// 1. The attack distance is satisfied
+	if (isAttackSatisfied
+		&& singleUnit->coll == CollisionType_NoCollision
+		&& singleUnit->movementState != MovementState_FollowPath && singleUnit->movementState != MovementState_NoState) {
+
+		singleUnit->movementState = MovementState_GoalReached;
+
+		// Attack the other unit until killed
+		if (animation->Finished()) {
+			attackingTarget->ApplyDamage(unitInfo.damage);
+			animation->Reset();
+		}
+		isAttacking = true;
+	}
+
+	// 2. The attack distance is not satisfied
+	else {
+
+		// The unit has reached the goal but the attack distance is not satisfied. The attacking target may have moved
+		if (singleUnit->movementState == MovementState_GoalReached) {
+
+			/// Keep chasing the attackingTarget
+			DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
+			singleUnit->group->SetGoal(dynamicEntity->GetSingleUnit()->currTile);
 		}
 
-		// The unit stops attacking this unit if:
-			// a) The sight distance is no longer satisfied
-			// b) The other unit is killed
+		App->movement->MoveUnit(this, dt);
+		isAttacking = false;
+	}
 
-		break;
+	// The unit stops attacking this unit if:
+		// a) The sight distance is no longer satisfied
+		// b) The other unit is killed
+
+	break;
 
 	case UnitState_Die:
 
-		// The unit is dead
+		// Remove the corpse when a certain time is reached
+		if (deadTimer.ReadSec() >= TIME_REMOVE_CORPSE)
+			isRemove = true;
 
-		// Perform the dead animation
+		break;
+
+	case UnitState_Idle:
+	case UnitState_NoState:
+	default:
 
 		break;
 	}
@@ -313,14 +323,24 @@ bool Footman::ChangeAnimation()
 	
 		UnitDirection dir = GetUnitDirection();
 
-		if (dir == UnitDirection_Up || dir == UnitDirection_UpLeft || dir == UnitDirection_UpRight
-			|| dir == UnitDirection_Left || dir == UnitDirection_Right) {
+		if (dir == UnitDirection_Up || dir == UnitDirection_Up || dir == UnitDirection_UpLeft || dir == UnitDirection_UpRight
+			|| dir == UnitDirection_Left || dir == UnitDirection_Right || dir == UnitDirection_NoDirection) {
+
+			if (animation->Finished() && unitState != UnitState_Die) {
+				unitState = UnitState_Die;
+				deadTimer.Start();
+			}
 
 			animation = &footmanInfo.deathUp;
 			ret = true;
 		}
 		else if (dir == UnitDirection_Down || dir == UnitDirection_DownLeft || dir == UnitDirection_DownRight) {
-		
+
+			if (animation->Finished() && unitState != UnitState_Die) {
+				unitState = UnitState_Die;
+				deadTimer.Start();
+			}
+
 			animation = &footmanInfo.deathDown;
 			ret = true;
 		}

@@ -72,6 +72,7 @@ bool j1Movement::CleanUp()
 	list<UnitGroup*>::const_iterator it = unitGroups.begin();
 
 	while (it != unitGroups.end()) {
+
 		delete *it;
 		it++;
 	}
@@ -96,7 +97,7 @@ UnitGroup* j1Movement::CreateGroupFromUnits(list<DynamicEntity*> units)
 
 			// If the group is empty, delete it
 			if (group->GetSize() == 0)
-				unitGroups.remove(group);
+				RemoveGroup(group);
 		}
 
 		it++;
@@ -180,6 +181,26 @@ UnitGroup* j1Movement::GetGroupByUnits(list<DynamicEntity*> units) const
 	}
 
 	return nullptr;
+}
+
+bool j1Movement::RemoveGroup(UnitGroup* unitGroup) 
+{
+	bool ret = false;
+
+	list<UnitGroup*>::const_iterator it = find(unitGroups.begin(), unitGroups.end(), unitGroup);
+
+	if (it != unitGroups.end()) {
+
+		// Remove the group
+		delete *it;
+
+		// Remove the group from the list of groups
+		unitGroups.erase(it);
+
+		ret = true;
+	}
+
+	return ret;
 }
 
 // Returns true if another unit has any of the booleans passed as arguments to true
@@ -1164,12 +1185,6 @@ UnitGroup::UnitGroup(list<DynamicEntity*> units)
 
 UnitGroup::~UnitGroup() 
 {
-	list<SingleUnit*>::const_iterator it = units.begin();
-
-	while (it != units.end()) {
-		delete *it;
-		it++;
-	}
 	units.clear();
 }
 
@@ -1209,6 +1224,9 @@ bool UnitGroup::RemoveUnit(SingleUnit* singleUnit)
 		units.remove(*it);
 		ret = true;
 	}
+
+	if (GetSize() == 0)
+		App->movement->RemoveGroup(this);
 
 	return ret;
 }
@@ -1384,6 +1402,14 @@ bool UnitGroup::SetShapedGoal()
 SingleUnit::SingleUnit(DynamicEntity* unit, UnitGroup* group) :unit(unit), group(group)
 {
 	currTile = goal = App->map->WorldToMap(this->unit->GetPos().x, this->unit->GetPos().y);
+}
+
+SingleUnit::~SingleUnit() 
+{
+	//unit = nullptr;
+	group->RemoveUnit(this);
+	group = nullptr;
+	waitUnit = nullptr;
 }
 
 // Returns true if the unit would reach its next tile during this move

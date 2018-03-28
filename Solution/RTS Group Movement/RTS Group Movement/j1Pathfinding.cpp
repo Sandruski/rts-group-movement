@@ -18,6 +18,8 @@ j1PathFinding::j1PathFinding() : j1Module(), walkabilityMap(NULL), width(0), hei
 j1PathFinding::~j1PathFinding()
 {
 	RELEASE_ARRAY(walkabilityMap);
+
+	trigger = nullptr;
 }
 
 // Called before quitting
