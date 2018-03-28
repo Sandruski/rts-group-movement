@@ -204,60 +204,52 @@ void Grunt::UnitStateMachine(float dt)
 
 	case UnitState_Attack:
 
-	// The unit is ordered to attack (this happens when the sight distance is satisfied)
-	{
-		DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
+		// The unit is ordered to attack (this happens when the sight distance is satisfied)
 
-		if (dynamicEntity->GetUnitState() == UnitState_Die) {
+		// The attackingTarget has died. Stop chasing and/or attacking
+		if (((DynamicEntity*)attackingTarget)->isDead) {
 
 			LOG("Player killed!");
-			unitState = UnitState_Idle;
-			singleUnit->movementState == MovementState_NoState;
-			SetUnitDirection(UnitDirection_NoDirection);
 
-			// Reset the attack parameters
+			// Reset the attack parameters (they will also be reseted later when the attackingTarget is removed)
 			attackingTarget = nullptr;
 			isSightSatisfied = false;
 			isAttackSatisfied = false;
 			isAttacking = false;
+
+			/// The goal tile of this unit must be their currTile
+			singleUnit->group->SetGoal(singleUnit->currTile);
+
 			break;
 		}
-	}
 
-	// 1. The attack distance is satisfied
-	if (isAttackSatisfied
-		&& singleUnit->coll == CollisionType_NoCollision
-		&& singleUnit->movementState != MovementState_FollowPath && singleUnit->movementState != MovementState_NoState) {
+		// 1. The attack distance is satisfied
+		/// When attacking, the unit cannot move...
+		if (isAttackSatisfied
+			&& singleUnit->movementState != MovementState_FollowPath) {
 
-		singleUnit->movementState = MovementState_GoalReached;
-
-		// Attack the other unit until killed
-		if (animation->Finished()) {
-			attackingTarget->ApplyDamage(unitInfo.damage);
-			LOG("Player: IT HURTS!");
-			animation->Reset();
-		}
-		isAttacking = true;
-	}
-
-	// 2. The attack distance is not satisfied
-	else {
-
-		// The unit has reached the goal but the attack distance is not satisfied. The attacking target may have moved
-		if (singleUnit->movementState == MovementState_GoalReached) {
-
-			/// Keep chasing the attackingTarget
-			DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
-			singleUnit->group->SetGoal(dynamicEntity->GetSingleUnit()->currTile);
+			// Attack the other unit until killed
+			if (animation->Finished()) {
+				attackingTarget->ApplyDamage(unitInfo.damage);
+				LOG("Player: IT HURTS!");
+				animation->Reset();
+			}
+			isAttacking = true;
 		}
 
-		App->movement->MoveUnit(this, dt);
-		isAttacking = false;
-	}
+		// 2. The attack distance is not satisfied
+		else {
 
-	// The unit stops attacking this unit if:
-	// a) The sight distance is no longer satisfied
-	// b) The other unit is killed
+			// The unit has reached the goal but the attack distance is not satisfied. The attacking target may have moved
+			if (singleUnit->movementState == MovementState_GoalReached) {
+
+				/// Keep chasing the attackingTarget
+				singleUnit->group->SetGoal(((DynamicEntity*)attackingTarget)->GetSingleUnit()->currTile);
+			}
+
+			App->movement->MoveUnit(this, dt);
+			isAttacking = false;
+		}
 
 	break;
 
