@@ -10,13 +10,23 @@
 #include <algorithm>
 using namespace std;
 
+class Entity;
 class DynamicEntity;
 
 enum GoalType {
 
 	GoalType_NoType,
+	
+	// Composite Goals
 	GoalType_Think,
+	GoalType_AttackTarget,
 	GoalType_Wander,
+	GoalType_Patrol,
+
+	// Atomic Goals
+	GoalType_MoveToPosition,
+	GoalType_HitTarget,
+
 	GoalType_MaxTypes,
 
 	// Composite Goals
@@ -122,7 +132,7 @@ public:
 	// before deletion
 	void RemoveAllSubgoals();
 
-private:
+protected:
 
 	list<Goal*> subgoals;
 };
@@ -159,6 +169,53 @@ public:
 	// to be pursued. Calculate the desirability of the strategies
 	//void Arbitrate();
 	void AddGoal_Wander();
+	void AddGoalAttackTarget(Entity* target);
+	void AddGoalMoveToPosition(iPoint destinationTile);
+};
+
+class Goal_AttackTarget :public CompositeGoal
+{
+public:
+
+	Goal_AttackTarget(DynamicEntity* owner, Entity* target);
+
+	void Activate();
+	GoalStatus Process();
+	void Terminate();
+
+private:
+
+	Entity* target = nullptr;
+};
+
+class Goal_MoveToPosition :public CompositeGoal
+{
+public:
+
+	Goal_MoveToPosition(DynamicEntity* owner, iPoint destinationTile);
+
+	void Activate();
+	GoalStatus Process();
+	void Terminate();
+
+private:
+
+	iPoint destinationTile = { 0,0 }; // the position the bot wants to reach
+};
+
+class Goal_HitTarget :public AtomicGoal
+{
+public:
+
+	Goal_HitTarget(DynamicEntity* owner, Entity* target);
+
+	void Activate();
+	GoalStatus Process();
+	void Terminate();
+
+private:
+
+	Entity* target = nullptr;
 };
 
 #endif //__GOAL_H__

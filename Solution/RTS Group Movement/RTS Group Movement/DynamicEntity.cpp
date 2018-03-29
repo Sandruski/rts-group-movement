@@ -61,7 +61,7 @@ DynamicEntity::~DynamicEntity()
 	singleUnit = nullptr;
 
 	// Remove Attack
-	attackingTarget = nullptr;
+	target = nullptr;
 
 	// Remove Colliders
 	if (sightRadiusCollider != nullptr)
@@ -93,6 +93,11 @@ void DynamicEntity::DebugDrawSelected()
 void DynamicEntity::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState collisionState) {}
 
 // -------------------------------------------------------------
+
+Animation* DynamicEntity::GetAnimation() const 
+{
+	return animation;
+}
 
 // State machine
 void DynamicEntity::UnitStateMachine(float dt) {}
@@ -126,6 +131,11 @@ float DynamicEntity::GetSpeed() const
 uint DynamicEntity::GetPriority() const 
 {
 	return unitInfo.priority;
+}
+
+uint DynamicEntity::GetDamage() const 
+{
+	return unitInfo.damage;
 }
 
 // Animations
@@ -321,14 +331,40 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 // Attack
 void DynamicEntity::ResetUnitAttackParameters() 
 {
-	attackingTarget = nullptr;
+	target = nullptr;
 
 	isSightSatisfied = false;
 	isAttackSatisfied = false;
 	isAttacking = false;
 }
 
-void DynamicEntity::IsUnitWantingAttack(bool isWantingAttack) 
+Entity* DynamicEntity::GetTarget() const 
 {
-	this->isWantingAttack = isWantingAttack;
+	return target;
+}
+
+void DynamicEntity::SetTarget(Entity* target) 
+{
+	this->target = target;
+}
+
+bool DynamicEntity::IsTargetPresent() const 
+{
+	if (target == nullptr)
+		return false;
+
+	if (target->GetCurrLife() <= 0)
+		return false;
+
+	return true;
+}
+
+bool DynamicEntity::IsSightSatisfied() const
+{
+	return isSightSatisfied;
+}
+
+bool DynamicEntity::IsAttackSatisfied() const
+{
+	return isSightSatisfied && isAttackSatisfied;
 }

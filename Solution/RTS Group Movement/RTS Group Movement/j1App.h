@@ -107,7 +107,7 @@ private:
 
 	list<j1Module*>		modules;
 	uint				frames = 0;
-	double				dt = 0;
+
 	int					argc;
 	char**				args;
 
@@ -130,6 +130,7 @@ public:
 	bool				toCap = true;
 	bool				quit_game = false;
 	double				auxiliar_dt = 0;
+	double				dt = 0;
 };
 
 extern j1App* App; // No student is asking me about that ... odd :-S

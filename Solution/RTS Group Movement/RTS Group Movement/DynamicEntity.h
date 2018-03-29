@@ -87,6 +87,8 @@ public:
 	virtual void DebugDrawSelected();
 	virtual void OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState collisionState);
 
+	Animation* GetAnimation() const;
+
 	// State machine
 	void UnitStateMachine(float dt);
 
@@ -98,6 +100,7 @@ public:
 	PathPlanner* GetPathPlanner() const;
 	float GetSpeed() const;
 	uint GetPriority() const;
+	uint GetDamage() const;
 
 	// Animations
 	virtual void LoadAnimationsSpeed();
@@ -125,7 +128,13 @@ public:
 
 	// Attack
 	void ResetUnitAttackParameters();
-	void IsUnitWantingAttack(bool isWantingAttack);
+
+	Entity* GetTarget() const;
+	void SetTarget(Entity* target);
+	bool IsTargetPresent() const;
+
+	bool IsSightSatisfied() const;
+	bool IsAttackSatisfied() const;
 
 public:
 
@@ -152,11 +161,12 @@ protected:
 	Navgraph* navgraph = nullptr;
 
 	// Attack
-	bool isWantingAttack = true; // if true, the unit wants to attack
 	bool isSightSatisfied = false; // if true, sight distance is satisfied
 	bool isAttackSatisfied = false; // if true, attack distance is satisfied
+
 	bool isAttacking = false; // if true, the unit is attacking
-	Entity* attackingTarget = nullptr;
+
+	Entity* target = nullptr;
 
 	// Collision
 	ColliderGroup* sightRadiusCollider = nullptr;

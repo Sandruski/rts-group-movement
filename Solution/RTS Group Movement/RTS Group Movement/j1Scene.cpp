@@ -89,7 +89,7 @@ bool j1Scene::PreUpdate()
 	/// Entity
 	fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
 	iPoint size = { App->map->data.tile_width,App->map->data.tile_height };
-	uint maxLife = 20;
+	uint maxLife = 30;
 	int currLife = (int)maxLife;
 
 	/// DynamicEntity
@@ -116,6 +116,8 @@ bool j1Scene::PreUpdate()
 		// 2: spawn a Grunt with priority 1
 		unitInfo.sightRadius = 4;
 		unitInfo.attackRadius = 3;
+		maxLife = 20;
+		currLife = (int)maxLife;
 
 		if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
 			App->entities->AddDynamicEntity(DynamicEntityType_Grunt, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)gruntInfo);

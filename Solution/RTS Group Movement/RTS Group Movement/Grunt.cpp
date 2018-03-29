@@ -146,7 +146,7 @@ void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState col
 			LOG("Enemy Sight Radius");
 			// The Alliance is within the SIGHT radius
 			isSightSatisfied = true;
-			attackingTarget = c2->entity;
+			target = c2->entity;
 
 			// Go attack the Alliance
 			list<DynamicEntity*> unit;
@@ -154,7 +154,7 @@ void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState col
 			UnitGroup* group = App->movement->CreateGroupFromUnits(unit);
 
 			/// Chase the attackingTarget
-			DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
+			DynamicEntity* dynamicEntity = (DynamicEntity*)target;
 			group->SetGoal(dynamicEntity->GetSingleUnit()->currTile);
 		}
 		else if (c1->colliderType == ColliderType_EnemyAttackRadius && c2->colliderType == ColliderType_PlayerUnit) {
@@ -173,7 +173,7 @@ void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState col
 
 			// The Alliance is NO longer within the SIGHT radius
 			isSightSatisfied = false;
-			attackingTarget = nullptr;
+			target = nullptr;
 		}
 		else if (c1->colliderType == ColliderType_EnemyAttackRadius && c2->colliderType == ColliderType_PlayerUnit) {
 
@@ -207,7 +207,7 @@ void Grunt::UnitStateMachine(float dt)
 		// The unit is ordered to attack (this happens when the sight distance is satisfied)
 
 		// The attackingTarget has died. Stop chasing and/or attacking
-		if (((DynamicEntity*)attackingTarget)->isDead) {
+		if (((DynamicEntity*)target)->isDead) {
 
 			LOG("Player killed!");
 
@@ -227,7 +227,7 @@ void Grunt::UnitStateMachine(float dt)
 
 			// Attack the other unit until killed
 			if (animation->Finished()) {
-				attackingTarget->ApplyDamage(unitInfo.damage);
+				target->ApplyDamage(unitInfo.damage);
 				LOG("Player: IT HURTS!");
 				animation->Reset();
 			}
@@ -241,7 +241,7 @@ void Grunt::UnitStateMachine(float dt)
 			if (singleUnit->movementState == MovementState_GoalReached) {
 
 				/// Keep chasing the attackingTarget
-				singleUnit->group->SetGoal(((DynamicEntity*)attackingTarget)->GetSingleUnit()->currTile);
+				singleUnit->group->SetGoal(((DynamicEntity*)target)->GetSingleUnit()->currTile);
 			}
 
 			App->movement->MoveUnit(this, dt);
@@ -420,7 +420,7 @@ bool Grunt::ChangeAnimation()
 		// The unit is in UnitState_Attack
 
 		// Set the direction of the unit as the orientation towards the attacking target
-		fPoint orientation = { attackingTarget->GetPos().x - pos.x, (float)attackingTarget->GetPos().y - pos.y };
+		fPoint orientation = { target->GetPos().x - pos.x, (float)target->GetPos().y - pos.y };
 
 		float m = sqrtf(pow(orientation.x, 2.0f) + pow(orientation.y, 2.0f));
 

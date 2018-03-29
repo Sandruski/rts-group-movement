@@ -49,9 +49,6 @@ Footman::Footman(fPoint pos, iPoint size, int currLife, uint maxLife, const Unit
 
 	// Initialize the goals
 	brain->RemoveAllSubgoals();
-
-	///
-	brain->AddGoal_Wander();
 }
 
 void Footman::Move(float dt)
@@ -90,9 +87,13 @@ void Footman::Move(float dt)
 
 			isDead = true;
 			unitState = UnitState_NoState;
+
+			// If the player dies, remove all their goals
+			brain->RemoveAllSubgoals();
 		}
 	}
 
+	/*
 	if (!isDead) {
 
 		// UnitState_Walk
@@ -106,9 +107,9 @@ void Footman::Move(float dt)
 			if (isWantingAttack)
 				unitState = UnitState_Attack;
 		}
-	}
+	}*/
 
-	UnitStateMachine(dt);
+	//UnitStateMachine(dt);
 
 	// Update animations
 	UpdateAnimationsSpeed(dt);
@@ -152,15 +153,23 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 	case CollisionState_OnEnter:
 
 		// An enemy is within the sight of this player unit
-		if (c1->colliderType == ColliderType_PlayerSightRadius && c2->colliderType == ColliderType_EnemyUnit) {
+		if (c1->colliderType == ColliderType_PlayerSightRadius && c2->colliderType == ColliderType_EnemyUnit) { // || c2->colliderType == ColliderType_EnemyBuilding
 
 			LOG("Player Sight Radius");
 			// The Horde is within the SIGHT radius
 			isSightSatisfied = true;
-			attackingTarget = c2->entity;
+			target = c2->entity;
+
+			if (target != nullptr) {
+
+				brain->AddGoalAttackTarget(target);
+				isAttacking = true;
+			}
 
 			// Go attack the Horde
 			/// The unit only attacks automatically if it isn't going anywhere
+
+			/*
 			if (isWantingAttack) {
 
 				list<DynamicEntity*> unit;
@@ -168,11 +177,11 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 				UnitGroup* group = App->movement->CreateGroupFromUnits(unit);
 
 				/// Chase the attackingTarget
-				DynamicEntity* dynamicEntity = (DynamicEntity*)attackingTarget;
+				DynamicEntity* dynamicEntity = (DynamicEntity*)target;
 				group->SetGoal(dynamicEntity->GetSingleUnit()->currTile);
-			}
+			}*/
 		}
-		else if (c1->colliderType == ColliderType_PlayerAttackRadius && c2->colliderType == ColliderType_EnemyUnit) {
+		else if (c1->colliderType == ColliderType_PlayerAttackRadius && c2->colliderType == ColliderType_EnemyUnit) { // || c2->colliderType == ColliderType_EnemyBuilding
 
 			LOG("Player Attack Radius");
 			// The Horde is within the ATTACK radius
@@ -184,13 +193,13 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 	case CollisionState_OnExit:
 
 		// Reset attack parameters
-		if (c1->colliderType == ColliderType_PlayerSightRadius && c2->colliderType == ColliderType_EnemyUnit) {
+		if (c1->colliderType == ColliderType_PlayerSightRadius && c2->colliderType == ColliderType_EnemyUnit) { // || c2->colliderType == ColliderType_EnemyBuilding
 
 			// The Horde is NO longer within the SIGHT radius
 			isSightSatisfied = false;
-			attackingTarget = nullptr;
+			target = nullptr;
 		}
-		else if (c1->colliderType == ColliderType_PlayerAttackRadius && c2->colliderType == ColliderType_EnemyUnit) {
+		else if (c1->colliderType == ColliderType_PlayerAttackRadius && c2->colliderType == ColliderType_EnemyUnit) { // || c2->colliderType == ColliderType_EnemyBuilding
 
 			// The Horde is NO longer within the ATTACK radius
 			isAttackSatisfied = false;
@@ -208,8 +217,6 @@ void Footman::UnitStateMachine(float dt)
 
 	case UnitState_Walk:
 
-		isWantingAttack = false;
-
 		if (App->scene->isFrameByFrame) { /// debug
 			if (App->input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN)
 				App->movement->MoveUnit(this, dt);
@@ -224,7 +231,8 @@ void Footman::UnitStateMachine(float dt)
 		// The unit is ordered to attack (this happens when the sight distance is satisfied)
 
 		// The attackingTarget has died. Stop chasing and/or attacking
-		if (((DynamicEntity*)attackingTarget)->isDead) {
+		/*
+		if (((DynamicEntity*)target)->isDead) {
 
 			LOG("Player killed!");
 
@@ -246,7 +254,7 @@ void Footman::UnitStateMachine(float dt)
 
 			// Attack the other unit until killed
 			if (animation->Finished()) {
-				attackingTarget->ApplyDamage(unitInfo.damage);
+				target->ApplyDamage(unitInfo.damage);
 				LOG("Enemy: IT HURTS!");
 				animation->Reset();
 			}
@@ -260,24 +268,20 @@ void Footman::UnitStateMachine(float dt)
 			if (singleUnit->movementState == MovementState_GoalReached) {
 
 				/// Keep chasing the attackingTarget
-				singleUnit->group->SetGoal(((DynamicEntity*)attackingTarget)->GetSingleUnit()->currTile);
+				singleUnit->group->SetGoal(((DynamicEntity*)target)->GetSingleUnit()->currTile);
 			}
 
 			App->movement->MoveUnit(this, dt);
 			isAttacking = false;
 		}
-
+		*/
 	break;
 
 	case UnitState_Patrol:
 
-		isWantingAttack = true;
-
 		break;
 
 	case UnitState_Die:
-
-		isWantingAttack = false;
 
 		// Remove the corpse when a certain time is reached
 		if (deadTimer.ReadSec() >= TIME_REMOVE_CORPSE)
@@ -380,7 +384,7 @@ bool Footman::ChangeAnimation()
 		return ret;
 	}
 
-	if (!isAttacking) {
+	if (unitState != UnitState_Attack) {
 
 		// The unit is in UnitState_Walk
 		switch (GetUnitDirection()) {
@@ -447,16 +451,19 @@ bool Footman::ChangeAnimation()
 		// The unit is in UnitState_Attack
 
 		// Set the direction of the unit as the orientation towards the attacking target
-		fPoint orientation = { attackingTarget->GetPos().x - pos.x, (float)attackingTarget->GetPos().y - pos.y };
+		if (target != nullptr) {
 
-		float m = sqrtf(pow(orientation.x, 2.0f) + pow(orientation.y, 2.0f));
+			fPoint orientation = { target->GetPos().x - pos.x, (float)target->GetPos().y - pos.y };
 
-		if (m > 0.0f) {
-			orientation.x /= m;
-			orientation.y /= m;
+			float m = sqrtf(pow(orientation.x, 2.0f) + pow(orientation.y, 2.0f));
+
+			if (m > 0.0f) {
+				orientation.x /= m;
+				orientation.y /= m;
+			}
+
+			SetUnitDirectionByValue(orientation);
 		}
-
-		SetUnitDirectionByValue(orientation);
 
 		switch (GetUnitDirection()) {
 

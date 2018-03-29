@@ -3,6 +3,11 @@
 
 #include "j1App.h"
 #include "Goal.h"
+#include "Entity.h"
+#include "DynamicEntity.h"
+#include "j1Map.h"
+#include "j1PathManager.h"
+#include "j1Movement.h"
 
 #include "Brofiler\Brofiler.h"
 
@@ -82,7 +87,7 @@ GoalStatus CompositeGoal::ProcessSubgoals()
 	
 		subgoals.front()->Terminate();
 		delete subgoals.front();
-		subgoals.pop_front();	
+		subgoals.pop_front();
 	}
 
 	// If any subgoals remain, process the one at the front of the list
@@ -107,7 +112,8 @@ GoalStatus CompositeGoal::ProcessSubgoals()
 
 void CompositeGoal::ReactivateIfFailed()
 {
-	// TODO: Add some code here
+	if (HasFailed())
+		Activate();
 }
 
 void CompositeGoal::RemoveAllSubgoals() 
@@ -119,47 +125,6 @@ void CompositeGoal::RemoveAllSubgoals()
 	}
 
 	subgoals.clear();
-}
-
-// Goal_Wander ---------------------------------------------------------------------
-
-Goal_Wander::Goal_Wander(DynamicEntity* owner) :AtomicGoal(owner, GoalType_Wander) {}
-
-void Goal_Wander::Activate() 
-{
-	goalStatus = GoalStatus_Active;
-
-	// Initialize the goal
-	number = 40;
-	i = 0;
-}
-
-GoalStatus Goal_Wander::Process() 
-{
-	// If status is inactive, activate it
-	ActivateIfInactive();
-
-	if (number == 40)
-		LOG("I'm Happy!");
-	else
-		LOG("I'm sad...");
-
-	i++;
-	if (i > 50)
-		goalStatus = GoalStatus_Completed;
-
-	return goalStatus;
-}
-
-void Goal_Wander::Terminate() 
-{
-	// Switch the goal off
-	number = 0;
-
-	if (number == 0)
-		LOG("I'm Happy again!");
-	else
-		LOG("I'm sad...");
 }
 
 // Goal_Think ---------------------------------------------------------------------
@@ -180,9 +145,6 @@ void Goal_Think::Activate()
 
 GoalStatus Goal_Think::Process()
 {
-	// If status is inactive, set it to active
-	//ActivateIfInactive();
-
 	// Process the subgoals
 	ProcessSubgoals();
 
@@ -201,4 +163,201 @@ void Goal_Think::Terminate()
 void Goal_Think::AddGoal_Wander()
 {
 	AddSubgoal(new Goal_Wander(owner));
+}
+
+void Goal_Think::AddGoalAttackTarget(Entity* target)
+{
+	AddSubgoal(new Goal_AttackTarget(owner, target));
+}
+
+void Goal_Think::AddGoalMoveToPosition(iPoint destinationTile) 
+{
+	AddSubgoal(new Goal_MoveToPosition(owner, destinationTile));
+}
+
+// Goal_AttackTarget ---------------------------------------------------------------------
+
+Goal_AttackTarget::Goal_AttackTarget(DynamicEntity* owner, Entity* target) :CompositeGoal(owner, GoalType_AttackTarget), target(target) {}
+
+void Goal_AttackTarget::Activate() 
+{
+	goalStatus = GoalStatus_Active;
+
+	RemoveAllSubgoals();
+
+	// It is possible for a bot's target to die while this goal is active,
+	// so we must test to make sure the bot always has an active target
+	if (!owner->IsTargetPresent()) {
+
+		goalStatus = GoalStatus_Completed;
+		return;
+	}
+
+	AddSubgoal(new Goal_HitTarget(owner, target));
+
+	// If the target is far from the unit, head directly at the target's position
+	if (!owner->IsAttackSatisfied()) {
+	
+		iPoint targetTile = App->map->WorldToMap(target->GetPos().x, target->GetPos().y);
+		AddSubgoal(new Goal_MoveToPosition(owner, targetTile));
+	}
+}
+
+GoalStatus Goal_AttackTarget::Process()
+{
+	ActivateIfInactive();
+
+	if (owner->IsAttackSatisfied() && owner->GetSingleUnit()->IsFittingTile() 
+		&& subgoals.front()->GetType() == GoalType_MoveToPosition) {
+
+		subgoals.front()->Terminate();
+		delete subgoals.front();
+		subgoals.pop_front();
+	}
+
+	// Process the subgoals
+	goalStatus = ProcessSubgoals();
+
+	ReactivateIfFailed();
+
+	return goalStatus;
+}
+
+void Goal_AttackTarget::Terminate() 
+{
+	RemoveAllSubgoals();
+
+	if (target == owner->GetTarget())
+		owner->SetTarget(nullptr);
+
+	target = nullptr;
+}
+
+// Goal_MoveToPosition ---------------------------------------------------------------------
+
+Goal_MoveToPosition::Goal_MoveToPosition(DynamicEntity* owner, iPoint destinationTile) :CompositeGoal(owner, GoalType_MoveToPosition), destinationTile(destinationTile) {}
+
+void Goal_MoveToPosition::Activate() 
+{
+	goalStatus = GoalStatus_Active;
+
+	RemoveAllSubgoals();
+
+	if (!owner->GetSingleUnit()->group->SetGoal(destinationTile)) {
+		
+		goalStatus = GoalStatus_Failed;
+		return;
+	}
+
+	LOG("MoveToPosition is activated");
+}
+
+GoalStatus Goal_MoveToPosition::Process() 
+{
+	ActivateIfInactive();
+
+	if (goalStatus == GoalStatus_Failed)
+		return goalStatus;
+
+	App->movement->MoveUnit(owner, App->dt);
+
+	if (owner->GetSingleUnit()->movementState == MovementState_GoalReached)
+		goalStatus = GoalStatus_Completed;
+
+	LOG("MoveToPosition is in progress");
+
+	return goalStatus;
+}
+
+void Goal_MoveToPosition::Terminate() 
+{
+	LOG("MoveToPosition is terminated");
+}
+
+// Goal_HitTarget ---------------------------------------------------------------------
+
+Goal_HitTarget::Goal_HitTarget(DynamicEntity* owner, Entity* target) :AtomicGoal(owner, GoalType_HitTarget), target(target) {}
+
+void Goal_HitTarget::Activate() 
+{
+	goalStatus = GoalStatus_Active;
+
+	// It is possible for a bot's target to die while this goal is active,
+	// so we must test to make sure the bot always has an active target
+	if (!owner->IsTargetPresent()) {
+
+		goalStatus = GoalStatus_Completed;
+		return;
+	}
+
+	owner->SetUnitState(UnitState_Attack);
+
+	LOG("HitTarget is terminated");
+}
+
+GoalStatus Goal_HitTarget::Process() 
+{
+	ActivateIfInactive();
+
+	if (((DynamicEntity*)owner)->GetAnimation()->Finished()) {
+
+		owner->GetTarget()->ApplyDamage(owner->GetDamage());
+		((DynamicEntity*)owner)->GetAnimation()->Reset();
+	}
+
+	if (!owner->IsTargetPresent())
+		goalStatus = GoalStatus_Completed;
+
+	LOG("HitTarget is in progress");
+
+	return goalStatus;
+}
+
+void Goal_HitTarget::Terminate()
+{
+	owner->SetUnitState(UnitState_Idle);
+	owner->SetUnitDirection(UnitDirection_NoDirection);
+
+	LOG("HitTarget is terminated");
+}
+
+// Goal_Wander ---------------------------------------------------------------------
+
+Goal_Wander::Goal_Wander(DynamicEntity* owner) :AtomicGoal(owner, GoalType_Wander) {}
+
+void Goal_Wander::Activate()
+{
+	goalStatus = GoalStatus_Active;
+
+	// Initialize the goal
+	number = 40;
+	i = 0;
+}
+
+GoalStatus Goal_Wander::Process()
+{
+	// If status is inactive, activate it
+	ActivateIfInactive();
+
+	if (number == 40)
+		LOG("I'm Happy!");
+	else
+		LOG("I'm sad...");
+
+	i++;
+	if (i > 50)
+		goalStatus = GoalStatus_Completed;
+
+	return goalStatus;
+}
+
+void Goal_Wander::Terminate()
+{
+	// Switch the goal off
+	number = 0;
+
+	if (number == 0)
+		LOG("I'm Happy again!");
+	else
+		LOG("I'm sad...");
 }
