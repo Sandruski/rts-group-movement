@@ -11,6 +11,7 @@
 #include "j1EntityFactory.h"
 #include "j1Movement.h"
 #include "j1PathManager.h"
+#include "Goal.h"
 
 #include "j1Scene.h" // isFrameByFrame
 #include "j1Input.h" // isFrameByFrame
@@ -45,6 +46,12 @@ Footman::Footman(fPoint pos, iPoint size, int currLife, uint maxLife, const Unit
 	this->footmanInfo.deathDown = info.deathDown;
 
 	LoadAnimationsSpeed();
+
+	// Initialize the goals
+	brain->RemoveAllSubgoals();
+
+	///
+	brain->AddGoal_Wander();
 }
 
 void Footman::Move(float dt)
@@ -69,6 +76,9 @@ void Footman::Move(float dt)
 
 		isSpawned = true;
 	}
+
+	// Process the currently active goal
+	brain->Process();
 
 	// ---------------------------------------------------------------------
 

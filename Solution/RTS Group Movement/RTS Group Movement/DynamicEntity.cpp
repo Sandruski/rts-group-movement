@@ -12,6 +12,7 @@
 #include "j1Input.h"
 #include "j1Movement.h"
 #include "j1PathManager.h"
+#include "Goal.h"
 
 #include "Brofiler\Brofiler.h"
 
@@ -32,11 +33,19 @@ DynamicEntity::DynamicEntity(fPoint pos, iPoint size, int currLife, uint maxLife
 
 	/// PathPlanner
 	pathPlanner = new PathPlanner(this, *navgraph);
+
+	// Goals
+	brain = new Goal_Think(this);
 }
 
 DynamicEntity::~DynamicEntity() 
 {
 	animation = nullptr;
+
+	// Remove goals
+	if (brain != nullptr)
+		delete brain;
+	brain = nullptr;
 
 	// Remove Movement
 	if (pathPlanner != nullptr)

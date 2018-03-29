@@ -20,6 +20,7 @@ struct SingleUnit;
 
 class PathPlanner; 
 class Navgraph;
+class Goal_Think;
 
 enum ColliderType;
 enum CollisionState;
@@ -137,6 +138,10 @@ protected:
 
 	Animation* animation = nullptr;
 	UnitState unitState = UnitState_Idle;
+	bool isFlying = false; // Dragon and Gryphon Rider fly
+
+	// Root of a bot's goal hierarchy
+	Goal_Think* brain = nullptr;
 
 	// Movement
 	UnitInfo unitInfo;

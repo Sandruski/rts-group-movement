@@ -105,6 +105,9 @@
     <ClInclude Include="Grunt.h">
       <Filter>Modules\Entities</Filter>
     </ClInclude>
+    <ClInclude Include="Goal.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="j1App.cpp">
@@ -169,6 +172,9 @@
     </ClCompile>
     <ClCompile Include="Grunt.cpp">
       <Filter>Modules\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="Goal.cpp">
+      <Filter>Modules</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

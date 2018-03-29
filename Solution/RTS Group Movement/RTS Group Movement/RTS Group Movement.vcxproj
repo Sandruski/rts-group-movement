@@ -120,6 +120,7 @@
     <ClInclude Include="DynamicEntity.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="Footman.h" />
+    <ClInclude Include="Goal.h" />
     <ClInclude Include="Grunt.h" />
     <ClInclude Include="j1App.h" />
     <ClInclude Include="j1Collision.h" />
@@ -145,6 +146,7 @@
     <ClCompile Include="DynamicEntity.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="Footman.cpp" />
+    <ClCompile Include="Goal.cpp" />
     <ClCompile Include="Grunt.cpp" />
     <ClCompile Include="j1App.cpp" />
     <ClCompile Include="j1Collision.cpp" />
