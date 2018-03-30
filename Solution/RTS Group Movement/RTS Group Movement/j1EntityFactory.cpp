@@ -335,6 +335,8 @@ bool j1EntityFactory::Start()
 
 bool j1EntityFactory::PreUpdate()
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	bool ret = true;
 
 	// Spawn entities
@@ -361,6 +363,8 @@ bool j1EntityFactory::PreUpdate()
 // Called before render is available
 bool j1EntityFactory::Update(float dt)
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	bool ret = true;
 
 	// Update active entities
@@ -377,6 +381,8 @@ bool j1EntityFactory::Update(float dt)
 
 bool j1EntityFactory::PostUpdate()
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	bool ret = true;
 
 	// Dead entities cannot be selected. Remove them from the unitsSelected list
@@ -471,6 +477,8 @@ void j1EntityFactory::OnCollision(ColliderGroup* c1, ColliderGroup* c2, Collisio
 
 void j1EntityFactory::Draw()
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	// Blit active entities
 	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
 

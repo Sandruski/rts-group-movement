@@ -68,6 +68,8 @@ j1Collision::j1Collision()
 	debugColors[ColliderType_EnemyUnit] = ColorDarkRed;
 	debugColors[ColliderType_PlayerSightRadius] = ColorLightBlue;
 	debugColors[ColliderType_EnemySightRadius] = ColorLightRed;
+	debugColors[ColliderType_PlayerAttackRadius] = ColorLightBlue;
+	debugColors[ColliderType_EnemyAttackRadius] = ColorLightRed;
 }
 
 // Destructor
@@ -76,6 +78,8 @@ j1Collision::~j1Collision()
 
 bool j1Collision::PreUpdate()
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	bool ret = true;
 
 	// Remove all colliders scheduled for deletion
@@ -193,7 +197,7 @@ bool j1Collision::Update(float dt)
 		}
 		I++;
 	}
-
+	
 	HandleTriggers();
 
 	return ret;
@@ -201,6 +205,8 @@ bool j1Collision::Update(float dt)
 
 void j1Collision::HandleTriggers()
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	list<ColliderGroup*>::const_iterator groups = colliderGroups.begin();
 
 	while (groups != colliderGroups.end()) {
@@ -248,6 +254,8 @@ bool j1Collision::CleanUp()
 
 void j1Collision::DebugDraw()
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	Uint8 alpha = 80;
 	SDL_Color color;
 

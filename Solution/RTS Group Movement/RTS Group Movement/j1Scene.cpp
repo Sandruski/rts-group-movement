@@ -129,6 +129,8 @@ bool j1Scene::PreUpdate()
 // Called each loop iteration
 bool j1Scene::Update(float dt)
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	bool ret = true;
 
 	// Save mouse position (world and map coords)
@@ -157,6 +159,7 @@ bool j1Scene::Update(float dt)
 
 	// Draw
 	App->map->Draw(); // map
+
 	App->entities->Draw(); // entities
 
 	if (debugDrawAttack)

@@ -45,7 +45,9 @@ enum UnitState
 	UnitState_NoState,
 	UnitState_Idle,
 	UnitState_Walk,
-	UnitState_Attack,
+	UnitState_AttackTarget,
+	UnitState_MoveToPosition,
+	UnitState_HitTarget,
 	UnitState_Patrol,
 	UnitState_Die
 };
@@ -163,9 +165,7 @@ protected:
 	// Attack
 	bool isSightSatisfied = false; // if true, sight distance is satisfied
 	bool isAttackSatisfied = false; // if true, attack distance is satisfied
-
 	bool isAttacking = false; // if true, the unit is attacking
-
 	Entity* target = nullptr;
 
 	// Collision

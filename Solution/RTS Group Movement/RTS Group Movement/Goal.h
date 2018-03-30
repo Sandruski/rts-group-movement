@@ -65,7 +65,7 @@ public:
 	virtual void Activate();
 
 	// It is executed each update step
-	virtual GoalStatus Process();
+	virtual GoalStatus Process(float dt);
 
 	// Undertakes any necessary tidying up before a goal is exited
 	/// It is called just before a goal is destroyed
@@ -101,7 +101,7 @@ public:
 	AtomicGoal(DynamicEntity* owner, GoalType goalType);
 
 	virtual void Activate();
-	virtual GoalStatus Process();
+	virtual GoalStatus Process(float dt);
 	virtual void Terminate();
 };
 
@@ -112,7 +112,7 @@ public:
 	CompositeGoal(DynamicEntity* owner, GoalType goalType);
 
 	virtual void Activate();
-	virtual GoalStatus Process();
+	virtual GoalStatus Process(float dt);
 	virtual void Terminate();
 
 	// -----
@@ -123,7 +123,7 @@ public:
 	// It ensures that all completed and failed goals are removed from the list before
 	// processing the next subgoal in line and returning its status
 	// If the subgoal list is empty, 'completed' is returned
-	GoalStatus ProcessSubgoals();
+	GoalStatus ProcessSubgoals(float dt);
 
 	void ReactivateIfFailed();
 
@@ -146,7 +146,7 @@ public:
 	Goal_Wander(DynamicEntity* owner);
 
 	void Activate();
-	GoalStatus Process();
+	GoalStatus Process(float dt);
 	void Terminate();
 
 private:
@@ -162,7 +162,7 @@ public:
 	Goal_Think(DynamicEntity* owner);
 
 	void Activate();
-	GoalStatus Process();
+	GoalStatus Process(float dt);
 	void Terminate();
 
 	// Arbitrate between available strategies, choosing the most appropriate
@@ -180,7 +180,7 @@ public:
 	Goal_AttackTarget(DynamicEntity* owner, Entity* target);
 
 	void Activate();
-	GoalStatus Process();
+	GoalStatus Process(float dt);
 	void Terminate();
 
 private:
@@ -195,7 +195,7 @@ public:
 	Goal_MoveToPosition(DynamicEntity* owner, iPoint destinationTile);
 
 	void Activate();
-	GoalStatus Process();
+	GoalStatus Process(float dt);
 	void Terminate();
 
 private:
@@ -210,7 +210,7 @@ public:
 	Goal_HitTarget(DynamicEntity* owner, Entity* target);
 
 	void Activate();
-	GoalStatus Process();
+	GoalStatus Process(float dt);
 	void Terminate();
 
 private:

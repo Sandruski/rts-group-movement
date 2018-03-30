@@ -17,7 +17,7 @@ Goal::~Goal() {}
 
 void Goal::Activate() {}
 
-GoalStatus Goal::Process() { return goalStatus; }
+GoalStatus Goal::Process(float dt) { return goalStatus; }
 
 void Goal::Terminate() {}
 
@@ -60,7 +60,7 @@ AtomicGoal::AtomicGoal(DynamicEntity* owner, GoalType goalType) :Goal(owner, goa
 
 void AtomicGoal::Activate() {}
 
-GoalStatus AtomicGoal::Process() { return goalStatus; }
+GoalStatus AtomicGoal::Process(float dt) { return goalStatus; }
 
 void AtomicGoal::Terminate() {}
 
@@ -70,7 +70,7 @@ CompositeGoal::CompositeGoal(DynamicEntity* owner, GoalType goalType) : Goal(own
 
 void CompositeGoal::Activate() {}
 
-GoalStatus CompositeGoal::Process() { return goalStatus; }
+GoalStatus CompositeGoal::Process(float dt) { return goalStatus; }
 
 void CompositeGoal::Terminate() {}
 
@@ -79,7 +79,7 @@ void CompositeGoal::AddSubgoal(Goal* goal)
 	subgoals.push_front(goal);
 }
 
-GoalStatus CompositeGoal::ProcessSubgoals() 
+GoalStatus CompositeGoal::ProcessSubgoals(float dt) 
 {
 	// Remove all completed and failed goals from the front of the subgoal list
 	while (subgoals.size() > 0
@@ -94,7 +94,7 @@ GoalStatus CompositeGoal::ProcessSubgoals()
 	if (subgoals.size() > 0) {
 
 		// Grab the status of the frontmost subgoal
-		GoalStatus subgoalsStatus = subgoals.front()->Process();
+		GoalStatus subgoalsStatus = subgoals.front()->Process(dt);
 
 		// SPECIAL CASE: the frontmost subgoal reports 'completed' and the subgoal list
 		// contains additional goals. To ensure the parent keeps processing its subgoal list,
@@ -141,12 +141,14 @@ void Goal_Think::Activate()
 
 	// Initialize the goal
 	// TODO: Add some code here
+
+	owner->SetUnitState(UnitState_Idle);
 }
 
-GoalStatus Goal_Think::Process()
+GoalStatus Goal_Think::Process(float dt)
 {
 	// Process the subgoals
-	ProcessSubgoals();
+	ProcessSubgoals(dt);
 
 	// If any of the subgoals have failed then this goal replans
 	ReactivateIfFailed();
@@ -158,6 +160,9 @@ void Goal_Think::Terminate()
 {
 	// Switch the goal off
 	// TODO: Add some code here
+
+	owner->SetUnitState(UnitState_Idle);
+	owner->SetUnitDirection(UnitDirection_NoDirection);
 }
 
 void Goal_Think::AddGoal_Wander()
@@ -201,9 +206,11 @@ void Goal_AttackTarget::Activate()
 		iPoint targetTile = App->map->WorldToMap(target->GetPos().x, target->GetPos().y);
 		AddSubgoal(new Goal_MoveToPosition(owner, targetTile));
 	}
+
+	owner->SetUnitState(UnitState_AttackTarget);
 }
 
-GoalStatus Goal_AttackTarget::Process()
+GoalStatus Goal_AttackTarget::Process(float dt)
 {
 	ActivateIfInactive();
 
@@ -216,7 +223,7 @@ GoalStatus Goal_AttackTarget::Process()
 	}
 
 	// Process the subgoals
-	goalStatus = ProcessSubgoals();
+	goalStatus = ProcessSubgoals(dt);
 
 	ReactivateIfFailed();
 
@@ -231,6 +238,9 @@ void Goal_AttackTarget::Terminate()
 		owner->SetTarget(nullptr);
 
 	target = nullptr;
+
+	owner->SetUnitState(UnitState_Idle);
+	owner->SetUnitDirection(UnitDirection_NoDirection);
 }
 
 // Goal_MoveToPosition ---------------------------------------------------------------------
@@ -249,17 +259,19 @@ void Goal_MoveToPosition::Activate()
 		return;
 	}
 
+	owner->SetUnitState(UnitState_MoveToPosition);
+
 	LOG("MoveToPosition is activated");
 }
 
-GoalStatus Goal_MoveToPosition::Process() 
+GoalStatus Goal_MoveToPosition::Process(float dt) 
 {
 	ActivateIfInactive();
 
 	if (goalStatus == GoalStatus_Failed)
 		return goalStatus;
 
-	App->movement->MoveUnit(owner, App->dt);
+	App->movement->MoveUnit(owner, dt);
 
 	if (owner->GetSingleUnit()->movementState == MovementState_GoalReached)
 		goalStatus = GoalStatus_Completed;
@@ -272,6 +284,11 @@ GoalStatus Goal_MoveToPosition::Process()
 void Goal_MoveToPosition::Terminate() 
 {
 	LOG("MoveToPosition is terminated");
+
+	owner->GetSingleUnit()->ResetUnitParameters();
+
+	owner->SetUnitState(UnitState_Idle);
+	owner->SetUnitDirection(UnitDirection_NoDirection);
 }
 
 // Goal_HitTarget ---------------------------------------------------------------------
@@ -290,12 +307,12 @@ void Goal_HitTarget::Activate()
 		return;
 	}
 
-	owner->SetUnitState(UnitState_Attack);
+	owner->SetUnitState(UnitState_HitTarget);
 
 	LOG("HitTarget is terminated");
 }
 
-GoalStatus Goal_HitTarget::Process() 
+GoalStatus Goal_HitTarget::Process(float dt) 
 {
 	ActivateIfInactive();
 
@@ -334,7 +351,7 @@ void Goal_Wander::Activate()
 	i = 0;
 }
 
-GoalStatus Goal_Wander::Process()
+GoalStatus Goal_Wander::Process(float dt)
 {
 	// If status is inactive, activate it
 	ActivateIfInactive();

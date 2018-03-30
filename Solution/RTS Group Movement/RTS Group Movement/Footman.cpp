@@ -75,7 +75,7 @@ void Footman::Move(float dt)
 	}
 
 	// Process the currently active goal
-	brain->Process();
+	brain->Process(dt);
 
 	// ---------------------------------------------------------------------
 
@@ -109,7 +109,7 @@ void Footman::Move(float dt)
 		}
 	}*/
 
-	//UnitStateMachine(dt);
+	UnitStateMachine(dt);
 
 	// Update animations
 	UpdateAnimationsSpeed(dt);
@@ -215,6 +215,7 @@ void Footman::UnitStateMachine(float dt)
 {
 	switch (unitState) {
 
+	case UnitState_MoveToPosition:
 	case UnitState_Walk:
 
 		if (App->scene->isFrameByFrame) { /// debug
@@ -226,7 +227,7 @@ void Footman::UnitStateMachine(float dt)
 
 		break;
 
-	case UnitState_Attack:
+	case UnitState_AttackTarget:
 
 		// The unit is ordered to attack (this happens when the sight distance is satisfied)
 
@@ -275,7 +276,13 @@ void Footman::UnitStateMachine(float dt)
 			isAttacking = false;
 		}
 		*/
-	break;
+		break;
+
+	case UnitState_HitTarget:
+
+		LOG("Hit");
+
+		break;
 
 	case UnitState_Patrol:
 
@@ -384,9 +391,8 @@ bool Footman::ChangeAnimation()
 		return ret;
 	}
 
-	if (unitState != UnitState_Attack) {
+	if (unitState != UnitState_HitTarget) {
 
-		// The unit is in UnitState_Walk
 		switch (GetUnitDirection()) {
 
 		case UnitDirection_NoDirection:
@@ -447,8 +453,6 @@ bool Footman::ChangeAnimation()
 		return ret;
 	}
 	else {
-
-		// The unit is in UnitState_Attack
 
 		// Set the direction of the unit as the orientation towards the attacking target
 		if (target != nullptr) {

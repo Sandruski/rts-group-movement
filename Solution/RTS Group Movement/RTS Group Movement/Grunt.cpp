@@ -92,7 +92,7 @@ void Grunt::Move(float dt)
 
 		/// UnitState_Attack
 		if (isSightSatisfied)
-			unitState = UnitState_Attack;
+			unitState = UnitState_AttackTarget;
 		else
 			unitState = UnitState_Walk;
 	}
@@ -202,7 +202,7 @@ void Grunt::UnitStateMachine(float dt)
 
 		break;
 
-	case UnitState_Attack:
+	case UnitState_AttackTarget:
 
 		// The unit is ordered to attack (this happens when the sight distance is satisfied)
 
