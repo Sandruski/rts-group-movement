@@ -132,11 +132,17 @@ bool j1Collision::Update(float dt)
 
 				c1 = (*I)->colliders[i];
 
+				if (!c1->isValid)
+					continue;
+
 				bool isCollision = false;
 
 				for (uint j = 0; j < (*J)->colliders.size(); ++j) {
 
 					c2 = (*J)->colliders[j];
+
+					if (!c2->isValid)
+						continue;
 
 					// Check for the collision
 					if (c1->CheckCollision(c2->colliderRect)) {
@@ -267,7 +273,8 @@ void j1Collision::DebugDraw()
 
 		for (uint i = 0; i < (*it)->colliders.size(); ++i)
 
-			App->render->DrawQuad((*it)->colliders[i]->colliderRect, color.r, color.g, color.b, alpha);
+			if ((*it)->colliders[i]->isValid)
+				App->render->DrawQuad((*it)->colliders[i]->colliderRect, color.r, color.g, color.b, alpha);
 
 		it++;
 	}
@@ -358,6 +365,11 @@ void Collider::SetPos(int x, int y)
 	colliderRect.y = y;
 }
 
+iPoint Collider::GetPos() const 
+{
+	return { colliderRect.x, colliderRect.y };
+}
+
 void Collider::SetColliderGroup(ColliderGroup* colliderGroup) 
 {
 	this->colliderGroup = colliderGroup;
@@ -394,4 +406,10 @@ bool ColliderGroup::IsColliderInGroup(Collider* collider)
 			return true;
 
 	return false;
+}
+
+void ColliderGroup::RemoveCollider(Collider* collider) 
+{
+	colliders.erase(remove(colliders.begin(), colliders.end(), collider), colliders.end());
+	collider = nullptr;
 }

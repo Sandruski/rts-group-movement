@@ -312,7 +312,6 @@ bool Grunt::ChangeAnimation()
 
 	if (unitState != UnitState_HitTarget) {
 
-		// The unit is in UnitState_Walk
 		switch (GetUnitDirection()) {
 
 		case UnitDirection_NoDirection:
@@ -374,19 +373,20 @@ bool Grunt::ChangeAnimation()
 	}
 	else {
 
-		// The unit is in UnitState_Attack
-
 		// Set the direction of the unit as the orientation towards the attacking target
-		fPoint orientation = { target->GetPos().x - pos.x, (float)target->GetPos().y - pos.y };
+		if (target != nullptr) {
 
-		float m = sqrtf(pow(orientation.x, 2.0f) + pow(orientation.y, 2.0f));
+			fPoint orientation = { target->GetPos().x - pos.x, (float)target->GetPos().y - pos.y };
 
-		if (m > 0.0f) {
-			orientation.x /= m;
-			orientation.y /= m;
+			float m = sqrtf(pow(orientation.x, 2.0f) + pow(orientation.y, 2.0f));
+
+			if (m > 0.0f) {
+				orientation.x /= m;
+				orientation.y /= m;
+			}
+
+			SetUnitDirectionByValue(orientation);
 		}
-
-		SetUnitDirectionByValue(orientation);
 
 		switch (GetUnitDirection()) {
 

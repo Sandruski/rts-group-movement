@@ -320,8 +320,19 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 
 			for (int x = (-sign * y) - (int)radius + 1; x < (int)radius + (sign * y); ++x) {
 
-				SDL_Rect rect = { currTilePos.x + x * App->map->data.tile_width, currTilePos.y + y * App->map->data.tile_height, App->map->data.tile_width, App->map->data.tile_height };
-				(*it)->SetPos(rect.x, rect.y);
+				iPoint definitivePos = { currTilePos.x + x * App->map->data.tile_width, currTilePos.y + y * App->map->data.tile_height };
+				iPoint definitiveTile = App->map->WorldToMap(definitivePos.x, definitivePos.y);
+
+				if (App->pathfinding->IsWalkable(definitiveTile)) {
+
+					(*it)->isValid = true;
+
+					SDL_Rect rect = { definitivePos.x, definitivePos.y, App->map->data.tile_width, App->map->data.tile_height };
+					(*it)->SetPos(rect.x, rect.y);
+				}
+				else
+					(*it)->isValid = false;
+
 				it++;
 			}
 		}

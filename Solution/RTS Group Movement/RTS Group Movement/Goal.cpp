@@ -324,14 +324,17 @@ GoalStatus Goal_HitTarget::Process(float dt)
 {
 	ActivateIfInactive();
 
+	if (!owner->IsTargetPresent()) {
+
+		goalStatus = GoalStatus_Completed;
+		return goalStatus;
+	}
+
 	if (((DynamicEntity*)owner)->GetAnimation()->Finished()) {
 
 		owner->GetTarget()->ApplyDamage(owner->GetDamage());
 		((DynamicEntity*)owner)->GetAnimation()->Reset();
 	}
-
-	if (!owner->IsTargetPresent())
-		goalStatus = GoalStatus_Completed;
 
 	LOG("HitTarget is in progress");
 

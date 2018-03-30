@@ -2,6 +2,7 @@
 #define __j1COLLISION_H__
 
 #include "j1Module.h"
+#include "p2Point.h"
 
 #include "SDL\include\SDL_rect.h"
 
@@ -78,6 +79,7 @@ struct ColliderGroup
 	~ColliderGroup();
 
 	bool IsColliderInGroup(Collider* collider);
+	void RemoveCollider(Collider* collider);
 
 	// -----
 
@@ -103,6 +105,8 @@ struct Collider
 	~Collider();
 
 	void SetPos(int x, int y);
+	iPoint GetPos() const;
+
 	void SetColliderGroup(ColliderGroup* colliderGroup);
 
 	bool CheckCollision(const SDL_Rect& r) const;
@@ -111,6 +115,7 @@ struct Collider
 
 	SDL_Rect colliderRect = { 0,0,0,0 };
 	ColliderGroup* colliderGroup = nullptr; // parent
+	bool isValid = true;
 };
 
 #endif //__j1COLLISION_H__
