@@ -329,15 +329,6 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 }
 
 // Attack
-void DynamicEntity::ResetUnitAttackParameters() 
-{
-	target = nullptr;
-
-	isSightSatisfied = false;
-	isAttackSatisfied = false;
-	isAttacking = false;
-}
-
 Entity* DynamicEntity::GetTarget() const 
 {
 	return target;

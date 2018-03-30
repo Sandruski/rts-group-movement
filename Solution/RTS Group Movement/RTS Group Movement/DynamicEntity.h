@@ -44,11 +44,12 @@ enum UnitState
 {
 	UnitState_NoState,
 	UnitState_Idle,
-	UnitState_Walk,
+
 	UnitState_AttackTarget,
 	UnitState_MoveToPosition,
 	UnitState_HitTarget,
 	UnitState_Patrol,
+
 	UnitState_Die
 };
 
@@ -129,8 +130,6 @@ public:
 	void UpdateRhombusColliderPos(ColliderGroup* collider, uint radius);
 
 	// Attack
-	void ResetUnitAttackParameters();
-
 	Entity* GetTarget() const;
 	void SetTarget(Entity* target);
 	bool IsTargetPresent() const;
@@ -145,14 +144,14 @@ public:
 	// Dead
 	bool isDead = false; // if true, the unit is performing their dead animation
 
+	// Root of a bot's goal hierarchy
+	Goal_Think* brain = nullptr;
+
 protected:
 
 	Animation* animation = nullptr;
 	UnitState unitState = UnitState_Idle;
 	bool isFlying = false; // Dragon and Gryphon Rider fly
-
-	// Root of a bot's goal hierarchy
-	Goal_Think* brain = nullptr;
 
 	// Movement
 	UnitInfo unitInfo;
@@ -165,7 +164,6 @@ protected:
 	// Attack
 	bool isSightSatisfied = false; // if true, sight distance is satisfied
 	bool isAttackSatisfied = false; // if true, attack distance is satisfied
-	bool isAttacking = false; // if true, the unit is attacking
 	Entity* target = nullptr;
 
 	// Collision

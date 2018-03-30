@@ -74,40 +74,27 @@ void Footman::Move(float dt)
 		isSpawned = true;
 	}
 
-	// Process the currently active goal
-	brain->Process(dt);
-
 	// ---------------------------------------------------------------------
 
 	// Is the unit dead?
-	if (currLife <= 0 && unitState != UnitState_Die) {
+	/// The unit must fit the tile (it is more attractive for the player)
+	if (currLife <= 0 && unitState != UnitState_Die && singleUnit->IsFittingTile()) {
 
-		/// The unit must fit the tile (it is more attractive for the player)
-		if (singleUnit->IsFittingTile()) {
+		isDead = true;
 
-			isDead = true;
-			unitState = UnitState_NoState;
-
-			// If the player dies, remove all their goals
-			brain->RemoveAllSubgoals();
-		}
+		// If the player dies, remove all their goals
+		brain->RemoveAllSubgoals();
 	}
 
-	/*
-	if (!isDead) {
+	// The goal of the unit has been changed manually
+	if (singleUnit->isGoalChanged)
 
-		// UnitState_Walk
-		if (singleUnit != nullptr)
-			if ((isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) || singleUnit->wakeUp)
-				unitState = UnitState_Walk;
+		brain->AddGoal_MoveToPosition(singleUnit->goal);
 
-		// UnitState_Attack
-		if (isSightSatisfied) {
-		
-			if (isWantingAttack)
-				unitState = UnitState_Attack;
-		}
-	}*/
+	// ---------------------------------------------------------------------
+
+	// Process the currently active goal
+	brain->Process(dt);
 
 	UnitStateMachine(dt);
 
@@ -156,34 +143,24 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 		if (c1->colliderType == ColliderType_PlayerSightRadius && c2->colliderType == ColliderType_EnemyUnit) { // || c2->colliderType == ColliderType_EnemyBuilding
 
 			LOG("Player Sight Radius");
+
 			// The Horde is within the SIGHT radius
 			isSightSatisfied = true;
 			target = c2->entity;
 
 			if (target != nullptr) {
 
-				brain->AddGoalAttackTarget(target);
-				isAttacking = true;
-			}
-
-			// Go attack the Horde
-			/// The unit only attacks automatically if it isn't going anywhere
-
-			/*
-			if (isWantingAttack) {
-
 				list<DynamicEntity*> unit;
 				unit.push_back(this);
 				UnitGroup* group = App->movement->CreateGroupFromUnits(unit);
 
-				/// Chase the attackingTarget
-				DynamicEntity* dynamicEntity = (DynamicEntity*)target;
-				group->SetGoal(dynamicEntity->GetSingleUnit()->currTile);
-			}*/
+				brain->AddGoal_AttackTarget(target);
+			}
 		}
 		else if (c1->colliderType == ColliderType_PlayerAttackRadius && c2->colliderType == ColliderType_EnemyUnit) { // || c2->colliderType == ColliderType_EnemyBuilding
 
 			LOG("Player Attack Radius");
+
 			// The Horde is within the ATTACK radius
 			isAttackSatisfied = true;
 		}
@@ -203,7 +180,6 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 
 			// The Horde is NO longer within the ATTACK radius
 			isAttackSatisfied = false;
-			isAttacking = false;
 		}
 
 		break;
@@ -216,71 +192,14 @@ void Footman::UnitStateMachine(float dt)
 	switch (unitState) {
 
 	case UnitState_MoveToPosition:
-	case UnitState_Walk:
-
-		if (App->scene->isFrameByFrame) { /// debug
-			if (App->input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN)
-				App->movement->MoveUnit(this, dt);
-		}
-		else
-			App->movement->MoveUnit(this, dt);
 
 		break;
 
 	case UnitState_AttackTarget:
 
-		// The unit is ordered to attack (this happens when the sight distance is satisfied)
-
-		// The attackingTarget has died. Stop chasing and/or attacking
-		/*
-		if (((DynamicEntity*)target)->isDead) {
-
-			LOG("Player killed!");
-
-			// Reset the attack parameters (they will also be reseted later when the attackingTarget is removed)
-			ResetUnitAttackParameters();
-
-			/// The goal tile of this unit must be their currTile
-			singleUnit->group->SetGoal(singleUnit->currTile);
-
-			break;
-		}
-
-		// 1. The attack distance is satisfied
-		if (isAttackSatisfied
-			&& singleUnit->coll == CollisionType_NoCollision
-			&& singleUnit->movementState != MovementState_FollowPath && singleUnit->movementState != MovementState_NoState) {
-
-			singleUnit->movementState = MovementState_GoalReached;
-
-			// Attack the other unit until killed
-			if (animation->Finished()) {
-				target->ApplyDamage(unitInfo.damage);
-				LOG("Enemy: IT HURTS!");
-				animation->Reset();
-			}
-			isAttacking = true;
-		}
-
-		// 2. The attack distance is not satisfied
-		else {
-
-			// The unit has reached the goal but the attack distance is not satisfied. The attacking target may have moved
-			if (singleUnit->movementState == MovementState_GoalReached) {
-
-				/// Keep chasing the attackingTarget
-				singleUnit->group->SetGoal(((DynamicEntity*)target)->GetSingleUnit()->currTile);
-			}
-
-			App->movement->MoveUnit(this, dt);
-			isAttacking = false;
-		}
-		*/
 		break;
 
 	case UnitState_HitTarget:
-
-		LOG("Hit");
 
 		break;
 

@@ -10,6 +10,7 @@
 #include "j1Render.h"
 #include "j1Scene.h"
 #include "j1PathManager.h"
+#include "Goal.h"
 
 #include "Brofiler\Brofiler.h"
 
@@ -242,18 +243,9 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 	fPoint movePos;
 	iPoint newGoal;
 
-	// HAS THE GOAL BEEN CHANGED?
-	if (singleUnit->isGoalChanged) {
-
-		singleUnit->GetReadyForNewMove();
-	}
-
 	switch (singleUnit->movementState) {
 
 	case MovementState_WaitForPath:
-
-		if (singleUnit->goal.x == -2 && singleUnit->goal.y == 0)
-			LOG("NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
 
 		// The goal of a unit cannot be the goal of another unit
 		if (!IsValidTile(singleUnit, singleUnit->goal, false, false, true))
@@ -265,7 +257,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 			// Only one unit at a time can change its goal
 			if (!IsAnyUnitDoingSomething(singleUnit, true)) {
 
-				singleUnit->unit->GetPathPlanner()->RequestDijkstra(singleUnit->group->goal, FindActiveTrigger::ActiveTriggerType_Goal);
+				singleUnit->unit->GetPathPlanner()->RequestDijkstra(singleUnit->goal, FindActiveTrigger::ActiveTriggerType_Goal);
 
 				singleUnit->isSearching = true; /// The unit is changing its goal
 			}
@@ -292,9 +284,6 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 
 			// ***IS THE PATH READY?***
 			if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
-
-				if (singleUnit->currTile == singleUnit->goal)
-					LOG("YESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
 
 				singleUnit->path = singleUnit->unit->GetPathPlanner()->GetPath();
 				singleUnit->unit->GetPathPlanner()->SetSearchRequested(false);
@@ -335,9 +324,6 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 		// ---------------------------------------------------------------------
 		// COLLISION CALCULATION
 		// ---------------------------------------------------------------------
-
-		if (singleUnit->goal.x == -2 && singleUnit->goal.y == 0)
-			LOG("NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
 
 		CheckForFutureCollision(singleUnit);
 
@@ -458,11 +444,8 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 					// ***IS THE TILE READY?***
 					if (singleUnit->waitUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
-						singleUnit->waitUnit->goal = singleUnit->waitUnit->unit->GetPathPlanner()->GetTile();
+						singleUnit->waitUnit->unit->brain->AddGoal_MoveToPosition(singleUnit->waitUnit->unit->GetPathPlanner()->GetTile());
 						singleUnit->waitUnit->unit->GetPathPlanner()->SetSearchRequested(false);
-
-						singleUnit->waitUnit->GetReadyForNewMove();
-						singleUnit->waitUnit->movementState = MovementState_WaitForPath;
 
 						/// COLLISION RESOLVED
 						singleUnit->ResetUnitCollisionParameters();
@@ -723,10 +706,13 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 
 	case MovementState_GoalReached:
 
-		if (singleUnit->group->isShapedGoal && singleUnit->goal != singleUnit->shapedGoal) {
-		
-			singleUnit->goal = singleUnit->shapedGoal;
-			singleUnit->isGoalChanged = true;
+		if (singleUnit->group->isShapedGoal) {
+
+			if (singleUnit->goal != singleUnit->shapedGoal) {
+
+				singleUnit->goal = singleUnit->shapedGoal;
+				singleUnit->isGoalChanged = true;
+			}
 		}
 
 		// The unit is still
@@ -1399,9 +1385,10 @@ bool UnitGroup::SetShapedGoal()
 			it++;
 		}
 
-		shapedGoal.clear();
 		ret = true;
 	}
+
+	shapedGoal.clear();
 
 	return ret;
 }
@@ -1465,10 +1452,9 @@ void SingleUnit::StopUnit()
 // Resets the parameters of the unit (general info)
 void SingleUnit::ResetUnitParameters()
 {
-	reversePriority = false;
-
 	isGoalNeeded = false;
 	isSearching = false;
+	reversePriority = false;
 
 	wait = false;
 	wakeUp = false;
@@ -1518,15 +1504,14 @@ void SingleUnit::WakeUp()
 		wakeUp = true;
 }
 
-bool SingleUnit::IsUnitGoingSomewhere() const
-{
-	return (goal.x != -1 && goal.y != -1 && (movementState == MovementState_WaitForPath || movementState == MovementState_FollowPath))
-		|| isGoalChanged;
-}
-
 bool SingleUnit::IsFittingTile() const 
 {
 	iPoint currTilePos = App->map->MapToWorld(currTile.x, currTile.y);
 
 	return (int)unit->GetPos().x == currTilePos.x && (int)unit->GetPos().y == currTilePos.y;
+}
+
+void SingleUnit::SetGoal(iPoint goal) 
+{
+	this->goal = goal;
 }

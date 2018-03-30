@@ -170,12 +170,12 @@ void Goal_Think::AddGoal_Wander()
 	AddSubgoal(new Goal_Wander(owner));
 }
 
-void Goal_Think::AddGoalAttackTarget(Entity* target)
+void Goal_Think::AddGoal_AttackTarget(Entity* target)
 {
 	AddSubgoal(new Goal_AttackTarget(owner, target));
 }
 
-void Goal_Think::AddGoalMoveToPosition(iPoint destinationTile) 
+void Goal_Think::AddGoal_MoveToPosition(iPoint destinationTile) 
 {
 	AddSubgoal(new Goal_MoveToPosition(owner, destinationTile));
 }
@@ -253,11 +253,11 @@ void Goal_MoveToPosition::Activate()
 
 	RemoveAllSubgoals();
 
-	if (!owner->GetSingleUnit()->group->SetGoal(destinationTile)) {
-		
-		goalStatus = GoalStatus_Failed;
-		return;
-	}
+	if (owner->GetSingleUnit()->goal != destinationTile)
+
+		owner->GetSingleUnit()->SetGoal(destinationTile);
+
+	owner->GetSingleUnit()->GetReadyForNewMove();
 
 	owner->SetUnitState(UnitState_MoveToPosition);
 
@@ -273,8 +273,16 @@ GoalStatus Goal_MoveToPosition::Process(float dt)
 
 	App->movement->MoveUnit(owner, dt);
 
-	if (owner->GetSingleUnit()->movementState == MovementState_GoalReached)
-		goalStatus = GoalStatus_Completed;
+	if (owner->GetSingleUnit()->movementState == MovementState_GoalReached) {
+
+		if (owner->GetSingleUnit()->group->isShapedGoal) {
+
+			if (owner->GetSingleUnit()->goal == owner->GetSingleUnit()->shapedGoal)
+				goalStatus = GoalStatus_Completed;
+		}
+		else
+			goalStatus = GoalStatus_Completed;
+	}
 
 	LOG("MoveToPosition is in progress");
 

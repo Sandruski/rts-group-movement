@@ -169,8 +169,8 @@ public:
 	// to be pursued. Calculate the desirability of the strategies
 	//void Arbitrate();
 	void AddGoal_Wander();
-	void AddGoalAttackTarget(Entity* target);
-	void AddGoalMoveToPosition(iPoint destinationTile);
+	void AddGoal_AttackTarget(Entity* target);
+	void AddGoal_MoveToPosition(iPoint destinationTile);
 };
 
 class Goal_AttackTarget :public CompositeGoal

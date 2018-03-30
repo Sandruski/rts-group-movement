@@ -115,7 +115,7 @@ bool j1Scene::PreUpdate()
 
 		// 2: spawn a Grunt with priority 1
 		unitInfo.sightRadius = 4;
-		unitInfo.attackRadius = 3;
+		unitInfo.attackRadius = 2;
 		maxLife = 20;
 		currLife = (int)maxLife;
 

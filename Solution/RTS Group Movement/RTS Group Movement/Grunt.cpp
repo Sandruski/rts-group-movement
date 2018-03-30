@@ -11,6 +11,7 @@
 #include "j1EntityFactory.h"
 #include "j1Movement.h"
 #include "j1PathManager.h"
+#include "Goal.h"
 
 #include "j1Scene.h" // isFrameByFrame
 #include "j1Input.h" // isFrameByFrame
@@ -45,6 +46,9 @@ Grunt::Grunt(fPoint pos, iPoint size, int currLife, uint maxLife, const UnitInfo
 	this->gruntInfo.deathDown = info.deathDown;
 
 	LoadAnimationsSpeed();
+
+	// Initialize the goals
+	brain->RemoveAllSubgoals();
 }
 
 void Grunt::Move(float dt)
@@ -73,29 +77,24 @@ void Grunt::Move(float dt)
 	// ---------------------------------------------------------------------
 
 	// Is the unit dead?
-	if (currLife <= 0 && unitState != UnitState_Die) {
+	/// The unit must fit the tile (it is more attractive for the player)
+	if (currLife <= 0 && unitState != UnitState_Die && singleUnit->IsFittingTile()) {
 
-		/// The unit must fit the tile (it is more attractive for the player)
-		if (singleUnit->IsFittingTile()) {
+		isDead = true;
 
-			isDead = true;
-			unitState = UnitState_NoState;
-		}
+		// If the player dies, remove all their goals
+		brain->RemoveAllSubgoals();
 	}
 
-	if (!isDead) {
+	// The goal of the unit has been changed manually
+	if (singleUnit->isGoalChanged)
 
-		/// UnitState_Walk
-		if (singleUnit != nullptr)
-			if ((isSelected && App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN) || singleUnit->wakeUp)
-				unitState = UnitState_Walk;
+		brain->AddGoal_MoveToPosition(singleUnit->goal);
 
-		/// UnitState_Attack
-		if (isSightSatisfied)
-			unitState = UnitState_AttackTarget;
-		else
-			unitState = UnitState_Walk;
-	}
+	// ---------------------------------------------------------------------
+
+	// Process the currently active goal
+	brain->Process(dt);
 
 	UnitStateMachine(dt);
 
@@ -140,26 +139,28 @@ void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState col
 
 	case CollisionState_OnEnter:
 
-		// An player is within the sight of this enemy unit
-		if (c1->colliderType == ColliderType_EnemySightRadius && c2->colliderType == ColliderType_PlayerUnit) {
+		// An player is within the sight of this player unit
+		if (c1->colliderType == ColliderType_EnemySightRadius && c2->colliderType == ColliderType_PlayerUnit) { // || c2->colliderType == ColliderType_PlayerBuilding
 
 			LOG("Enemy Sight Radius");
+
 			// The Alliance is within the SIGHT radius
 			isSightSatisfied = true;
 			target = c2->entity;
 
-			// Go attack the Alliance
-			list<DynamicEntity*> unit;
-			unit.push_back(this);
-			UnitGroup* group = App->movement->CreateGroupFromUnits(unit);
+			if (target != nullptr) {
 
-			/// Chase the attackingTarget
-			DynamicEntity* dynamicEntity = (DynamicEntity*)target;
-			group->SetGoal(dynamicEntity->GetSingleUnit()->currTile);
+				list<DynamicEntity*> unit;
+				unit.push_back(this);
+				UnitGroup* group = App->movement->CreateGroupFromUnits(unit);
+
+				brain->AddGoal_AttackTarget(target);
+			}
 		}
-		else if (c1->colliderType == ColliderType_EnemyAttackRadius && c2->colliderType == ColliderType_PlayerUnit) {
+		else if (c1->colliderType == ColliderType_EnemyAttackRadius && c2->colliderType == ColliderType_PlayerUnit) { // || c2->colliderType == ColliderType_PlayerBuilding
 
 			LOG("Enemy Attack Radius");
+
 			// The Alliance is within the ATTACK radius
 			isAttackSatisfied = true;
 		}
@@ -169,17 +170,16 @@ void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState col
 	case CollisionState_OnExit:
 
 		// Reset attack parameters
-		if (c1->colliderType == ColliderType_EnemySightRadius && c2->colliderType == ColliderType_PlayerUnit) {
+		if (c1->colliderType == ColliderType_EnemySightRadius && c2->colliderType == ColliderType_PlayerUnit) { // || c2->colliderType == ColliderType_PlayerBuilding
 
 			// The Alliance is NO longer within the SIGHT radius
 			isSightSatisfied = false;
 			target = nullptr;
 		}
-		else if (c1->colliderType == ColliderType_EnemyAttackRadius && c2->colliderType == ColliderType_PlayerUnit) {
+		else if (c1->colliderType == ColliderType_EnemyAttackRadius && c2->colliderType == ColliderType_PlayerUnit) { // || c2->colliderType == ColliderType_PlayerBuilding
 
 			// The Alliance is NO longer within the ATTACK radius
 			isAttackSatisfied = false;
-			isAttacking = false;
 		}
 
 		break;
@@ -191,64 +191,21 @@ void Grunt::UnitStateMachine(float dt)
 {
 	switch (unitState) {
 
-	case UnitState_Walk:
-
-		if (App->scene->isFrameByFrame) { /// debug
-			if (App->input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN)
-				App->movement->MoveUnit(this, dt);
-		}
-		else
-			App->movement->MoveUnit(this, dt);
+	case UnitState_MoveToPosition:
 
 		break;
 
 	case UnitState_AttackTarget:
 
-		// The unit is ordered to attack (this happens when the sight distance is satisfied)
+		break;
 
-		// The attackingTarget has died. Stop chasing and/or attacking
-		if (((DynamicEntity*)target)->isDead) {
+	case UnitState_HitTarget:
 
-			LOG("Player killed!");
+		break;
 
-			// Reset the attack parameters (they will also be reseted later when the attackingTarget is removed)
-			ResetUnitAttackParameters();
+	case UnitState_Patrol:
 
-			/// The goal tile of this unit must be their currTile
-			singleUnit->group->SetGoal(singleUnit->currTile);
-
-			break;
-		}
-
-		// 1. The attack distance is satisfied
-		/// When attacking, the unit cannot move...
-		if (isAttackSatisfied
-			&& singleUnit->movementState != MovementState_FollowPath) {
-
-			// Attack the other unit until killed
-			if (animation->Finished()) {
-				target->ApplyDamage(unitInfo.damage);
-				LOG("Player: IT HURTS!");
-				animation->Reset();
-			}
-			isAttacking = true;
-		}
-
-		// 2. The attack distance is not satisfied
-		else {
-
-			// The unit has reached the goal but the attack distance is not satisfied. The attacking target may have moved
-			if (singleUnit->movementState == MovementState_GoalReached) {
-
-				/// Keep chasing the attackingTarget
-				singleUnit->group->SetGoal(((DynamicEntity*)target)->GetSingleUnit()->currTile);
-			}
-
-			App->movement->MoveUnit(this, dt);
-			isAttacking = false;
-		}
-
-	break;
+		break;
 
 	case UnitState_Die:
 
@@ -353,7 +310,7 @@ bool Grunt::ChangeAnimation()
 		return ret;
 	}
 
-	if (!isAttacking) {
+	if (unitState != UnitState_HitTarget) {
 
 		// The unit is in UnitState_Walk
 		switch (GetUnitDirection()) {
