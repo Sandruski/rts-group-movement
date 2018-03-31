@@ -37,20 +37,26 @@ enum DynamicEntityType
 	// Enemy types
 	DynamicEntityType_Grunt,
 
+	// Neutral types
+	DynamicEntityType_CritterSheep,
+	DynamicEntityType_CritterBoar,
+
 	DynamicEntityType_MaxTypes
 };
 
 enum UnitState 
 {
 	UnitState_NoState,
+
 	UnitState_Idle,
+	UnitState_Die,
 
+	// Composite goals only
 	UnitState_AttackTarget,
-	UnitState_MoveToPosition,
-	UnitState_HitTarget,
 	UnitState_Patrol,
+	UnitState_Wander,
 
-	UnitState_Die
+	UnitState_MaxStates
 };
 
 enum UnitDirection 
@@ -64,6 +70,18 @@ enum UnitDirection
 	UnitDirection_UpRight,
 	UnitDirection_DownLeft,
 	UnitDirection_DownRight
+};
+
+enum UnitCommand {
+
+	UnitCommand_NoCommand,
+
+	UnitCommand_Stop,
+	UnitCommand_AttackTarget,
+	UnitCommand_Patrol,
+	UnitCommand_Wander,
+
+	UnitCommand_MaxCommands
 };
 
 // Struct UnitInfo: contains all necessary information of the movement and attack of the unit
@@ -91,6 +109,7 @@ public:
 	virtual void OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState collisionState);
 
 	Animation* GetAnimation() const;
+	Goal_Think* GetBrain() const;
 
 	// State machine
 	void UnitStateMachine(float dt);
@@ -137,6 +156,12 @@ public:
 	bool IsSightSatisfied() const;
 	bool IsAttackSatisfied() const;
 
+	void SetHitting(bool isHitting);
+	bool IsHitting() const;
+
+	// Player commands
+	bool SetCommand(UnitCommand unitCommand);
+
 public:
 
 	DynamicEntityType dynamicEntityType = DynamicEntityType_NoType;
@@ -144,19 +169,23 @@ public:
 	// Dead
 	bool isDead = false; // if true, the unit is performing their dead animation
 
+protected:
+
+	UnitInfo unitInfo;
+	UnitState unitState = UnitState_Idle;
+
+	Animation* animation = nullptr;
+	fPoint direction = { 0.0f,0.0f };
+
+	bool isFlying = false; /// Dragon and Gryphon Rider fly
+
 	// Root of a bot's goal hierarchy
 	Goal_Think* brain = nullptr;
 
-protected:
-
-	Animation* animation = nullptr;
-	UnitState unitState = UnitState_Idle;
-	bool isFlying = false; // Dragon and Gryphon Rider fly
+	// Player commands
+	UnitCommand unitCommand = UnitCommand_NoCommand;
 
 	// Movement
-	UnitInfo unitInfo;
-	fPoint direction = { 0.0f,0.0f };
-
 	SingleUnit* singleUnit = nullptr;
 	PathPlanner* pathPlanner = nullptr;
 	Navgraph* navgraph = nullptr;
@@ -165,6 +194,8 @@ protected:
 	bool isSightSatisfied = false; // if true, sight distance is satisfied
 	bool isAttackSatisfied = false; // if true, attack distance is satisfied
 	Entity* target = nullptr;
+
+	bool isHitting = false; // if true, the unit is hitting their target (to change animation)
 
 	// Collision
 	ColliderGroup* sightRadiusCollider = nullptr;

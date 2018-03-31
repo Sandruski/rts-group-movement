@@ -340,6 +340,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 			}
 
 			// waitUnit is dead
+			// TODO: Check that this works fine and doesn't crash
 			if (singleUnit->waitUnit->unit->isRemove) {
 
 				singleUnit->waitUnit = nullptr;
@@ -351,7 +352,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 			// ---------------------------------------------------------------------
 
 			// a) The other unit is attacking and won't respond to any movement order
-			if (singleUnit->waitUnit->unit->GetUnitState() == UnitState_HitTarget) {
+			if (singleUnit->waitUnit->unit->IsHitting()) {
 			
 				// Current unit must react to the collision
 				// Current unit moves
@@ -444,7 +445,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 					// ***IS THE TILE READY?***
 					if (singleUnit->waitUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
-						singleUnit->waitUnit->unit->brain->AddGoal_MoveToPosition(singleUnit->waitUnit->unit->GetPathPlanner()->GetTile());
+						singleUnit->waitUnit->unit->GetBrain()->AddGoal_MoveToPosition(singleUnit->waitUnit->unit->GetPathPlanner()->GetTile());
 						singleUnit->waitUnit->unit->GetPathPlanner()->SetSearchRequested(false);
 
 						/// COLLISION RESOLVED

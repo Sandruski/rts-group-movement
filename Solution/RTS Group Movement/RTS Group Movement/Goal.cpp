@@ -127,6 +127,7 @@ void CompositeGoal::RemoveAllSubgoals()
 	subgoals.clear();
 }
 
+// COMPOSITE GOALS
 // Goal_Think ---------------------------------------------------------------------
 
 Goal_Think::Goal_Think(DynamicEntity* owner) :CompositeGoal(owner, GoalType_Think) {}
@@ -180,6 +181,11 @@ void Goal_Think::AddGoal_MoveToPosition(iPoint destinationTile)
 	AddSubgoal(new Goal_MoveToPosition(owner, destinationTile));
 }
 
+void Goal_Think::AddGoal_Patrol(iPoint originTile, iPoint destinationTile)
+{
+	AddSubgoal(new Goal_Patrol(owner, originTile, destinationTile));
+}
+
 // Goal_AttackTarget ---------------------------------------------------------------------
 
 Goal_AttackTarget::Goal_AttackTarget(DynamicEntity* owner, Entity* target) :CompositeGoal(owner, GoalType_AttackTarget), target(target) {}
@@ -214,6 +220,7 @@ GoalStatus Goal_AttackTarget::Process(float dt)
 {
 	ActivateIfInactive();
 
+	// The unit was chasing their target, but the attack distance has been suddenly satisfied
 	if (owner->IsAttackSatisfied() && owner->GetSingleUnit()->IsFittingTile() 
 		&& subgoals.front()->GetType() == GoalType_MoveToPosition) {
 
@@ -243,25 +250,63 @@ void Goal_AttackTarget::Terminate()
 	owner->SetUnitDirection(UnitDirection_NoDirection);
 }
 
-// Goal_MoveToPosition ---------------------------------------------------------------------
+// Goal_Patrol ---------------------------------------------------------------------
 
-Goal_MoveToPosition::Goal_MoveToPosition(DynamicEntity* owner, iPoint destinationTile) :CompositeGoal(owner, GoalType_MoveToPosition), destinationTile(destinationTile) {}
+Goal_Patrol::Goal_Patrol(DynamicEntity* owner, iPoint originTile, iPoint destinationTile) :CompositeGoal(owner, GoalType_Patrol), originTile(originTile), destinationTile(destinationTile) {}
 
-void Goal_MoveToPosition::Activate() 
+void Goal_Patrol::Activate()
 {
 	goalStatus = GoalStatus_Active;
 
 	RemoveAllSubgoals();
+
+	if (currGoal == destinationTile)
+		currGoal = originTile;
+	else
+		currGoal = destinationTile;
+
+	AddSubgoal(new Goal_MoveToPosition(owner, currGoal));
+
+	owner->SetUnitState(UnitState_Patrol);
+}
+
+GoalStatus Goal_Patrol::Process(float dt)
+{
+	ActivateIfInactive();
+
+	if (goalStatus == GoalStatus_Failed)
+		return goalStatus;
+
+	goalStatus = ProcessSubgoals(dt);
+
+	if (goalStatus == GoalStatus_Completed)
+		Activate();
+
+	ReactivateIfFailed();
+
+	return goalStatus;
+}
+
+void Goal_Patrol::Terminate()
+{
+	owner->SetUnitState(UnitState_Idle);
+	owner->SetUnitDirection(UnitDirection_NoDirection);
+}
+
+// ATOMIC GOALS
+// Goal_MoveToPosition ---------------------------------------------------------------------
+
+Goal_MoveToPosition::Goal_MoveToPosition(DynamicEntity* owner, iPoint destinationTile) :AtomicGoal(owner, GoalType_MoveToPosition), destinationTile(destinationTile) {}
+
+void Goal_MoveToPosition::Activate() 
+{
+	goalStatus = GoalStatus_Active;
 
 	if (owner->GetSingleUnit()->goal != destinationTile)
 
 		owner->GetSingleUnit()->SetGoal(destinationTile);
 
 	owner->GetSingleUnit()->GetReadyForNewMove();
-
-	owner->SetUnitState(UnitState_MoveToPosition);
-
-	LOG("MoveToPosition is activated");
 }
 
 GoalStatus Goal_MoveToPosition::Process(float dt) 
@@ -284,18 +329,13 @@ GoalStatus Goal_MoveToPosition::Process(float dt)
 			goalStatus = GoalStatus_Completed;
 	}
 
-	LOG("MoveToPosition is in progress");
-
 	return goalStatus;
 }
 
 void Goal_MoveToPosition::Terminate() 
 {
-	LOG("MoveToPosition is terminated");
-
 	owner->GetSingleUnit()->ResetUnitParameters();
 
-	owner->SetUnitState(UnitState_Idle);
 	owner->SetUnitDirection(UnitDirection_NoDirection);
 }
 
@@ -314,10 +354,13 @@ void Goal_HitTarget::Activate()
 		goalStatus = GoalStatus_Completed;
 		return;
 	}
+	else if (!owner->IsAttackSatisfied()) {
 
-	owner->SetUnitState(UnitState_HitTarget);
+		goalStatus = GoalStatus_Failed;
+		return;
+	}
 
-	LOG("HitTarget is terminated");
+	owner->SetHitting(true);
 }
 
 GoalStatus Goal_HitTarget::Process(float dt) 
@@ -329,6 +372,11 @@ GoalStatus Goal_HitTarget::Process(float dt)
 		goalStatus = GoalStatus_Completed;
 		return goalStatus;
 	}
+	else if (!owner->IsAttackSatisfied()) {
+
+		goalStatus = GoalStatus_Failed;
+		return goalStatus;
+	}
 
 	if (((DynamicEntity*)owner)->GetAnimation()->Finished()) {
 
@@ -336,18 +384,38 @@ GoalStatus Goal_HitTarget::Process(float dt)
 		((DynamicEntity*)owner)->GetAnimation()->Reset();
 	}
 
-	LOG("HitTarget is in progress");
-
 	return goalStatus;
 }
 
 void Goal_HitTarget::Terminate()
 {
-	owner->SetUnitState(UnitState_Idle);
-	owner->SetUnitDirection(UnitDirection_NoDirection);
+	owner->SetHitting(false);
 
-	LOG("HitTarget is terminated");
+	owner->SetUnitDirection(UnitDirection_NoDirection);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Goal_Wander ---------------------------------------------------------------------
 

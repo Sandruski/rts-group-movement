@@ -21,6 +21,7 @@ class j1Textures;
 class j1Scene;
 class j1Map;
 class j1Collision;
+class j1Particles;
 class j1PathFinding;
 class j1EntityFactory;
 class j1Movement;
@@ -98,6 +99,7 @@ public:
 	j1Scene*					scene = nullptr;
 	j1Map*						map = nullptr;
 	j1Collision*				collision = nullptr;
+	j1Particles*				particles = nullptr;
 	j1EntityFactory*			entities = nullptr;
 	j1PathFinding*				pathfinding = nullptr;
 	j1Movement*					movement = nullptr;

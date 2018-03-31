@@ -113,10 +113,11 @@ void Grunt::Move(float dt)
 
 void Grunt::Draw(SDL_Texture* sprites) 
 {
-	fPoint offset = { animation->GetCurrentFrame().w / 4.0f, animation->GetCurrentFrame().h / 2.0f };
+	if (animation != nullptr) {
 
-	if (animation != nullptr)
+		fPoint offset = { animation->GetCurrentFrame().w / 4.0f, animation->GetCurrentFrame().h / 2.0f };
 		App->render->Blit(sprites, pos.x - offset.x, pos.y - offset.y, &(animation->GetCurrentFrame()));
+	}
 
 	if (isSelected)
 		DebugDrawSelected();
@@ -191,15 +192,7 @@ void Grunt::UnitStateMachine(float dt)
 {
 	switch (unitState) {
 
-	case UnitState_MoveToPosition:
-
-		break;
-
 	case UnitState_AttackTarget:
-
-		break;
-
-	case UnitState_HitTarget:
 
 		break;
 
@@ -285,7 +278,7 @@ bool Grunt::ChangeAnimation()
 
 		UnitDirection dir = GetUnitDirection();
 
-		if (dir == UnitDirection_Up ||dir == UnitDirection_Up || dir == UnitDirection_UpLeft || dir == UnitDirection_UpRight
+		if (dir == UnitDirection_Up || dir == UnitDirection_Up || dir == UnitDirection_UpLeft || dir == UnitDirection_UpRight
 			|| dir == UnitDirection_Left || dir == UnitDirection_Right || dir == UnitDirection_NoDirection) {
 
 			if (animation->Finished() && unitState != UnitState_Die) {
@@ -310,68 +303,8 @@ bool Grunt::ChangeAnimation()
 		return ret;
 	}
 
-	if (unitState != UnitState_HitTarget) {
-
-		switch (GetUnitDirection()) {
-
-		case UnitDirection_NoDirection:
-
-			animation = &gruntInfo.idle;
-			ret = true;
-			break;
-
-		case UnitDirection_Up:
-
-			animation = &gruntInfo.up;
-			ret = true;
-			break;
-
-		case UnitDirection_Down:
-
-			animation = &gruntInfo.down;
-			ret = true;
-			break;
-
-		case UnitDirection_Left:
-
-			animation = &gruntInfo.left;
-			ret = true;
-			break;
-
-		case UnitDirection_Right:
-
-			animation = &gruntInfo.right;
-			ret = true;
-			break;
-
-		case UnitDirection_UpLeft:
-
-			animation = &gruntInfo.upLeft;
-			ret = true;
-			break;
-
-		case UnitDirection_UpRight:
-
-			animation = &gruntInfo.upRight;
-			ret = true;
-			break;
-
-		case UnitDirection_DownLeft:
-
-			animation = &gruntInfo.downLeft;
-			ret = true;
-			break;
-
-		case UnitDirection_DownRight:
-
-			animation = &gruntInfo.downRight;
-			ret = true;
-			break;
-		}
-
-		return ret;
-	}
-	else {
+	// The unit is hitting their target
+	else if (isHitting) {
 
 		// Set the direction of the unit as the orientation towards the attacking target
 		if (target != nullptr) {
@@ -435,6 +368,69 @@ bool Grunt::ChangeAnimation()
 		case UnitDirection_DownRight:
 
 			animation = &gruntInfo.attackDownRight;
+			ret = true;
+			break;
+		}
+
+		return ret;
+	}
+
+	// The unit is moving
+	else {
+
+		switch (GetUnitDirection()) {
+
+		case UnitDirection_NoDirection:
+
+			animation = &gruntInfo.idle;
+			ret = true;
+			break;
+
+		case UnitDirection_Up:
+
+			animation = &gruntInfo.up;
+			ret = true;
+			break;
+
+		case UnitDirection_Down:
+
+			animation = &gruntInfo.down;
+			ret = true;
+			break;
+
+		case UnitDirection_Left:
+
+			animation = &gruntInfo.left;
+			ret = true;
+			break;
+
+		case UnitDirection_Right:
+
+			animation = &gruntInfo.right;
+			ret = true;
+			break;
+
+		case UnitDirection_UpLeft:
+
+			animation = &gruntInfo.upLeft;
+			ret = true;
+			break;
+
+		case UnitDirection_UpRight:
+
+			animation = &gruntInfo.upRight;
+			ret = true;
+			break;
+
+		case UnitDirection_DownLeft:
+
+			animation = &gruntInfo.downLeft;
+			ret = true;
+			break;
+
+		case UnitDirection_DownRight:
+
+			animation = &gruntInfo.downRight;
 			ret = true;
 			break;
 		}

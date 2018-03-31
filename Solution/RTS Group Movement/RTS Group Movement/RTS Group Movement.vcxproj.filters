@@ -108,6 +108,15 @@
     <ClInclude Include="Goal.h">
       <Filter>Modules</Filter>
     </ClInclude>
+    <ClInclude Include="CritterSheep.h">
+      <Filter>Modules\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="CritterBoar.h">
+      <Filter>Modules\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="j1Particles.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="j1App.cpp">
@@ -174,6 +183,15 @@
       <Filter>Modules\Entities</Filter>
     </ClCompile>
     <ClCompile Include="Goal.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="CritterSheep.cpp">
+      <Filter>Modules\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="CritterBoar.cpp">
+      <Filter>Modules\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="j1Particles.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
   </ItemGroup>

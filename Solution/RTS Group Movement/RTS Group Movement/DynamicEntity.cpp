@@ -99,6 +99,11 @@ Animation* DynamicEntity::GetAnimation() const
 	return animation;
 }
 
+Goal_Think* DynamicEntity::GetBrain() const
+{
+	return brain;
+}
+
 // State machine
 void DynamicEntity::UnitStateMachine(float dt) {}
 
@@ -369,4 +374,28 @@ bool DynamicEntity::IsSightSatisfied() const
 bool DynamicEntity::IsAttackSatisfied() const
 {
 	return isSightSatisfied && isAttackSatisfied;
+}
+
+void DynamicEntity::SetHitting(bool isHitting) 
+{
+	this->isHitting = isHitting;
+}
+
+bool DynamicEntity::IsHitting() const 
+{
+	return isHitting;
+}
+
+// Player commands
+bool DynamicEntity::SetCommand(UnitCommand unitCommand) 
+{
+	bool ret = false;
+
+	if (this->unitCommand == UnitCommand_NoCommand) {
+
+		this->unitCommand = unitCommand;
+		ret = true;
+	}
+
+	return ret;
 }

@@ -5,9 +5,11 @@
 
 #include "p2Point.h"
 
-// DynamicEntities (also called Units)
+// DynamicEntities
 #include "Footman.h"
 #include "Grunt.h"
+#include "CritterBoar.h"
+#include "CritterSheep.h"
 
 #include <string>
 #include <algorithm>
@@ -70,6 +72,8 @@ public:
 	// Returns the entityInfo (normally read from the config file)
 	EntityInfo& GetDynamicEntityInfo(DynamicEntityType dynamicEntityType);
 
+	bool CommandToUnits(list<DynamicEntity*> units, UnitCommand unitCommand = UnitCommand_NoCommand);
+
 	bool Save(pugi::xml_node& save) const;
 	bool Load(pugi::xml_node& save);
 
@@ -83,12 +87,16 @@ private:
 	// Entities textures
 	string footmanTexName;
 	string gruntTexName;
+	string crittersTexName;
 	SDL_Texture* footmanTex = nullptr;
 	SDL_Texture* gruntTex = nullptr;
+	SDL_Texture* crittersTex = nullptr;
 
 	// Entities info
 	FootmanInfo footmanInfo;
 	GruntInfo gruntInfo;
+	CritterSheepInfo critterSheepInfo;
+	CritterBoarInfo critterBoarInfo;
 };
 
 #endif //__j1ENTITY_FACTORY_H__

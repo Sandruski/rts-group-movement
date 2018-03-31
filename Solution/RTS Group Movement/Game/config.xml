@@ -30,12 +30,207 @@
     </maps>
   </scene>
 
+  <particles>
+    <spritesheets>
+      <paws name="data/assets/textures/sprites/paws.png"/>
+    </spritesheets>
+    <animations>
+
+      <sheepPaws>
+        <up speed="1" loop="0">
+          <frame x="0" y="0" w="32" h="32"/>
+          <frame x="128" y="0" w="32" h="32"/>
+          <frame x="0" y="128" w="32" h="32"/>
+          <frame x="128" y="128" w="32" h="32"/>
+        </up>
+        <down speed="1" loop="0">
+          <frame x="0" y="32" w="32" h="32"/>
+          <frame x="128" y="32" w="32" h="32"/>
+          <frame x="0" y="160" w="32" h="32"/>
+          <frame x="128" y="160" w="32" h="32"/>
+        </down>
+        <left speed="1" loop="0">
+          <frame x="64" y="32" w="32" h="32"/>
+          <frame x="192" y="32" w="32" h="32"/>
+          <frame x="64" y="160" w="32" h="32"/>
+          <frame x="192" y="160" w="32" h="32"/>
+        </left>
+        <right speed="1" loop="0">
+          <frame x="64" y="0" w="32" h="32"/>
+          <frame x="192" y="0" w="32" h="32"/>
+          <frame x="64" y="128" w="32" h="32"/>
+          <frame x="192" y="128" w="32" h="32"/>
+        </right>
+
+        <upLeft speed="1" loop="0">
+          <frame x="32" y="32" w="32" h="32"/>
+          <frame x="160" y="32" w="32" h="32"/>
+          <frame x="32" y="160" w="32" h="32"/>
+          <frame x="160" y="160" w="32" h="32"/>
+        </upLeft>
+        <upRight speed="1" loop="0">
+          <frame x="32" y="0" w="32" h="32"/>
+          <frame x="160" y="0" w="32" h="32"/>
+          <frame x="32" y="128" w="32" h="32"/>
+          <frame x="160" y="128" w="32" h="32"/>
+        </upRight>
+        <downLeft speed="1" loop="0">
+          <frame x="96" y="32" w="32" h="32"/>
+          <frame x="224" y="32" w="32" h="32"/>
+          <frame x="96" y="160" w="32" h="32"/>
+          <frame x="224" y="160" w="32" h="32"/>
+        </downLeft>
+        <downRight speed="1" loop="0">
+          <frame x="96" y="0" w="32" h="32"/>
+          <frame x="224" y="0" w="32" h="32"/>
+          <frame x="96" y="128" w="32" h="32"/>
+          <frame x="224" y="128" w="32" h="32"/>
+        </downRight>
+      </sheepPaws>
+
+      <boarPaws>
+        <up speed="1" loop="0">
+          <frame x="0" y="64" w="32" h="32"/>
+          <frame x="128" y="64" w="32" h="32"/>
+          <frame x="0" y="192" w="32" h="32"/>
+          <frame x="128" y="192" w="32" h="32"/>
+        </up>
+        <down speed="1" loop="0">
+          <frame x="0" y="96" w="32" h="32"/>
+          <frame x="128" y="96" w="32" h="32"/>
+          <frame x="0" y="224" w="32" h="32"/>
+          <frame x="128" y="224" w="32" h="32"/>
+        </down>
+        <left speed="1" loop="0">
+          <frame x="64" y="96" w="32" h="32"/>
+          <frame x="192" y="96" w="32" h="32"/>
+          <frame x="64" y="224" w="32" h="32"/>
+          <frame x="192" y="224" w="32" h="32"/>
+        </left>
+        <right speed="1" loop="0">
+          <frame x="64" y="64" w="32" h="32"/>
+          <frame x="192" y="64" w="32" h="32"/>
+          <frame x="64" y="192" w="32" h="32"/>
+          <frame x="192" y="192" w="32" h="32"/>
+        </right>
+
+        <upLeft speed="1" loop="0">
+          <frame x="32" y="96" w="32" h="32"/>
+          <frame x="160" y="96" w="32" h="32"/>
+          <frame x="32" y="224" w="32" h="32"/>
+          <frame x="160" y="224" w="32" h="32"/>
+        </upLeft>
+        <upRight speed="1" loop="0">
+          <frame x="32" y="64" w="32" h="32"/>
+          <frame x="160" y="64" w="32" h="32"/>
+          <frame x="32" y="192" w="32" h="32"/>
+          <frame x="160" y="192" w="32" h="32"/>
+        </upRight>
+        <downLeft speed="1" loop="0">
+          <frame x="96" y="96" w="32" h="32"/>
+          <frame x="224" y="96" w="32" h="32"/>
+          <frame x="96" y="224" w="32" h="32"/>
+          <frame x="224" y="224" w="32" h="32"/>
+        </downLeft>
+        <downRight speed="1" loop="0">
+          <frame x="96" y="64" w="32" h="32"/>
+          <frame x="224" y="64" w="32" h="32"/>
+          <frame x="96" y="192" w="32" h="32"/>
+          <frame x="224" y="192" w="32" h="32"/>
+        </downRight>
+      </boarPaws>
+
+    </animations>
+  </particles>
+
   <entities>
     <spritesheets>
       <footman name="data/assets/textures/sprites/footman.png"/>
       <grunt name="data/assets/textures/sprites/grunt.png"/>
+      <critters name="data/assets/textures/sprites/critters.png"/>
     </spritesheets>
     <animations>
+      
+      <sheep>
+        <deathDownLeft speed="0" loop="0">
+          <frame x="0" y="0" w="30" h="31"/>
+        </deathDownLeft>
+        <deathUpRight speed="0" loop="0">
+          <frame x="30" y="0" w="30" h="31"/>
+        </deathUpRight>
+        <down speed="0" loop="0">
+          <frame x="60" y="0" w="30" h="31"/>
+        </down>
+        <right speed="0" loop="0">
+          <frame x="90" y="0" w="30" h="31"/>
+        </right>
+        <left speed="0" loop="0">
+          <frame x="120" y="0" w="30" h="31"/>
+        </left>
+        <upRight speed="0" loop="0">
+          <frame x="150" y="0" w="30" h="31"/>
+        </upRight>
+        <upLeft speed="0" loop="0">
+          <frame x="180" y="0" w="30" h="31"/>
+        </upLeft>
+
+        <deathDownRight speed="0" loop="0">
+          <frame x="0" y="31" w="30" h="31"/>
+        </deathDownRight>
+        <deathUpLeft speed="0" loop="0">
+          <frame x="30" y="31" w="30" h="31"/>
+        </deathUpLeft>
+        <up speed="0" loop="0">
+          <frame x="60" y="31" w="30" h="31"/>
+        </up>
+        <downRight speed="0" loop="0">
+          <frame x="90" y="31" w="30" h="31"/>
+        </downRight>
+        <downLeft speed="0" loop="0">
+          <frame x="120" y="31" w="30" h="31"/>
+        </downLeft>
+      </sheep>
+
+      <boar>
+        <deathDownLeft speed="0" loop="0">
+          <frame x="0" y="62" w="32" h="32"/>
+        </deathDownLeft>
+        <deathUpRight speed="0" loop="0">
+          <frame x="32" y="62" w="32" h="32"/>
+        </deathUpRight>
+        <down speed="0" loop="0">
+          <frame x="64" y="62" w="32" h="32"/>
+        </down>
+        <right speed="0" loop="0">
+          <frame x="96" y="62" w="32" h="32"/>
+        </right>
+        <left speed="0" loop="0">
+          <frame x="128" y="62" w="32" h="32"/>
+        </left>
+        <upRight speed="0" loop="0">
+          <frame x="160" y="62" w="32" h="32"/>
+        </upRight>
+        <upLeft speed="0" loop="0">
+          <frame x="192" y="62" w="32" h="32"/>
+        </upLeft>
+
+        <deathDownRight speed="0" loop="0">
+          <frame x="0" y="94" w="32" h="32"/>
+        </deathDownRight>
+        <deathUpLeft speed="0" loop="0">
+          <frame x="32" y="94" w="32" h="32"/>
+        </deathUpLeft>
+        <up speed="0" loop="0">
+          <frame x="64" y="94" w="32" h="32"/>
+        </up>
+        <downRight speed="0" loop="0">
+          <frame x="96" y="94" w="32" h="32"/>
+        </downRight>
+        <downLeft speed="0" loop="0">
+          <frame x="128" y="94" w="32" h="32"/>
+        </downLeft>
+      </boar>
+      
       <footman>
         <up speed="4" loop="1">
           <frame x="2" y="4" w="69" h="54"/>

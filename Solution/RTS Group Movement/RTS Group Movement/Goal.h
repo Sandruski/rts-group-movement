@@ -171,6 +171,7 @@ public:
 	void AddGoal_Wander();
 	void AddGoal_AttackTarget(Entity* target);
 	void AddGoal_MoveToPosition(iPoint destinationTile);
+	void AddGoal_Patrol(iPoint originTile, iPoint destinationTile);
 };
 
 class Goal_AttackTarget :public CompositeGoal
@@ -188,7 +189,7 @@ private:
 	Entity* target = nullptr;
 };
 
-class Goal_MoveToPosition :public CompositeGoal
+class Goal_MoveToPosition :public AtomicGoal
 {
 public:
 
@@ -200,7 +201,25 @@ public:
 
 private:
 
-	iPoint destinationTile = { 0,0 }; // the position the bot wants to reach
+	iPoint destinationTile = { -1,-1 }; // the position the bot wants to reach
+};
+
+class Goal_Patrol :public CompositeGoal
+{
+public:
+
+	Goal_Patrol(DynamicEntity* owner, iPoint originTile, iPoint destinationTile);
+
+	void Activate();
+	GoalStatus Process(float dt);
+	void Terminate();
+
+private:
+
+	iPoint originTile = { -1,-1 }; // the position from which the bot starts
+	iPoint destinationTile = { -1,-1 }; // the position the bot wants to reach
+
+	iPoint currGoal = { -1,-1 };
 };
 
 class Goal_HitTarget :public AtomicGoal

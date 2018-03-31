@@ -86,14 +86,59 @@ void Footman::Move(float dt)
 		brain->RemoveAllSubgoals();
 	}
 
-	// The goal of the unit has been changed manually
-	if (singleUnit->isGoalChanged)
+	// PROCESS THE COMMANDS
+	switch (unitCommand) {
 
-		brain->AddGoal_MoveToPosition(singleUnit->goal);
+	case UnitCommand_Stop:
+
+		if (singleUnit->IsFittingTile()) {
+
+			brain->RemoveAllSubgoals();
+
+			unitCommand = UnitCommand_NoCommand;
+		}
+
+		break;
+
+	case UnitCommand_Patrol:
+
+		// The goal of the unit has been changed manually (to patrol)
+		if (singleUnit->isGoalChanged) {
+
+			brain->AddGoal_Patrol(singleUnit->currTile, singleUnit->goal);
+
+			unitCommand = UnitCommand_NoCommand;
+		}
+
+		break;
+
+	case UnitCommand_AttackTarget:
+
+		if (target != nullptr) {
+
+			list<DynamicEntity*> unit;
+			unit.push_back(this);
+			UnitGroup* group = App->movement->CreateGroupFromUnits(unit);
+
+			brain->AddGoal_AttackTarget(target);
+		}
+
+		break;
+
+	case UnitCommand_NoCommand:
+	default:
+
+		// The goal of the unit has been changed manually (to move to position)
+		if (singleUnit->isGoalChanged)
+
+			brain->AddGoal_MoveToPosition(singleUnit->goal);
+
+		break;	
+	}
 
 	// ---------------------------------------------------------------------
 
-	// Process the currently active goal
+	// PROCESS THE CURRENTLY ACTIVE GOAL
 	brain->Process(dt);
 
 	UnitStateMachine(dt);
@@ -113,10 +158,11 @@ void Footman::Move(float dt)
 
 void Footman::Draw(SDL_Texture* sprites)
 {
-	fPoint offset = { animation->GetCurrentFrame().w / 4.0f, animation->GetCurrentFrame().h / 2.0f };
+	if (animation != nullptr) {
 
-	if (animation != nullptr)
+		fPoint offset = { animation->GetCurrentFrame().w / 4.0f, animation->GetCurrentFrame().h / 2.0f };
 		App->render->Blit(sprites, pos.x - offset.x, pos.y - offset.y, &(animation->GetCurrentFrame()));
+	}
 
 	if (isSelected)
 		DebugDrawSelected();
@@ -147,15 +193,6 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 			// The Horde is within the SIGHT radius
 			isSightSatisfied = true;
 			target = c2->entity;
-
-			if (target != nullptr) {
-
-				list<DynamicEntity*> unit;
-				unit.push_back(this);
-				UnitGroup* group = App->movement->CreateGroupFromUnits(unit);
-
-				brain->AddGoal_AttackTarget(target);
-			}
 		}
 		else if (c1->colliderType == ColliderType_PlayerAttackRadius && c2->colliderType == ColliderType_EnemyUnit) { // || c2->colliderType == ColliderType_EnemyBuilding
 
@@ -191,15 +228,7 @@ void Footman::UnitStateMachine(float dt)
 {
 	switch (unitState) {
 
-	case UnitState_MoveToPosition:
-
-		break;
-
 	case UnitState_AttackTarget:
-
-		break;
-
-	case UnitState_HitTarget:
 
 		break;
 
@@ -310,68 +339,8 @@ bool Footman::ChangeAnimation()
 		return ret;
 	}
 
-	if (unitState != UnitState_HitTarget) {
-
-		switch (GetUnitDirection()) {
-
-		case UnitDirection_NoDirection:
-
-			animation = &footmanInfo.idle;
-			ret = true;
-			break;
-
-		case UnitDirection_Up:
-
-			animation = &footmanInfo.up;
-			ret = true;
-			break;
-
-		case UnitDirection_Down:
-
-			animation = &footmanInfo.down;
-			ret = true;
-			break;
-
-		case UnitDirection_Left:
-
-			animation = &footmanInfo.left;
-			ret = true;
-			break;
-
-		case UnitDirection_Right:
-
-			animation = &footmanInfo.right;
-			ret = true;
-			break;
-
-		case UnitDirection_UpLeft:
-
-			animation = &footmanInfo.upLeft;
-			ret = true;
-			break;
-
-		case UnitDirection_UpRight:
-
-			animation = &footmanInfo.upRight;
-			ret = true;
-			break;
-
-		case UnitDirection_DownLeft:
-
-			animation = &footmanInfo.downLeft;
-			ret = true;
-			break;
-
-		case UnitDirection_DownRight:
-
-			animation = &footmanInfo.downRight;
-			ret = true;
-			break;
-		}
-
-		return ret;
-	}
-	else {
+	// The unit is hitting their target
+	else if (isHitting) {
 
 		// Set the direction of the unit as the orientation towards the attacking target
 		if (target != nullptr) {
@@ -442,5 +411,68 @@ bool Footman::ChangeAnimation()
 		return ret;
 	}
 
+	// The unit is moving
+	else {
+	
+		switch (GetUnitDirection()) {
+
+		case UnitDirection_NoDirection:
+
+			animation = &footmanInfo.idle;
+			ret = true;
+			break;
+
+		case UnitDirection_Up:
+
+			animation = &footmanInfo.up;
+			ret = true;
+			break;
+
+		case UnitDirection_Down:
+
+			animation = &footmanInfo.down;
+			ret = true;
+			break;
+
+		case UnitDirection_Left:
+
+			animation = &footmanInfo.left;
+			ret = true;
+			break;
+
+		case UnitDirection_Right:
+
+			animation = &footmanInfo.right;
+			ret = true;
+			break;
+
+		case UnitDirection_UpLeft:
+
+			animation = &footmanInfo.upLeft;
+			ret = true;
+			break;
+
+		case UnitDirection_UpRight:
+
+			animation = &footmanInfo.upRight;
+			ret = true;
+			break;
+
+		case UnitDirection_DownLeft:
+
+			animation = &footmanInfo.downLeft;
+			ret = true;
+			break;
+
+		case UnitDirection_DownRight:
+
+			animation = &footmanInfo.downRight;
+			ret = true;
+			break;
+		}
+
+		return ret;
+	}
+		
 	return ret;
 }
