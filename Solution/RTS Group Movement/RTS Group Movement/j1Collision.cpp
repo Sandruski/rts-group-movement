@@ -413,3 +413,19 @@ void ColliderGroup::RemoveCollider(Collider* collider)
 	colliders.erase(remove(colliders.begin(), colliders.end(), collider), colliders.end());
 	collider = nullptr;
 }
+
+bool ColliderGroup::RemoveAllColliders() 
+{
+	bool ret = false;
+
+	for (uint i = 0; i < colliders.size(); ++i) {
+	
+		delete colliders[i];
+		colliders[i] = nullptr;
+
+		ret = true;
+	}
+	colliders.clear();
+
+	return ret;
+}

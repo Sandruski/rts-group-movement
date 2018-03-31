@@ -291,6 +291,50 @@ ColliderGroup* DynamicEntity::GetAttackRadiusCollider() const
 ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, uint radius)
 {
 	vector<Collider*> colliders;
+
+	// Perform a BFS
+	queue<iPoint> queue;
+	list<iPoint> visited;
+
+	iPoint curr = singleUnit->currTile;
+	queue.push(curr);
+
+	while (queue.size() > 0) {
+
+		curr = queue.front();
+		queue.pop();
+
+		iPoint neighbors[8];
+		neighbors[0].create(curr.x + 1, curr.y + 0);
+		neighbors[1].create(curr.x + 0, curr.y + 1);
+		neighbors[2].create(curr.x - 1, curr.y + 0);
+		neighbors[3].create(curr.x + 0, curr.y - 1);
+		neighbors[4].create(curr.x + 1, curr.y + 1);
+		neighbors[5].create(curr.x + 1, curr.y - 1);
+		neighbors[6].create(curr.x - 1, curr.y + 1);
+		neighbors[7].create(curr.x - 1, curr.y - 1);
+
+		for (uint i = 0; i < 8; ++i)
+		{
+			if (neighbors[i].DistanceManhattan(singleUnit->currTile) < radius) {
+
+				if (find(visited.begin(), visited.end(), neighbors[i]) == visited.end()) {
+
+					queue.push(neighbors[i]);
+					visited.push_back(neighbors[i]);
+
+					iPoint collPos = App->map->MapToWorld(neighbors[i].x, neighbors[i].y);
+					SDL_Rect rect = { collPos.x, collPos.y, App->map->data.tile_width, App->map->data.tile_height };
+
+					Collider* coll = App->collision->CreateCollider(rect);
+					colliders.push_back(coll);
+				}
+			}
+		}
+	}
+
+	/*
+	vector<Collider*> colliders;
 	iPoint currTilePos = App->map->MapToWorld(singleUnit->currTile.x, singleUnit->currTile.y);
 
 	int sign = 1;
@@ -305,12 +349,57 @@ ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, u
 			colliders.push_back(App->collision->CreateCollider(rect));
 		}
 	}
-	
+	*/
+
 	return App->collision->CreateAndAddColliderGroup(colliders, colliderType, App->entities, this);
 }
 
 void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radius)
 {
+	collider->RemoveAllColliders();
+
+	// Perform a BFS
+	queue<iPoint> queue;
+	list<iPoint> visited;
+
+	iPoint curr = singleUnit->currTile;
+	queue.push(curr);
+
+	while (queue.size() > 0) {
+
+		curr = queue.front();
+		queue.pop();
+
+		iPoint neighbors[8];
+		neighbors[0].create(curr.x + 1, curr.y + 0);
+		neighbors[1].create(curr.x + 0, curr.y + 1);
+		neighbors[2].create(curr.x - 1, curr.y + 0);
+		neighbors[3].create(curr.x + 0, curr.y - 1);
+		neighbors[4].create(curr.x + 1, curr.y + 1);
+		neighbors[5].create(curr.x + 1, curr.y - 1);
+		neighbors[6].create(curr.x - 1, curr.y + 1);
+		neighbors[7].create(curr.x - 1, curr.y - 1);
+
+		for (uint i = 0; i < 8; ++i)
+		{
+			if (App->pathfinding->IsWalkable(neighbors[i]) && neighbors[i].DistanceManhattan(singleUnit->currTile) < radius) {
+
+				if (find(visited.begin(), visited.end(), neighbors[i]) == visited.end()) {
+
+					queue.push(neighbors[i]);
+					visited.push_back(neighbors[i]);
+
+					iPoint collPos = App->map->MapToWorld(neighbors[i].x, neighbors[i].y);
+					SDL_Rect rect = { collPos.x, collPos.y, App->map->data.tile_width, App->map->data.tile_height };
+
+					Collider* coll = App->collision->CreateCollider(rect);
+					App->collision->AddColliderToAColliderGroup(collider, coll);
+				}
+			}
+		}
+	}
+
+	/*
 	vector<Collider*>::const_iterator it = collider->colliders.begin();
 
 	while (it != collider->colliders.end()) {
@@ -342,6 +431,7 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 			}
 		}
 	}
+	*/
 }
 
 // Attack

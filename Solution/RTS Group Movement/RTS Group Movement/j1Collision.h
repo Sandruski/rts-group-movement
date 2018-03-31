@@ -80,6 +80,7 @@ struct ColliderGroup
 
 	bool IsColliderInGroup(Collider* collider);
 	void RemoveCollider(Collider* collider);
+	bool RemoveAllColliders();
 
 	// -----
 

@@ -201,6 +201,7 @@ protected:
 	ColliderGroup* sightRadiusCollider = nullptr;
 	ColliderGroup* attackRadiusCollider = nullptr;
 	bool isSpawned = false; // the colliders must start working once the unit has been spawned
+	iPoint lastColliderUpdateTile = { -1,-1 };
 
 	// Death
 	j1Timer deadTimer;

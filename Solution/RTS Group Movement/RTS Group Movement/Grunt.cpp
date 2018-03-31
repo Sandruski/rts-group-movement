@@ -102,12 +102,14 @@ void Grunt::Move(float dt)
 	UpdateAnimationsSpeed(dt);
 	ChangeAnimation();
 
-	if (!isDead) {
+	if (!isDead && lastColliderUpdateTile != singleUnit->currTile) {
 
 		// Update colliders
 		UpdateEntityColliderPos();
 		UpdateRhombusColliderPos(sightRadiusCollider, unitInfo.sightRadius);
 		UpdateRhombusColliderPos(attackRadiusCollider, unitInfo.attackRadius);
+
+		lastColliderUpdateTile = singleUnit->currTile;
 	}
 }
 

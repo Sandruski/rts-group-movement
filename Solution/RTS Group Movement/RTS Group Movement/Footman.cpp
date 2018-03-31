@@ -133,7 +133,7 @@ void Footman::Move(float dt)
 
 			brain->AddGoal_MoveToPosition(singleUnit->goal);
 
-		break;	
+		break;
 	}
 
 	// ---------------------------------------------------------------------
@@ -147,12 +147,14 @@ void Footman::Move(float dt)
 	UpdateAnimationsSpeed(dt);
 	ChangeAnimation();
 
-	if (!isDead) {
+	if (!isDead && lastColliderUpdateTile != singleUnit->currTile) {
 
 		// Update colliders
 		UpdateEntityColliderPos();
 		UpdateRhombusColliderPos(sightRadiusCollider, unitInfo.sightRadius);
 		UpdateRhombusColliderPos(attackRadiusCollider, unitInfo.attackRadius);
+
+		lastColliderUpdateTile = singleUnit->currTile;
 	}
 }
 
