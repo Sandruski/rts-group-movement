@@ -298,7 +298,7 @@ Goal_Wander::Goal_Wander(DynamicEntity* owner, uint maxDistance) :CompositeGoal(
 
 void Goal_Wander::Activate()
 {
-	maxDistance = 10;
+	maxDistance = 5;
 	goalStatus = GoalStatus_Active;
 
 	AddSubgoal(new Goal_LookAround(owner));
@@ -311,13 +311,13 @@ void Goal_Wander::Activate()
 	if (sign == 0)
 		sign = -1;
 
-	destinationTile.x = owner->GetSingleUnit()->currTile.x + sign * (rand() % (maxDistance + 1));
+	destinationTile.x = owner->GetSingleUnit()->currTile.x + sign * (rand() % (maxDistance + 1) + 1);
 
 	sign = rand() % 2;
 	if (sign == 0)
 		sign = -1;
 
-	destinationTile.y = owner->GetSingleUnit()->currTile.y + sign * (rand() % (maxDistance + 1));
+	destinationTile.y = owner->GetSingleUnit()->currTile.y + sign * (rand() % (maxDistance + 1) + 1);
 
 	AddSubgoal(new Goal_MoveToPosition(owner, destinationTile));
 }
