@@ -82,8 +82,13 @@ void Grunt::Move(float dt)
 
 		isDead = true;
 
+		// Invalidate colliders
+		sightRadiusCollider->isValid = false;
+		attackRadiusCollider->isValid = false;
+		entityCollider->isValid = false;
+
 		// If the player dies, remove all their goals
-		brain->RemoveAllSubgoals();
+		unitCommand = UnitCommand_Stop;
 	}
 
 	// The goal of the unit has been changed manually

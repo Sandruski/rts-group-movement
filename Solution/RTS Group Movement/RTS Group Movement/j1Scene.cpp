@@ -123,8 +123,8 @@ bool j1Scene::PreUpdate()
 			App->entities->AddDynamicEntity(DynamicEntityType_Footman, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)footmanInfo);
 
 		// 2: spawn a Grunt with priority 1
-		unitInfo.sightRadius = 4;
-		unitInfo.attackRadius = 2;
+		unitInfo.sightRadius = 5;
+		unitInfo.attackRadius = 3;
 		maxLife = 20;
 		currLife = (int)maxLife;
 

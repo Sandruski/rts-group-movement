@@ -82,8 +82,13 @@ void Footman::Move(float dt)
 
 		isDead = true;
 
+		// Invalidate colliders
+		sightRadiusCollider->isValid = false;
+		attackRadiusCollider->isValid = false;
+		entityCollider->isValid = false;
+
 		// If the player dies, remove all their goals
-		brain->RemoveAllSubgoals();
+		unitCommand = UnitCommand_Stop;
 	}
 
 	// PROCESS THE COMMANDS
@@ -129,9 +134,12 @@ void Footman::Move(float dt)
 	default:
 
 		// The goal of the unit has been changed manually (to move to position)
-		if (singleUnit->isGoalChanged)
+		if (!isDead) {
 
-			brain->AddGoal_MoveToPosition(singleUnit->goal);
+			if (singleUnit->isGoalChanged)
+
+				brain->AddGoal_MoveToPosition(singleUnit->goal);
+		}
 
 		break;
 	}

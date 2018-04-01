@@ -87,6 +87,7 @@ struct ColliderGroup
 	ColliderType colliderType = ColliderType_NoType;
 	bool isRemove = false;
 	bool isTrigger = false;
+	bool isValid = true;
 	vector<Collider*> colliders;
 	list<ColliderGroup*> collidingGroups;
 	list<ColliderGroup*> lastCollidingGroups;
@@ -116,7 +117,6 @@ struct Collider
 
 	SDL_Rect colliderRect = { 0,0,0,0 };
 	ColliderGroup* colliderGroup = nullptr; // parent
-	bool isValid = true;
 };
 
 #endif //__j1COLLISION_H__

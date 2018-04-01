@@ -115,14 +115,21 @@ bool j1Collision::Update(float dt)
 
 	while (I != colliderGroups.end()) {
 
+		if (!(*I)->isValid) {
+		
+			I++;
+			continue;
+		}
+
 		list<ColliderGroup*>::const_iterator J = I;
 		J++;
 
 		// Avoid checking collisions already checked
 		while (J != colliderGroups.end()) {
 
-			if (!matrix[(*I)->colliderType][(*J)->colliderType]
-				&& !matrix[(*J)->colliderType][(*I)->colliderType]) {
+			if ((!matrix[(*I)->colliderType][(*J)->colliderType]
+				&& !matrix[(*J)->colliderType][(*I)->colliderType])
+				|| !(*J)->isValid) {
 
 				J++;
 				continue;
@@ -132,17 +139,11 @@ bool j1Collision::Update(float dt)
 
 				c1 = (*I)->colliders[i];
 
-				if (!c1->isValid)
-					continue;
-
 				bool isCollision = false;
 
 				for (uint j = 0; j < (*J)->colliders.size(); ++j) {
 
 					c2 = (*J)->colliders[j];
-
-					if (!c2->isValid)
-						continue;
 
 					// Check for the collision
 					if (c1->CheckCollision(c2->colliderRect)) {
@@ -272,9 +273,7 @@ void j1Collision::DebugDraw()
 		color = debugColors[(*it)->colliderType];
 
 		for (uint i = 0; i < (*it)->colliders.size(); ++i)
-
-			if ((*it)->colliders[i]->isValid)
-				App->render->DrawQuad((*it)->colliders[i]->colliderRect, color.r, color.g, color.b, alpha);
+			App->render->DrawQuad((*it)->colliders[i]->colliderRect, color.r, color.g, color.b, alpha);
 
 		it++;
 	}
