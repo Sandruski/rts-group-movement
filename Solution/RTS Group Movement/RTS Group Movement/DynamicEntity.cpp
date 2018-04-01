@@ -398,7 +398,7 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 
 		for (uint i = 0; i < 8; ++i)
 		{
-			if (App->pathfinding->IsWalkable(neighbors[i]) && neighbors[i].DistanceManhattan(singleUnit->currTile) < radius) {
+			if (navgraph->IsWalkable(neighbors[i]) && neighbors[i].DistanceManhattan(singleUnit->currTile) < radius) {
 
 				if (find(visited.begin(), visited.end(), neighbors[i]) == visited.end()) {
 

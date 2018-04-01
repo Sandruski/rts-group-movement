@@ -398,6 +398,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 					if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
 						singleUnit->path = singleUnit->unit->GetPathPlanner()->GetPath();
+						singleUnit->unit->GetPathPlanner()->SetSearchRequested(false);
 
 						singleUnit->isSearching = false;/// The unit has finished changing its nextTile
 
@@ -438,22 +439,25 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 				if ((singleUnit->unit->GetPriority() >= singleUnit->waitUnit->unit->GetPriority() || singleUnit->reversePriority)) {
 
 					// 1. waitUnit moves
-					singleUnit->waitUnit->unit->GetPathPlanner()->RequestDijkstra(singleUnit->waitUnit->goal, FindActiveTrigger::ActiveTriggerType_Goal);
-					singleUnit->waitUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
-					singleUnit->waitUnit->unit->GetPathPlanner()->SetCheckingNextTile(true); // TODO: trigger must be fully customizable
+					singleUnit->unit->GetPathPlanner()->RequestDijkstra(singleUnit->waitUnit->goal, FindActiveTrigger::ActiveTriggerType_Goal);
+					singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
+					singleUnit->unit->GetPathPlanner()->SetCheckingNextTile(true); // TODO: trigger must be fully customizable
+					singleUnit->isSearching = true;
 
 					// ***IS THE TILE READY?***
-					if (singleUnit->waitUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
+					if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
-						singleUnit->waitUnit->unit->GetBrain()->AddGoal_MoveToPosition(singleUnit->waitUnit->unit->GetPathPlanner()->GetTile());
-						singleUnit->waitUnit->unit->GetPathPlanner()->SetSearchRequested(false);
+						singleUnit->waitUnit->unit->GetBrain()->AddGoal_MoveToPosition(singleUnit->unit->GetPathPlanner()->GetTile());
+						singleUnit->unit->GetPathPlanner()->SetSearchRequested(false);
+						singleUnit->isSearching = false;
 
-						/// COLLISION RESOLVED
-						singleUnit->ResetUnitCollisionParameters();
+						LOG("DEL changed path waitUnit Still Goal %i, %i", singleUnit->unit->GetPathPlanner()->GetTile().x, singleUnit->unit->GetPathPlanner()->GetTile().y);
 
 						if (singleUnit->unit->isSelected)
 							LOG("%s: MOVED AWAY %s", singleUnit->unit->GetColorName().data(), singleUnit->waitUnit->unit->GetColorName().data());
 
+						/// COLLISION RESOLVED
+						singleUnit->ResetUnitCollisionParameters();
 						break;
 					}
 					break;
@@ -473,7 +477,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 							singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
 
 							singleUnit->isSearching = true; /// The unit is changing its nextTile
-
+							LOG("DEL waitUnit Still Goal1 %i, %i", newTile.x, newTile.y);
 							break;
 						}
 						else {
@@ -488,7 +492,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 								singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
 
 								singleUnit->isSearching = true; /// The unit is changing its nextTile
-
+								LOG("DEL waitUnit Still Goal2 %i, %i", newTile.x, newTile.y);
 								break;
 							}
 							break;
@@ -503,17 +507,18 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 						if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
 							singleUnit->path = singleUnit->unit->GetPathPlanner()->GetPath();
+							singleUnit->waitUnit->unit->GetPathPlanner()->SetSearchRequested(false);
 
 							singleUnit->isSearching = false;/// The unit has finished changing its nextTile
 
 							// Update the unit's nextTile
 							singleUnit->nextTile = singleUnit->path.front();
 
-							/// COLLISION RESOLVED
-							singleUnit->ResetUnitCollisionParameters();
-
 							if (singleUnit->unit->isSelected)
 								LOG("%s: MOVED AWAY %s", singleUnit->waitUnit->unit->GetColorName().data(), singleUnit->unit->GetColorName().data());
+
+							/// COLLISION RESOLVED
+							singleUnit->ResetUnitCollisionParameters();
 
 							break;
 						}
@@ -592,7 +597,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 						singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
 
 						singleUnit->isSearching = true; /// The unit is changing its nextTile
-
+						LOG("DEL towards1 %i, %i", newTile.x, newTile.y);
 						break;
 					}
 					else {
@@ -607,7 +612,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 							singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
 
 							singleUnit->isSearching = true; /// The unit is changing its nextTile
-
+							LOG("DEL towards2 %i, %i", newTile.x, newTile.y);
 							break;
 						}
 						break;
@@ -622,18 +627,19 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 					if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
 						singleUnit->path = singleUnit->unit->GetPathPlanner()->GetPath();
+						singleUnit->waitUnit->unit->GetPathPlanner()->SetSearchRequested(false);
 
 						singleUnit->isSearching = false;/// The unit has finished changing its nextTile
 
 						// Update the unit's nextTile
 						singleUnit->nextTile = singleUnit->path.front();
 
-						/// COLLISION RESOLVED
-						singleUnit->ResetUnitCollisionParameters();
-						singleUnit->waitUnit->wait = false;
-
 						if (singleUnit->unit->isSelected)
 							LOG("%s: MOVED AWAY TOWARDS %s", singleUnit->waitUnit->unit->GetColorName().data(), singleUnit->unit->GetColorName().data());
+
+						/// COLLISION RESOLVED
+						singleUnit->waitUnit->wait = false;
+						singleUnit->ResetUnitCollisionParameters();
 
 						break;
 					}
@@ -654,10 +660,12 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 		}
 
 		if (singleUnit->wait) {
-			singleUnit->unit->SetIsStill(true);
 
+			singleUnit->unit->SetIsStill(true);
 			break;
 		}
+
+		singleUnit->unit->SetIsStill(false);
 
 		// ---------------------------------------------------------------------
 		// TILE FITTING
@@ -1054,10 +1062,13 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront)
 
 	for (uint i = 0; i < 8; ++i)
 	{
-		priorityNeighbors.point = neighbors[i];
-		/// We could use the path size to set the priority, but it would be too heavy to compute
-		priorityNeighbors.priority = neighbors[i].DistanceManhattan(singleUnit->goal); 
-		queue.push(priorityNeighbors);
+		if (neighbors[i].x != -1 && neighbors[i].y != -1) {
+
+			priorityNeighbors.point = neighbors[i];
+			/// We could use the path size to set the priority, but it would be too heavy to compute
+			priorityNeighbors.priority = neighbors[i].DistanceManhattan(singleUnit->goal);
+			queue.push(priorityNeighbors);
+		}
 	}
 
 	iPointPriority curr;
@@ -1066,7 +1077,7 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront)
 		curr = queue.top();
 		queue.pop();
 
-		if (App->pathfinding->IsWalkable(curr.point) && IsValidTile(singleUnit, curr.point, true, true))
+		if (singleUnit->unit->GetNavgraph()->IsWalkable(curr.point) && IsValidTile(singleUnit, curr.point, true, true))
 			return curr.point;
 	}
 
@@ -1448,21 +1459,17 @@ bool SingleUnit::IsTileReached(iPoint nextPos, fPoint endPos) const
 void SingleUnit::ResetUnitParameters()
 {
 	isGoalNeeded = false;
-	isSearching = false;
-	reversePriority = false;
 
-	wait = false;
 	wakeUp = false;
-	waitTile = { -1,-1 };
 	nextTile = { -1,-1 };
-	waitUnit = nullptr;
-	coll = CollisionType_NoCollision;
 }
 
 // Resets the collision parameters of the unit
 void SingleUnit::ResetUnitCollisionParameters()
 {
 	coll = CollisionType_NoCollision;
+	waitUnit = nullptr;
+	waitTile = { -1,-1 };
 	wait = false;
 
 	reversePriority = false;

@@ -97,6 +97,7 @@ bool j1Scene::PreUpdate()
 	UnitInfo unitInfo;
 	unitInfo.maxSpeed = 50.0f;
 	unitInfo.damage = 2;
+	unitInfo.priority = 3;
 
 	/// Footman
 	FootmanInfo footmanInfo;
@@ -134,6 +135,7 @@ bool j1Scene::PreUpdate()
 		// 3: spawn a Sheep
 		unitInfo.sightRadius = 0;
 		unitInfo.attackRadius = 0;
+		unitInfo.priority = 1;
 		maxLife = 10;
 		currLife = (int)maxLife;
 
@@ -143,6 +145,7 @@ bool j1Scene::PreUpdate()
 		// 4: spawn a Boar
 		unitInfo.sightRadius = 0;
 		unitInfo.attackRadius = 0;
+		unitInfo.priority = 2;
 		maxLife = 20;
 		currLife = (int)maxLife;
 

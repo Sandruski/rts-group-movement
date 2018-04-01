@@ -295,6 +295,11 @@ void PathPlanner::SetCheckingGoalTile(bool isCheckingGoalTile)
 		trigger->isCheckingGoalTile = isCheckingGoalTile;
 }
 
+j1PathFinding* PathPlanner::GetCurrentSearch() const 
+{
+	return currentSearch;
+}
+
 // WalkabilityMap struct ---------------------------------------------------------------------------------
 
 bool Navgraph::CreateNavgraph()
@@ -310,11 +315,6 @@ bool Navgraph::SetNavgraph(j1PathFinding* currentSearch) const
 	currentSearch->SetMap(w, h, data);
 
 	return true;
-}
-
-inline uint Navgraph::Get(int x, int y) const
-{
-	return data[w * y + x];
 }
 
 // Utility: return true if pos is inside the map boundaries

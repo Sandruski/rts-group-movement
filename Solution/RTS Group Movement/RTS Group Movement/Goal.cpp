@@ -369,8 +369,6 @@ void Goal_MoveToPosition::Activate()
 		owner->GetSingleUnit()->SetGoal(destinationTile);
 
 	owner->GetSingleUnit()->GetReadyForNewMove();
-
-	owner->SetIsStill(false);
 }
 
 GoalStatus Goal_MoveToPosition::Process(float dt) 
@@ -392,8 +390,6 @@ GoalStatus Goal_MoveToPosition::Process(float dt)
 		else
 			goalStatus = GoalStatus_Completed;
 	}
-
-	LOG("%f, %f", owner->GetUnitDirectionByValue().x, owner->GetUnitDirectionByValue().y);
 
 	return goalStatus;
 }

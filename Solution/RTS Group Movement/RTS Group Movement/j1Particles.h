@@ -8,7 +8,7 @@
 
 #include "j1Collision.h"
 
-#define MAX_ACTIVE_PARTICLES 100
+#define MAX_ACTIVE_PARTICLES 500
 
 struct SDL_Texture;
 

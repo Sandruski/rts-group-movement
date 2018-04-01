@@ -37,8 +37,6 @@ public:
 
 	bool SetNavgraph(j1PathFinding* currentSearch) const;
 
-	inline uint Get(int x, int y) const;
-
 	// Pathfinding methods ---------------------------------------------------------------------
 
 	// Utility: return true if pos is inside the map boundaries
@@ -166,6 +164,8 @@ public:
 	void SetCheckingCurrTile(bool isCheckingCurrTile);
 	void SetCheckingNextTile(bool isCheckingNextTile);
 	void SetCheckingGoalTile(bool isCheckingGoalTile);
+
+	j1PathFinding* GetCurrentSearch() const;
 
 private:
 
