@@ -10,6 +10,8 @@
 #include <algorithm>
 using namespace std;
 
+#define INVALID_WALK_CODE -1
+
 enum PathfindingAlgorithmType {
 
 	PathfindingAlgorithmType_NoType,
@@ -34,6 +36,19 @@ public:
 	bool CreateNavgraph();
 
 	bool SetNavgraph(j1PathFinding* currentSearch) const;
+
+	inline uint Get(int x, int y) const;
+
+	// Pathfinding methods ---------------------------------------------------------------------
+
+	// Utility: return true if pos is inside the map boundaries
+	bool CheckBoundaries(const iPoint& pos) const;
+
+	// Utility: returns true is the tile is walkable
+	bool IsWalkable(const iPoint& pos) const;
+
+	// Utility: return the walkability value of a tile
+	int GetTileAt(const iPoint& pos) const;
 
 public:
 

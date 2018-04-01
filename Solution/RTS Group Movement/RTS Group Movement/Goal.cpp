@@ -166,9 +166,9 @@ void Goal_Think::Terminate()
 	owner->SetUnitDirection(UnitDirection_NoDirection);
 }
 
-void Goal_Think::AddGoal_Wander()
+void Goal_Think::AddGoal_Wander(uint maxDistance)
 {
-	AddSubgoal(new Goal_Wander(owner));
+	AddSubgoal(new Goal_Wander(owner, maxDistance));
 }
 
 void Goal_Think::AddGoal_AttackTarget(Entity* target)
@@ -289,8 +289,67 @@ GoalStatus Goal_Patrol::Process(float dt)
 
 void Goal_Patrol::Terminate()
 {
+	RemoveAllSubgoals();
+
 	owner->SetUnitState(UnitState_Idle);
 	owner->SetUnitDirection(UnitDirection_NoDirection);
+}
+
+// Goal_Wander ---------------------------------------------------------------------
+
+Goal_Wander::Goal_Wander(DynamicEntity* owner, uint maxDistance) :CompositeGoal(owner, GoalType_Wander), maxDistance(maxDistance) {}
+
+void Goal_Wander::Activate()
+{
+	maxDistance = 10;
+	goalStatus = GoalStatus_Active;
+
+	AddSubgoal(new Goal_LookAround(owner));
+
+	Navgraph* navgraph = owner->GetNavgraph();
+
+	iPoint destinationTile = { -1,-1 };
+
+	int sign = rand() % 2;
+	if (sign == 0)
+		sign = -1;
+
+	destinationTile.x = owner->GetSingleUnit()->currTile.x + sign * (rand() % (maxDistance + 1));
+
+	sign = rand() % 2;
+	if (sign == 0)
+		sign = -1;
+
+	destinationTile.y = owner->GetSingleUnit()->currTile.y + sign * (rand() % (maxDistance + 1));
+
+	AddSubgoal(new Goal_MoveToPosition(owner, destinationTile));
+}
+
+GoalStatus Goal_Wander::Process(float dt)
+{
+	ActivateIfInactive();
+
+	goalStatus = ProcessSubgoals(dt);
+
+	// Wander is performed in an infinite loop
+	if (goalStatus == GoalStatus_Completed)
+		Activate();
+
+	if (goalStatus == GoalStatus_Failed) {
+		RemoveAllSubgoals();
+		Activate();
+	}
+
+	return goalStatus;
+}
+
+void Goal_Wander::Terminate()
+{
+	RemoveAllSubgoals();
+
+	maxDistance = 0;
+
+	owner->SetUnitState(UnitState_Idle);
 }
 
 // ATOMIC GOALS
@@ -301,6 +360,12 @@ Goal_MoveToPosition::Goal_MoveToPosition(DynamicEntity* owner, iPoint destinatio
 void Goal_MoveToPosition::Activate() 
 {
 	goalStatus = GoalStatus_Active;
+
+	if (!owner->GetNavgraph()->IsWalkable(destinationTile)) {
+
+		goalStatus = GoalStatus_Failed;
+		return;
+	}
 
 	if (owner->GetSingleUnit()->goal != destinationTile)
 
@@ -394,66 +459,146 @@ void Goal_HitTarget::Terminate()
 	owner->SetUnitDirection(UnitDirection_NoDirection);
 }
 
+// Goal_LookAround ---------------------------------------------------------------------
 
+Goal_LookAround::Goal_LookAround(DynamicEntity* owner) :AtomicGoal(owner, GoalType_LookAround) {}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Goal_Wander ---------------------------------------------------------------------
-
-Goal_Wander::Goal_Wander(DynamicEntity* owner) :AtomicGoal(owner, GoalType_Wander) {}
-
-void Goal_Wander::Activate()
+void Goal_LookAround::Activate()
 {
 	goalStatus = GoalStatus_Active;
 
-	// Initialize the goal
-	number = 40;
-	i = 0;
+	uint random = rand() % 3;
+
+	switch (owner->GetUnitDirection()) {
+
+	case UnitDirection_Up:
+
+		if (random == 0)
+			nextOrientation = UnitDirection_UpLeft;
+		else if (random == 1)
+			nextOrientation = UnitDirection_UpRight;
+		else
+			nextOrientation = UnitDirection_Up;
+
+		break;
+
+	case UnitDirection_NoDirection:
+	case UnitDirection_Down:
+
+		if (random == 0)
+			nextOrientation = UnitDirection_DownLeft;
+		else if (random == 1)
+			nextOrientation = UnitDirection_DownRight;
+		else
+			nextOrientation = UnitDirection_Down;
+
+		break;
+
+	case UnitDirection_Left:
+
+		if (random == 0)
+			nextOrientation = UnitDirection_UpLeft;
+		else if (random == 1)
+			nextOrientation = UnitDirection_DownLeft;
+		else
+			nextOrientation = UnitDirection_Left;
+
+		break;
+
+	case UnitDirection_Right:
+
+		if (random == 0)
+			nextOrientation = UnitDirection_UpRight;
+		else if (random == 1)
+			nextOrientation = UnitDirection_DownRight;
+		else
+			nextOrientation = UnitDirection_Right;
+
+		break;
+
+	case UnitDirection_UpLeft:
+		
+		if (random == 0)
+			nextOrientation = UnitDirection_Up;
+		else if (random == 1)
+			nextOrientation = UnitDirection_Left;
+		else
+			nextOrientation = UnitDirection_UpLeft;
+
+		break;
+
+	case UnitDirection_UpRight:
+
+		if (random == 0)
+			nextOrientation = UnitDirection_Up;
+		else if (random == 1)
+			nextOrientation = UnitDirection_Right;
+		else
+			nextOrientation = UnitDirection_UpRight;
+
+		break;
+
+	case UnitDirection_DownLeft:
+
+		if (random == 0)
+			nextOrientation = UnitDirection_Down;
+		else if (random == 1)
+			nextOrientation = UnitDirection_Left;
+		else
+			nextOrientation = UnitDirection_DownLeft;
+
+		break;
+
+	case UnitDirection_DownRight:
+
+		if (random == 0)
+			nextOrientation = UnitDirection_Down;
+		else if (random == 1)
+			nextOrientation = UnitDirection_Right;
+		else
+			nextOrientation = UnitDirection_DownRight;
+
+		break;
+	}
+
+	timer.Start();
+	secondsToChange = (float)(rand() % 4 + 2);
+	secondsUntilNextChange = (float)(rand() % 6 + 2);
 }
 
-GoalStatus Goal_Wander::Process(float dt)
+GoalStatus Goal_LookAround::Process(float dt)
 {
-	// If status is inactive, activate it
 	ActivateIfInactive();
 
-	if (number == 40)
-		LOG("I'm Happy!");
-	else
-		LOG("I'm sad...");
+	if (!isChanged) {
 
-	i++;
-	if (i > 50)
-		goalStatus = GoalStatus_Completed;
+		if (timer.ReadSec() >= secondsToChange) {
+
+			owner->SetUnitDirection(nextOrientation);
+
+			isChanged = true;
+			timer.Start();
+		}
+	}
+	else {
+	
+		if (timer.ReadSec() >= secondsUntilNextChange) {
+
+			uint random = rand() % 3;
+
+			if (random % 2 == 0)
+				goalStatus = GoalStatus_Completed;
+			else
+				Activate();
+		}
+	}
 
 	return goalStatus;
 }
 
-void Goal_Wander::Terminate()
+void Goal_LookAround::Terminate()
 {
-	// Switch the goal off
-	number = 0;
-
-	if (number == 0)
-		LOG("I'm Happy again!");
-	else
-		LOG("I'm sad...");
+	secondsToChange = 0.0f;
+	secondsUntilNextChange = 0.0f;
+	isChanged = false;
 }

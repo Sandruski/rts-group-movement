@@ -128,6 +128,11 @@ PathPlanner* DynamicEntity::GetPathPlanner() const
 	return pathPlanner;
 }
 
+Navgraph* DynamicEntity::GetNavgraph() const 
+{
+	return navgraph;
+}
+
 float DynamicEntity::GetSpeed() const 
 {
 	return unitInfo.currSpeed;

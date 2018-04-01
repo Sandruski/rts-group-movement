@@ -13,6 +13,8 @@ using namespace std;
 class Entity;
 class DynamicEntity;
 
+enum UnitDirection;
+
 enum GoalType {
 
 	GoalType_NoType,
@@ -26,6 +28,7 @@ enum GoalType {
 	// Atomic Goals
 	GoalType_MoveToPosition,
 	GoalType_HitTarget,
+	GoalType_LookAround,
 
 	GoalType_MaxTypes,
 
@@ -137,23 +140,7 @@ protected:
 	list<Goal*> subgoals;
 };
 
-// ---------------------------------------------------------------------
-
-class Goal_Wander :public AtomicGoal
-{
-public:
-
-	Goal_Wander(DynamicEntity* owner);
-
-	void Activate();
-	GoalStatus Process(float dt);
-	void Terminate();
-
-private:
-
-	int number = 0;
-	int i = 0;
-};
+// Composite Goals ---------------------------------------------------------------------
 
 class Goal_Think :public CompositeGoal
 {
@@ -168,7 +155,7 @@ public:
 	// Arbitrate between available strategies, choosing the most appropriate
 	// to be pursued. Calculate the desirability of the strategies
 	//void Arbitrate();
-	void AddGoal_Wander();
+	void AddGoal_Wander(uint maxDistance);
 	void AddGoal_AttackTarget(Entity* target);
 	void AddGoal_MoveToPosition(iPoint destinationTile);
 	void AddGoal_Patrol(iPoint originTile, iPoint destinationTile);
@@ -189,21 +176,6 @@ private:
 	Entity* target = nullptr;
 };
 
-class Goal_MoveToPosition :public AtomicGoal
-{
-public:
-
-	Goal_MoveToPosition(DynamicEntity* owner, iPoint destinationTile);
-
-	void Activate();
-	GoalStatus Process(float dt);
-	void Terminate();
-
-private:
-
-	iPoint destinationTile = { -1,-1 }; // the position the bot wants to reach
-};
-
 class Goal_Patrol :public CompositeGoal
 {
 public:
@@ -222,6 +194,38 @@ private:
 	iPoint currGoal = { -1,-1 };
 };
 
+class Goal_Wander :public CompositeGoal
+{
+public:
+
+	Goal_Wander(DynamicEntity* owner, uint maxDistance);
+
+	void Activate();
+	GoalStatus Process(float dt);
+	void Terminate();
+
+private:
+
+	uint maxDistance = 0;
+};
+
+// Atomic Goals ---------------------------------------------------------------------
+
+class Goal_MoveToPosition :public AtomicGoal
+{
+public:
+
+	Goal_MoveToPosition(DynamicEntity* owner, iPoint destinationTile);
+
+	void Activate();
+	GoalStatus Process(float dt);
+	void Terminate();
+
+private:
+
+	iPoint destinationTile = { -1,-1 }; // the position the bot wants to reach
+};
+
 class Goal_HitTarget :public AtomicGoal
 {
 public:
@@ -235,6 +239,26 @@ public:
 private:
 
 	Entity* target = nullptr;
+};
+
+class Goal_LookAround :public AtomicGoal
+{
+public:
+
+	Goal_LookAround(DynamicEntity* owner);
+
+	void Activate();
+	GoalStatus Process(float dt);
+	void Terminate();
+
+private:
+
+	UnitDirection nextOrientation;
+	float secondsToChange = 0.0f;
+	float secondsUntilNextChange = 0.0f;
+	bool isChanged = false;
+
+	j1Timer timer;
 };
 
 #endif //__GOAL_H__

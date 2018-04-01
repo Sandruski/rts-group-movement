@@ -62,6 +62,7 @@ enum UnitState
 enum UnitDirection 
 {
 	UnitDirection_NoDirection,
+
 	UnitDirection_Up,
 	UnitDirection_Down,
 	UnitDirection_Left,
@@ -79,7 +80,6 @@ enum UnitCommand {
 	UnitCommand_Stop,
 	UnitCommand_AttackTarget,
 	UnitCommand_Patrol,
-	UnitCommand_Wander,
 
 	UnitCommand_MaxCommands
 };
@@ -120,6 +120,8 @@ public:
 	// Movement
 	SingleUnit* GetSingleUnit() const;
 	PathPlanner* GetPathPlanner() const;
+	Navgraph* GetNavgraph() const;
+
 	float GetSpeed() const;
 	uint GetPriority() const;
 	uint GetDamage() const;

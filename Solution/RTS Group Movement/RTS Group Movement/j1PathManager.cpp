@@ -312,6 +312,34 @@ bool Navgraph::SetNavgraph(j1PathFinding* currentSearch) const
 	return true;
 }
 
+inline uint Navgraph::Get(int x, int y) const
+{
+	return data[w * y + x];
+}
+
+// Utility: return true if pos is inside the map boundaries
+bool Navgraph::CheckBoundaries(const iPoint& pos) const
+{
+	return (pos.x >= 0 && pos.x <= (int)w &&
+		pos.y >= 0 && pos.y <= (int)h);
+}
+
+// Utility: returns true if the tile is walkable
+bool Navgraph::IsWalkable(const iPoint& pos) const
+{
+	int t = GetTileAt(pos);
+	return INVALID_WALK_CODE && t > 0;
+}
+
+// Utility: return the walkability value of a tile
+int Navgraph::GetTileAt(const iPoint& pos) const
+{
+	if (CheckBoundaries(pos))
+		return data[(pos.y*w) + pos.x];
+
+	return INVALID_WALK_CODE;
+}
+
 // FindActiveTrigger class ---------------------------------------------------------------------------------
 
 FindActiveTrigger::FindActiveTrigger(ActiveTriggerType activeTriggerType, Entity* entity) :activeTriggerType(activeTriggerType), entity(entity) {}

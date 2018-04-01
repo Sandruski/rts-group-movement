@@ -42,6 +42,8 @@ CritterSheep::CritterSheep(fPoint pos, iPoint size, int currLife, uint maxLife, 
 
 	// Initialize the goals
 	brain->RemoveAllSubgoals();
+
+	brain->AddGoal_Wander(5);
 }
 
 void CritterSheep::Move(float dt)
@@ -76,43 +78,6 @@ void CritterSheep::Move(float dt)
 	}
 
 	UpdatePaws();
-
-	// PROCESS THE COMMANDS
-	switch (unitCommand) {
-
-	case UnitCommand_Stop:
-
-		if (singleUnit->IsFittingTile()) {
-
-			brain->RemoveAllSubgoals();
-
-			unitCommand = UnitCommand_NoCommand;
-		}
-
-		break;
-
-	case UnitCommand_Wander:
-
-		// The goal of the unit has been changed manually (to patrol)
-		if (singleUnit->isGoalChanged) {
-
-			brain->AddGoal_Patrol(singleUnit->currTile, singleUnit->goal);
-
-			unitCommand = UnitCommand_NoCommand;
-		}
-
-		break;
-
-	case UnitCommand_NoCommand:
-	default:
-
-		// The goal of the unit has been changed manually (to move to position)
-		if (singleUnit->isGoalChanged)
-
-			brain->AddGoal_MoveToPosition(singleUnit->goal);
-
-		break;
-	}
 
 	// ---------------------------------------------------------------------
 
