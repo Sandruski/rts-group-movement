@@ -99,13 +99,6 @@ bool j1EntityFactory::Awake(pugi::xml_node& config) {
 	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
 		footmanInfo.downLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
-	// idle
-	currentAnimation = footmanAnimations.child("idle");
-	footmanInfo.idle.speed = currentAnimation.attribute("speed").as_float();
-	footmanInfo.idle.loop = currentAnimation.attribute("loop").as_bool();
-	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
-		footmanInfo.idle.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
-	}
 
 	/// Attack
 	// attack up
@@ -238,13 +231,6 @@ bool j1EntityFactory::Awake(pugi::xml_node& config) {
 	gruntInfo.downRight.loop = currentAnimation.attribute("loop").as_bool();
 	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
 		gruntInfo.downRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
-	}
-	// idle
-	currentAnimation = gruntAnimations.child("idle");
-	gruntInfo.idle.speed = currentAnimation.attribute("speed").as_float();
-	gruntInfo.idle.loop = currentAnimation.attribute("loop").as_bool();
-	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
-		gruntInfo.idle.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 
 	/// Attack

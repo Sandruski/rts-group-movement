@@ -215,10 +215,8 @@ bool CritterBoar::ChangeAnimation()
 			ret = true;
 			break;
 		}
-
 		return ret;
 	}
-
 	return ret;
 }
 
@@ -230,19 +228,6 @@ void CritterBoar::UpdatePaws()
 		&& singleUnit->nextTile.x != -1 && singleUnit->nextTile.y != -1) {
 
 		if (lastPaw != nullptr) {
-
-			// Predict the future orientation of the critter
-			iPoint nextTilePos = App->map->MapToWorld(singleUnit->nextTile.x, singleUnit->nextTile.y);
-			fPoint orientation = { (float)nextTilePos.x - pos.x, (float)nextTilePos.y - pos.y };
-
-			float m = sqrtf(pow(orientation.x, 2.0f) + pow(orientation.y, 2.0f));
-
-			if (m > 0.0f) {
-				orientation.x /= m;
-				orientation.y /= m;
-			}
-
-			singleUnit->unit->SetUnitDirectionByValue(orientation);
 
 			// Reset the animation of the last paw
 			if (GetUnitDirection() != UnitDirection_NoDirection && !lastPaw->isRemove) {

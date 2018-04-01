@@ -329,7 +329,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 
 		if (singleUnit->coll != CollisionType_NoCollision) {
 
-			singleUnit->StopUnit();
+			singleUnit->unit->SetIsStill(true);
 
 			// waitUnit doesn't exist
 			if (singleUnit->waitUnit == nullptr) {
@@ -654,7 +654,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 		}
 
 		if (singleUnit->wait) {
-			singleUnit->StopUnit();
+			singleUnit->unit->SetIsStill(true);
 
 			break;
 		}
@@ -717,13 +717,13 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 		}
 
 		// The unit is still
-		singleUnit->StopUnit();
+		singleUnit->unit->SetIsStill(true);
 
 	case MovementState_NoState:
 	default:
 
 		// The unit is still
-		singleUnit->StopUnit();
+		singleUnit->unit->SetIsStill(true);
 
 		break;
 	}
@@ -1444,12 +1444,6 @@ bool SingleUnit::IsTileReached(iPoint nextPos, fPoint endPos) const
 	return ret;
 }
 
-// Stops the unit
-void SingleUnit::StopUnit()
-{
-	unit->SetUnitDirection(UnitDirection_NoDirection);
-}
-
 // Resets the parameters of the unit (general info)
 void SingleUnit::ResetUnitParameters()
 {
@@ -1472,6 +1466,8 @@ void SingleUnit::ResetUnitCollisionParameters()
 	wait = false;
 
 	reversePriority = false;
+
+	unit->SetIsStill(false);
 }
 
 // When detected a collision, to set the collision parameters of the unit
@@ -1491,7 +1487,6 @@ void SingleUnit::GetReadyForNewMove()
 
 		ResetUnitParameters();
 		unit->GetPathPlanner()->SetSearchRequested(false);
-		StopUnit();
 		movementState = MovementState_WaitForPath;
 
 		isGoalChanged = false;

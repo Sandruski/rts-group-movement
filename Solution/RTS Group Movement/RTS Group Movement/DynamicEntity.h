@@ -111,6 +111,11 @@ public:
 	Animation* GetAnimation() const;
 	Goal_Think* GetBrain() const;
 
+	// UnitInfo
+	float GetSpeed() const;
+	uint GetPriority() const;
+	uint GetDamage() const;
+
 	// State machine
 	void UnitStateMachine(float dt);
 
@@ -122,9 +127,8 @@ public:
 	PathPlanner* GetPathPlanner() const;
 	Navgraph* GetNavgraph() const;
 
-	float GetSpeed() const;
-	uint GetPriority() const;
-	uint GetDamage() const;
+	void SetIsStill(bool isStill);
+	bool IsUnitStill() const;
 
 	// Animations
 	virtual void LoadAnimationsSpeed();
@@ -191,6 +195,8 @@ protected:
 	SingleUnit* singleUnit = nullptr;
 	PathPlanner* pathPlanner = nullptr;
 	Navgraph* navgraph = nullptr;
+
+	bool isStill = true; // if true, the unit is still. Else, the unit is moving
 
 	// Attack
 	bool isSightSatisfied = false; // if true, sight distance is satisfied

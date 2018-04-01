@@ -104,6 +104,22 @@ Goal_Think* DynamicEntity::GetBrain() const
 	return brain;
 }
 
+// UnitInfo
+float DynamicEntity::GetSpeed() const
+{
+	return unitInfo.currSpeed;
+}
+
+uint DynamicEntity::GetPriority() const
+{
+	return unitInfo.priority;
+}
+
+uint DynamicEntity::GetDamage() const
+{
+	return unitInfo.damage;
+}
+
 // State machine
 void DynamicEntity::UnitStateMachine(float dt) {}
 
@@ -133,19 +149,14 @@ Navgraph* DynamicEntity::GetNavgraph() const
 	return navgraph;
 }
 
-float DynamicEntity::GetSpeed() const 
+void DynamicEntity::SetIsStill(bool isStill)
 {
-	return unitInfo.currSpeed;
+	this->isStill = isStill;
 }
 
-uint DynamicEntity::GetPriority() const 
+bool DynamicEntity::IsUnitStill() const
 {
-	return unitInfo.priority;
-}
-
-uint DynamicEntity::GetDamage() const 
-{
-	return unitInfo.damage;
+	return isStill;
 }
 
 // Animations

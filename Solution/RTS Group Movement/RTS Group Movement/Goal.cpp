@@ -163,7 +163,6 @@ void Goal_Think::Terminate()
 	// TODO: Add some code here
 
 	owner->SetUnitState(UnitState_Idle);
-	owner->SetUnitDirection(UnitDirection_NoDirection);
 }
 
 void Goal_Think::AddGoal_Wander(uint maxDistance)
@@ -247,7 +246,6 @@ void Goal_AttackTarget::Terminate()
 	target = nullptr;
 
 	owner->SetUnitState(UnitState_Idle);
-	owner->SetUnitDirection(UnitDirection_NoDirection);
 }
 
 // Goal_Patrol ---------------------------------------------------------------------
@@ -292,7 +290,6 @@ void Goal_Patrol::Terminate()
 	RemoveAllSubgoals();
 
 	owner->SetUnitState(UnitState_Idle);
-	owner->SetUnitDirection(UnitDirection_NoDirection);
 }
 
 // Goal_Wander ---------------------------------------------------------------------
@@ -372,6 +369,8 @@ void Goal_MoveToPosition::Activate()
 		owner->GetSingleUnit()->SetGoal(destinationTile);
 
 	owner->GetSingleUnit()->GetReadyForNewMove();
+
+	owner->SetIsStill(false);
 }
 
 GoalStatus Goal_MoveToPosition::Process(float dt) 
@@ -394,6 +393,8 @@ GoalStatus Goal_MoveToPosition::Process(float dt)
 			goalStatus = GoalStatus_Completed;
 	}
 
+	LOG("%f, %f", owner->GetUnitDirectionByValue().x, owner->GetUnitDirectionByValue().y);
+
 	return goalStatus;
 }
 
@@ -401,7 +402,7 @@ void Goal_MoveToPosition::Terminate()
 {
 	owner->GetSingleUnit()->ResetUnitParameters();
 
-	owner->SetUnitDirection(UnitDirection_NoDirection);
+	owner->SetIsStill(true);
 }
 
 // Goal_HitTarget ---------------------------------------------------------------------
@@ -455,8 +456,6 @@ GoalStatus Goal_HitTarget::Process(float dt)
 void Goal_HitTarget::Terminate()
 {
 	owner->SetHitting(false);
-
-	owner->SetUnitDirection(UnitDirection_NoDirection);
 }
 
 // Goal_LookAround ---------------------------------------------------------------------

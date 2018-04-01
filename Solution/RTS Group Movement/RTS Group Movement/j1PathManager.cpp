@@ -320,8 +320,8 @@ inline uint Navgraph::Get(int x, int y) const
 // Utility: return true if pos is inside the map boundaries
 bool Navgraph::CheckBoundaries(const iPoint& pos) const
 {
-	return (pos.x >= 0 && pos.x <= (int)w &&
-		pos.y >= 0 && pos.y <= (int)h);
+	return (pos.x >= 0 && pos.x <= (int)(w - 1) &&
+		pos.y >= 0 && pos.y <= (int)(h - 1));
 }
 
 // Utility: returns true if the tile is walkable

@@ -160,9 +160,6 @@ struct SingleUnit
 	/// endPos is the tile that the unit would reach during this move
 	bool IsTileReached(iPoint nextPos, fPoint endPos) const;
 
-	// Stops the unit
-	void StopUnit();
-
 	// Resets the parameters of the unit (general info)
 	void ResetUnitParameters();
 

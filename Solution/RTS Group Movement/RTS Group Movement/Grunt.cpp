@@ -23,7 +23,6 @@ Grunt::Grunt(fPoint pos, iPoint size, int currLife, uint maxLife, const UnitInfo
 	// XML loading
 	/// Animations
 	GruntInfo info = (GruntInfo&)App->entities->GetDynamicEntityInfo(DynamicEntityType_Grunt);
-	this->gruntInfo.idle = info.idle;
 	this->gruntInfo.up = info.up;
 	this->gruntInfo.down = info.down;
 	this->gruntInfo.left = info.left;
@@ -104,7 +103,9 @@ void Grunt::Move(float dt)
 	UnitStateMachine(dt);
 
 	// Update animations
-	UpdateAnimationsSpeed(dt);
+	if (!isStill)
+		UpdateAnimationsSpeed(dt);
+
 	ChangeAnimation();
 
 	if (!isDead && lastColliderUpdateTile != singleUnit->currTile) {
@@ -228,7 +229,6 @@ void Grunt::UnitStateMachine(float dt)
 // Animations
 void Grunt::LoadAnimationsSpeed()
 {
-	idleSpeed = gruntInfo.idle.speed;
 	upSpeed = gruntInfo.up.speed;
 	downSpeed = gruntInfo.down.speed;
 	leftSpeed = gruntInfo.left.speed;
@@ -253,7 +253,6 @@ void Grunt::LoadAnimationsSpeed()
 
 void Grunt::UpdateAnimationsSpeed(float dt)
 {
-	gruntInfo.idle.speed = idleSpeed * dt;
 	gruntInfo.up.speed = upSpeed * dt;
 	gruntInfo.down.speed = downSpeed * dt;
 	gruntInfo.left.speed = leftSpeed * dt;
@@ -382,68 +381,277 @@ bool Grunt::ChangeAnimation()
 		return ret;
 	}
 
-	// The unit is moving
+	// The unit is either moving or still
 	else {
 
 		switch (GetUnitDirection()) {
 
-		case UnitDirection_NoDirection:
-
-			animation = &gruntInfo.idle;
-			ret = true;
-			break;
-
 		case UnitDirection_Up:
 
-			animation = &gruntInfo.up;
+			if (isStill) {
+
+				if (animation == &gruntInfo.up) {
+
+					gruntInfo.up.loop = false;
+
+					if (gruntInfo.up.Finished()) {
+
+						gruntInfo.up.Reset();
+						gruntInfo.up.speed = 0.0f;
+
+						animation = &gruntInfo.up;
+					}
+				}
+				else {
+
+					gruntInfo.up.Reset();
+					gruntInfo.up.speed = 0.0f;
+
+					animation = &gruntInfo.up;
+				}
+			}
+			else {
+
+				gruntInfo.up.loop = true;
+				animation = &gruntInfo.up;
+			}
+
 			ret = true;
 			break;
 
+		case UnitDirection_NoDirection:
 		case UnitDirection_Down:
 
-			animation = &gruntInfo.down;
+			if (isStill) {
+
+				if (animation == &gruntInfo.down) {
+
+					gruntInfo.down.loop = false;
+
+					if (gruntInfo.down.Finished()) {
+
+						gruntInfo.down.Reset();
+						gruntInfo.down.speed = 0.0f;
+
+						animation = &gruntInfo.down;
+					}
+				}
+				else {
+
+					gruntInfo.down.Reset();
+					gruntInfo.down.speed = 0.0f;
+
+					animation = &gruntInfo.down;
+				}
+			}
+			else {
+
+				gruntInfo.down.loop = true;
+				animation = &gruntInfo.down;
+			}
+
 			ret = true;
 			break;
 
 		case UnitDirection_Left:
 
-			animation = &gruntInfo.left;
+			if (isStill) {
+
+				if (animation == &gruntInfo.left) {
+
+					gruntInfo.left.loop = false;
+
+					if (gruntInfo.left.Finished()) {
+
+						gruntInfo.left.Reset();
+						gruntInfo.left.speed = 0.0f;
+
+						animation = &gruntInfo.left;
+					}
+				}
+				else {
+
+					gruntInfo.left.Reset();
+					gruntInfo.left.speed = 0.0f;
+
+					animation = &gruntInfo.left;
+				}
+			}
+			else {
+
+				gruntInfo.left.loop = true;
+				animation = &gruntInfo.left;
+			}
+
 			ret = true;
 			break;
 
 		case UnitDirection_Right:
 
-			animation = &gruntInfo.right;
+			if (isStill) {
+
+				if (animation == &gruntInfo.right) {
+
+					gruntInfo.right.loop = false;
+
+					if (gruntInfo.right.Finished()) {
+
+						gruntInfo.right.Reset();
+						gruntInfo.right.speed = 0.0f;
+
+						animation = &gruntInfo.right;
+					}
+				}
+				else {
+
+					gruntInfo.right.Reset();
+					gruntInfo.right.speed = 0.0f;
+
+					animation = &gruntInfo.right;
+				}
+			}
+			else {
+
+				gruntInfo.right.loop = true;
+				animation = &gruntInfo.right;
+			}
+
 			ret = true;
 			break;
 
 		case UnitDirection_UpLeft:
 
-			animation = &gruntInfo.upLeft;
+			if (isStill) {
+
+				if (animation == &gruntInfo.upLeft) {
+
+					gruntInfo.upLeft.loop = false;
+
+					if (gruntInfo.upLeft.Finished()) {
+
+						gruntInfo.upLeft.Reset();
+						gruntInfo.upLeft.speed = 0.0f;
+
+						animation = &gruntInfo.upLeft;
+					}
+				}
+				else {
+
+					gruntInfo.upLeft.Reset();
+					gruntInfo.upLeft.speed = 0.0f;
+
+					animation = &gruntInfo.upLeft;
+				}
+			}
+			else {
+
+				gruntInfo.upLeft.loop = true;
+				animation = &gruntInfo.upLeft;
+			}
+
 			ret = true;
 			break;
 
 		case UnitDirection_UpRight:
 
-			animation = &gruntInfo.upRight;
+			if (isStill) {
+
+				if (animation == &gruntInfo.upRight) {
+
+					gruntInfo.upRight.loop = false;
+
+					if (gruntInfo.upRight.Finished()) {
+
+						gruntInfo.upRight.Reset();
+						gruntInfo.upRight.speed = 0.0f;
+
+						animation = &gruntInfo.upRight;
+					}
+				}
+				else {
+
+					gruntInfo.upRight.Reset();
+					gruntInfo.upRight.speed = 0.0f;
+
+					animation = &gruntInfo.upRight;
+				}
+			}
+			else {
+
+				gruntInfo.upRight.loop = true;
+				animation = &gruntInfo.upRight;
+			}
+
 			ret = true;
 			break;
 
 		case UnitDirection_DownLeft:
 
-			animation = &gruntInfo.downLeft;
+			if (isStill) {
+
+				if (animation == &gruntInfo.downLeft) {
+
+					gruntInfo.downLeft.loop = false;
+
+					if (gruntInfo.downLeft.Finished()) {
+
+						gruntInfo.downLeft.Reset();
+						gruntInfo.downLeft.speed = 0.0f;
+
+						animation = &gruntInfo.downLeft;
+					}
+				}
+				else {
+
+					gruntInfo.downLeft.Reset();
+					gruntInfo.downLeft.speed = 0.0f;
+
+					animation = &gruntInfo.downLeft;
+				}
+			}
+			else {
+
+				gruntInfo.downLeft.loop = true;
+				animation = &gruntInfo.downLeft;
+			}
+
 			ret = true;
 			break;
 
 		case UnitDirection_DownRight:
 
-			animation = &gruntInfo.downRight;
+			if (isStill) {
+
+				if (animation == &gruntInfo.downRight) {
+
+					gruntInfo.downRight.loop = false;
+
+					if (gruntInfo.downRight.Finished()) {
+
+						gruntInfo.downRight.Reset();
+						gruntInfo.downRight.speed = 0.0f;
+
+						animation = &gruntInfo.downRight;
+					}
+				}
+				else {
+
+					gruntInfo.downRight.Reset();
+					gruntInfo.downRight.speed = 0.0f;
+
+					animation = &gruntInfo.downRight;
+				}
+			}
+			else {
+
+				gruntInfo.downRight.loop = true;
+				animation = &gruntInfo.downRight;
+			}
+
 			ret = true;
 			break;
 		}
-
 		return ret;
 	}
-
 	return ret;
 }

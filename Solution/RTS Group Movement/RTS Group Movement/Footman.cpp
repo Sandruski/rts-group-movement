@@ -23,7 +23,6 @@ Footman::Footman(fPoint pos, iPoint size, int currLife, uint maxLife, const Unit
 	// XML loading
 	/// Animations
 	FootmanInfo info = (FootmanInfo&)App->entities->GetDynamicEntityInfo(DynamicEntityType_Footman);
-	this->footmanInfo.idle = info.idle;
 	this->footmanInfo.up = info.up;
 	this->footmanInfo.down = info.down;
 	this->footmanInfo.left = info.left;
@@ -152,7 +151,9 @@ void Footman::Move(float dt)
 	UnitStateMachine(dt);
 
 	// Update animations
-	UpdateAnimationsSpeed(dt);
+	if (!isStill)
+		UpdateAnimationsSpeed(dt);
+
 	ChangeAnimation();
 
 	if (!isDead && lastColliderUpdateTile != singleUnit->currTile) {
@@ -267,7 +268,6 @@ void Footman::UnitStateMachine(float dt)
 // Animations
 void Footman::LoadAnimationsSpeed()
 {
-	idleSpeed = footmanInfo.idle.speed;
 	upSpeed = footmanInfo.up.speed;
 	downSpeed = footmanInfo.down.speed;
 	leftSpeed = footmanInfo.left.speed;
@@ -292,7 +292,6 @@ void Footman::LoadAnimationsSpeed()
 
 void Footman::UpdateAnimationsSpeed(float dt)
 {
-	footmanInfo.idle.speed = idleSpeed * dt;
 	footmanInfo.up.speed = upSpeed * dt;
 	footmanInfo.down.speed = downSpeed * dt;
 	footmanInfo.left.speed = leftSpeed * dt;
@@ -421,68 +420,277 @@ bool Footman::ChangeAnimation()
 		return ret;
 	}
 
-	// The unit is moving
+	// The unit is either moving or still
 	else {
 	
 		switch (GetUnitDirection()) {
 
-		case UnitDirection_NoDirection:
-
-			animation = &footmanInfo.idle;
-			ret = true;
-			break;
-
 		case UnitDirection_Up:
 
-			animation = &footmanInfo.up;
+			if (isStill) {
+
+				if (animation == &footmanInfo.up) {
+
+					footmanInfo.up.loop = false;
+
+					if (footmanInfo.up.Finished()) {
+
+						footmanInfo.up.Reset();
+						footmanInfo.up.speed = 0.0f;
+
+						animation = &footmanInfo.up;
+					}
+				}
+				else {
+
+					footmanInfo.up.Reset();
+					footmanInfo.up.speed = 0.0f;
+
+					animation = &footmanInfo.up;
+				}
+			}
+			else {
+
+				footmanInfo.up.loop = true;
+				animation = &footmanInfo.up;
+			}
+
 			ret = true;
 			break;
 
+		case UnitDirection_NoDirection:
 		case UnitDirection_Down:
 
-			animation = &footmanInfo.down;
+			if (isStill) {
+
+				if (animation == &footmanInfo.down) {
+
+					footmanInfo.down.loop = false;
+
+					if (footmanInfo.down.Finished()) {
+
+						footmanInfo.down.Reset();
+						footmanInfo.down.speed = 0.0f;
+						
+						animation = &footmanInfo.down;
+					}
+				}
+				else {
+
+					footmanInfo.down.Reset();
+					footmanInfo.down.speed = 0.0f;
+
+					animation = &footmanInfo.down;
+				}
+			}
+			else {
+
+				footmanInfo.down.loop = true;
+				animation = &footmanInfo.down;
+			}
+
 			ret = true;
 			break;
 
 		case UnitDirection_Left:
 
-			animation = &footmanInfo.left;
+			if (isStill) {
+
+				if (animation == &footmanInfo.left) {
+
+					footmanInfo.left.loop = false;
+
+					if (footmanInfo.left.Finished()) {
+
+						footmanInfo.left.Reset();
+						footmanInfo.left.speed = 0.0f;
+
+						animation = &footmanInfo.left;
+					}
+				}
+				else {
+
+					footmanInfo.left.Reset();
+					footmanInfo.left.speed = 0.0f;
+
+					animation = &footmanInfo.left;
+				}
+			}
+			else {
+
+				footmanInfo.left.loop = true;
+				animation = &footmanInfo.left;
+			}
+
 			ret = true;
 			break;
 
 		case UnitDirection_Right:
 
-			animation = &footmanInfo.right;
+			if (isStill) {
+
+				if (animation == &footmanInfo.right) {
+
+					footmanInfo.right.loop = false;
+
+					if (footmanInfo.right.Finished()) {
+
+						footmanInfo.right.Reset();
+						footmanInfo.right.speed = 0.0f;
+
+						animation = &footmanInfo.right;
+					}
+				}
+				else {
+
+					footmanInfo.right.Reset();
+					footmanInfo.right.speed = 0.0f;
+
+					animation = &footmanInfo.right;
+				}
+			}
+			else {
+
+				footmanInfo.right.loop = true;
+				animation = &footmanInfo.right;
+			}
+
 			ret = true;
 			break;
 
 		case UnitDirection_UpLeft:
 
-			animation = &footmanInfo.upLeft;
+			if (isStill) {
+
+				if (animation == &footmanInfo.upLeft) {
+
+					footmanInfo.upLeft.loop = false;
+
+					if (footmanInfo.upLeft.Finished()) {
+
+						footmanInfo.upLeft.Reset();
+						footmanInfo.upLeft.speed = 0.0f;
+
+						animation = &footmanInfo.upLeft;
+					}
+				}
+				else {
+
+					footmanInfo.upLeft.Reset();
+					footmanInfo.upLeft.speed = 0.0f;
+
+					animation = &footmanInfo.upLeft;
+				}
+			}
+			else {
+
+				footmanInfo.upLeft.loop = true;
+				animation = &footmanInfo.upLeft;
+			}
+
 			ret = true;
 			break;
 
 		case UnitDirection_UpRight:
 
-			animation = &footmanInfo.upRight;
+			if (isStill) {
+
+				if (animation == &footmanInfo.upRight) {
+
+					footmanInfo.upRight.loop = false;
+
+					if (footmanInfo.upRight.Finished()) {
+
+						footmanInfo.upRight.Reset();
+						footmanInfo.upRight.speed = 0.0f;
+
+						animation = &footmanInfo.upRight;
+					}
+				}
+				else {
+
+					footmanInfo.upRight.Reset();
+					footmanInfo.upRight.speed = 0.0f;
+
+					animation = &footmanInfo.upRight;
+				}
+			}
+			else {
+
+				footmanInfo.upRight.loop = true;
+				animation = &footmanInfo.upRight;
+			}
+
 			ret = true;
 			break;
 
 		case UnitDirection_DownLeft:
 
-			animation = &footmanInfo.downLeft;
+			if (isStill) {
+
+				if (animation == &footmanInfo.downLeft) {
+
+					footmanInfo.downLeft.loop = false;
+
+					if (footmanInfo.downLeft.Finished()) {
+
+						footmanInfo.downLeft.Reset();
+						footmanInfo.downLeft.speed = 0.0f;
+
+						animation = &footmanInfo.downLeft;
+					}
+				}
+				else {
+
+					footmanInfo.downLeft.Reset();
+					footmanInfo.downLeft.speed = 0.0f;
+
+					animation = &footmanInfo.downLeft;
+				}
+			}
+			else {
+
+				footmanInfo.downLeft.loop = true;
+				animation = &footmanInfo.downLeft;
+			}
+
 			ret = true;
 			break;
 
 		case UnitDirection_DownRight:
 
-			animation = &footmanInfo.downRight;
+			if (isStill) {
+
+				if (animation == &footmanInfo.downRight) {
+
+					footmanInfo.downRight.loop = false;
+
+					if (footmanInfo.downRight.Finished()) {
+
+						footmanInfo.downRight.Reset();
+						footmanInfo.downRight.speed = 0.0f;
+
+						animation = &footmanInfo.downRight;
+					}
+				}
+				else {
+
+					footmanInfo.downRight.Reset();
+					footmanInfo.downRight.speed = 0.0f;
+
+					animation = &footmanInfo.downRight;
+				}
+			}
+			else {
+
+				footmanInfo.downRight.loop = true;
+				animation = &footmanInfo.downRight;
+			}
+
 			ret = true;
 			break;
 		}
-
 		return ret;
-	}
-		
+	}	
 	return ret;
 }

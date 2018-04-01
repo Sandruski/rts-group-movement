@@ -288,9 +288,6 @@
           <frame x="151" y="168" w="69" h="54"/>
           <frame x="151" y="219" w="69" h="54"/>
         </right>
-        <idle speed="4" loop="1">
-          <frame x="300" y="4" w="69" h="54"/>
-        </idle>
         <attackUp speed="2" loop="0">
           <frame x="2" y="278" w="56" h="58"/>
           <frame x="2" y="338" w="56" h="58"/>
@@ -408,9 +405,6 @@
           <frame x="157" y="162" w="58" h="52"/>
           <frame x="157" y="216" w="58" h="52"/>
         </right>
-        <idle speed="4" loop="1">
-          <frame x="308" y="1" w="50" h="53"/>
-        </idle>
         <attackUp speed="2" loop="0">
           <frame x="5" y="272" w="70" h="51"/>
           <frame x="5" y="328" w="70" h="51"/>
