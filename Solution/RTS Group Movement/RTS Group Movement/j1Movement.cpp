@@ -405,11 +405,11 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 						// Update the unit's nextTile
 						singleUnit->nextTile = singleUnit->path.front();
 
-						/// COLLISION RESOLVED
-						singleUnit->ResetUnitCollisionParameters();
-
 						if (singleUnit->unit->isSelected)
 							LOG("%s: MOVED AWAY %s", singleUnit->waitUnit->unit->GetColorName().data(), singleUnit->unit->GetColorName().data());
+
+						/// COLLISION RESOLVED
+						singleUnit->ResetUnitCollisionParameters();
 
 						break;
 					}

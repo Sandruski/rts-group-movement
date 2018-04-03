@@ -48,13 +48,13 @@ DynamicEntity::~DynamicEntity()
 	brain = nullptr;
 
 	// Remove Movement
-	if (pathPlanner != nullptr)
-		delete pathPlanner;
-	pathPlanner = nullptr;
-
 	if (navgraph != nullptr)
 		delete navgraph;
 	navgraph = nullptr;
+
+	if (pathPlanner != nullptr)
+		delete pathPlanner;
+	pathPlanner = nullptr;
 
 	if (singleUnit != nullptr)
 		delete singleUnit;
