@@ -333,6 +333,7 @@ GoalStatus Goal_Wander::Process(float dt)
 		Activate();
 
 	if (goalStatus == GoalStatus_Failed) {
+		LOG("GOAL FAILEEEEEEEEED");
 		RemoveAllSubgoals();
 		Activate();
 	}

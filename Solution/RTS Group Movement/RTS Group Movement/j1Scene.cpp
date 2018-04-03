@@ -97,7 +97,7 @@ bool j1Scene::PreUpdate()
 	UnitInfo unitInfo;
 	unitInfo.maxSpeed = 50.0f;
 	unitInfo.damage = 2;
-	unitInfo.priority = 3;
+	unitInfo.priority = 1; // TODO: change to 3 or so
 
 	/// Footman
 	FootmanInfo footmanInfo;

@@ -390,31 +390,14 @@ bool Grunt::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &gruntInfo.up) {
-
-					gruntInfo.up.loop = false;
-
-					if (gruntInfo.up.Finished()) {
-
-						gruntInfo.up.Reset();
-						gruntInfo.up.speed = 0.0f;
-
-						animation = &gruntInfo.up;
-					}
-				}
-				else {
-
-					gruntInfo.up.Reset();
-					gruntInfo.up.speed = 0.0f;
-
-					animation = &gruntInfo.up;
-				}
+				gruntInfo.up.loop = false;
+				gruntInfo.up.Reset();
+				gruntInfo.up.speed = 0.0f;
 			}
-			else {
-
+			else
 				gruntInfo.up.loop = true;
-				animation = &gruntInfo.up;
-			}
+
+			animation = &gruntInfo.up;
 
 			ret = true;
 			break;
@@ -424,31 +407,14 @@ bool Grunt::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &gruntInfo.down) {
-
-					gruntInfo.down.loop = false;
-
-					if (gruntInfo.down.Finished()) {
-
-						gruntInfo.down.Reset();
-						gruntInfo.down.speed = 0.0f;
-
-						animation = &gruntInfo.down;
-					}
-				}
-				else {
-
-					gruntInfo.down.Reset();
-					gruntInfo.down.speed = 0.0f;
-
-					animation = &gruntInfo.down;
-				}
+				gruntInfo.down.loop = false;
+				gruntInfo.down.Reset();
+				gruntInfo.down.speed = 0.0f;
 			}
-			else {
-
+			else
 				gruntInfo.down.loop = true;
-				animation = &gruntInfo.down;
-			}
+
+			animation = &gruntInfo.down;
 
 			ret = true;
 			break;
@@ -457,31 +423,14 @@ bool Grunt::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &gruntInfo.left) {
-
-					gruntInfo.left.loop = false;
-
-					if (gruntInfo.left.Finished()) {
-
-						gruntInfo.left.Reset();
-						gruntInfo.left.speed = 0.0f;
-
-						animation = &gruntInfo.left;
-					}
-				}
-				else {
-
-					gruntInfo.left.Reset();
-					gruntInfo.left.speed = 0.0f;
-
-					animation = &gruntInfo.left;
-				}
+				gruntInfo.left.loop = false;
+				gruntInfo.left.Reset();
+				gruntInfo.left.speed = 0.0f;
 			}
-			else {
-
+			else
 				gruntInfo.left.loop = true;
-				animation = &gruntInfo.left;
-			}
+
+			animation = &gruntInfo.left;
 
 			ret = true;
 			break;
@@ -490,31 +439,14 @@ bool Grunt::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &gruntInfo.right) {
-
-					gruntInfo.right.loop = false;
-
-					if (gruntInfo.right.Finished()) {
-
-						gruntInfo.right.Reset();
-						gruntInfo.right.speed = 0.0f;
-
-						animation = &gruntInfo.right;
-					}
-				}
-				else {
-
-					gruntInfo.right.Reset();
-					gruntInfo.right.speed = 0.0f;
-
-					animation = &gruntInfo.right;
-				}
+				gruntInfo.right.loop = false;
+				gruntInfo.right.Reset();
+				gruntInfo.right.speed = 0.0f;
 			}
-			else {
-
+			else
 				gruntInfo.right.loop = true;
-				animation = &gruntInfo.right;
-			}
+
+			animation = &gruntInfo.right;
 
 			ret = true;
 			break;
@@ -523,31 +455,14 @@ bool Grunt::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &gruntInfo.upLeft) {
-
-					gruntInfo.upLeft.loop = false;
-
-					if (gruntInfo.upLeft.Finished()) {
-
-						gruntInfo.upLeft.Reset();
-						gruntInfo.upLeft.speed = 0.0f;
-
-						animation = &gruntInfo.upLeft;
-					}
-				}
-				else {
-
-					gruntInfo.upLeft.Reset();
-					gruntInfo.upLeft.speed = 0.0f;
-
-					animation = &gruntInfo.upLeft;
-				}
+				gruntInfo.upLeft.loop = false;
+				gruntInfo.upLeft.Reset();
+				gruntInfo.upLeft.speed = 0.0f;
 			}
-			else {
-
+			else
 				gruntInfo.upLeft.loop = true;
-				animation = &gruntInfo.upLeft;
-			}
+
+			animation = &gruntInfo.upLeft;
 
 			ret = true;
 			break;
@@ -556,31 +471,14 @@ bool Grunt::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &gruntInfo.upRight) {
-
-					gruntInfo.upRight.loop = false;
-
-					if (gruntInfo.upRight.Finished()) {
-
-						gruntInfo.upRight.Reset();
-						gruntInfo.upRight.speed = 0.0f;
-
-						animation = &gruntInfo.upRight;
-					}
-				}
-				else {
-
-					gruntInfo.upRight.Reset();
-					gruntInfo.upRight.speed = 0.0f;
-
-					animation = &gruntInfo.upRight;
-				}
+				gruntInfo.upRight.loop = false;
+				gruntInfo.upRight.Reset();
+				gruntInfo.upRight.speed = 0.0f;
 			}
-			else {
-
+			else
 				gruntInfo.upRight.loop = true;
-				animation = &gruntInfo.upRight;
-			}
+
+			animation = &gruntInfo.upRight;
 
 			ret = true;
 			break;
@@ -589,31 +487,14 @@ bool Grunt::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &gruntInfo.downLeft) {
-
-					gruntInfo.downLeft.loop = false;
-
-					if (gruntInfo.downLeft.Finished()) {
-
-						gruntInfo.downLeft.Reset();
-						gruntInfo.downLeft.speed = 0.0f;
-
-						animation = &gruntInfo.downLeft;
-					}
-				}
-				else {
-
-					gruntInfo.downLeft.Reset();
-					gruntInfo.downLeft.speed = 0.0f;
-
-					animation = &gruntInfo.downLeft;
-				}
+				gruntInfo.downLeft.loop = false;
+				gruntInfo.downLeft.Reset();
+				gruntInfo.downLeft.speed = 0.0f;
 			}
-			else {
-
+			else
 				gruntInfo.downLeft.loop = true;
-				animation = &gruntInfo.downLeft;
-			}
+
+			animation = &gruntInfo.downLeft;
 
 			ret = true;
 			break;
@@ -622,31 +503,14 @@ bool Grunt::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &gruntInfo.downRight) {
-
-					gruntInfo.downRight.loop = false;
-
-					if (gruntInfo.downRight.Finished()) {
-
-						gruntInfo.downRight.Reset();
-						gruntInfo.downRight.speed = 0.0f;
-
-						animation = &gruntInfo.downRight;
-					}
-				}
-				else {
-
-					gruntInfo.downRight.Reset();
-					gruntInfo.downRight.speed = 0.0f;
-
-					animation = &gruntInfo.downRight;
-				}
+				gruntInfo.downRight.loop = false;
+				gruntInfo.downRight.Reset();
+				gruntInfo.downRight.speed = 0.0f;
 			}
-			else {
-
+			else
 				gruntInfo.downRight.loop = true;
-				animation = &gruntInfo.downRight;
-			}
+
+			animation = &gruntInfo.downRight;
 
 			ret = true;
 			break;

@@ -429,31 +429,14 @@ bool Footman::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &footmanInfo.up) {
-
-					footmanInfo.up.loop = false;
-
-					if (footmanInfo.up.Finished()) {
-
-						footmanInfo.up.Reset();
-						footmanInfo.up.speed = 0.0f;
-
-						animation = &footmanInfo.up;
-					}
-				}
-				else {
-
-					footmanInfo.up.Reset();
-					footmanInfo.up.speed = 0.0f;
-
-					animation = &footmanInfo.up;
-				}
+				footmanInfo.up.loop = false;
+				footmanInfo.up.Reset();
+				footmanInfo.up.speed = 0.0f;
 			}
-			else {
-
+			else
 				footmanInfo.up.loop = true;
-				animation = &footmanInfo.up;
-			}
+
+			animation = &footmanInfo.up;
 
 			ret = true;
 			break;
@@ -463,31 +446,14 @@ bool Footman::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &footmanInfo.down) {
-
-					footmanInfo.down.loop = false;
-
-					if (footmanInfo.down.Finished()) {
-
-						footmanInfo.down.Reset();
-						footmanInfo.down.speed = 0.0f;
-						
-						animation = &footmanInfo.down;
-					}
-				}
-				else {
-
-					footmanInfo.down.Reset();
-					footmanInfo.down.speed = 0.0f;
-
-					animation = &footmanInfo.down;
-				}
+				footmanInfo.down.loop = false;
+				footmanInfo.down.Reset();
+				footmanInfo.down.speed = 0.0f;
 			}
-			else {
-
+			else
 				footmanInfo.down.loop = true;
-				animation = &footmanInfo.down;
-			}
+
+			animation = &footmanInfo.down;
 
 			ret = true;
 			break;
@@ -496,31 +462,14 @@ bool Footman::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &footmanInfo.left) {
-
-					footmanInfo.left.loop = false;
-
-					if (footmanInfo.left.Finished()) {
-
-						footmanInfo.left.Reset();
-						footmanInfo.left.speed = 0.0f;
-
-						animation = &footmanInfo.left;
-					}
-				}
-				else {
-
-					footmanInfo.left.Reset();
-					footmanInfo.left.speed = 0.0f;
-
-					animation = &footmanInfo.left;
-				}
+				footmanInfo.left.loop = false;
+				footmanInfo.left.Reset();
+				footmanInfo.left.speed = 0.0f;
 			}
-			else {
-
+			else
 				footmanInfo.left.loop = true;
-				animation = &footmanInfo.left;
-			}
+
+			animation = &footmanInfo.left;
 
 			ret = true;
 			break;
@@ -529,31 +478,14 @@ bool Footman::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &footmanInfo.right) {
-
-					footmanInfo.right.loop = false;
-
-					if (footmanInfo.right.Finished()) {
-
-						footmanInfo.right.Reset();
-						footmanInfo.right.speed = 0.0f;
-
-						animation = &footmanInfo.right;
-					}
-				}
-				else {
-
-					footmanInfo.right.Reset();
-					footmanInfo.right.speed = 0.0f;
-
-					animation = &footmanInfo.right;
-				}
+				footmanInfo.right.loop = false;
+				footmanInfo.right.Reset();
+				footmanInfo.right.speed = 0.0f;
 			}
-			else {
-
+			else
 				footmanInfo.right.loop = true;
-				animation = &footmanInfo.right;
-			}
+
+			animation = &footmanInfo.right;
 
 			ret = true;
 			break;
@@ -562,31 +494,14 @@ bool Footman::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &footmanInfo.upLeft) {
-
-					footmanInfo.upLeft.loop = false;
-
-					if (footmanInfo.upLeft.Finished()) {
-
-						footmanInfo.upLeft.Reset();
-						footmanInfo.upLeft.speed = 0.0f;
-
-						animation = &footmanInfo.upLeft;
-					}
-				}
-				else {
-
-					footmanInfo.upLeft.Reset();
-					footmanInfo.upLeft.speed = 0.0f;
-
-					animation = &footmanInfo.upLeft;
-				}
+				footmanInfo.upLeft.loop = false;
+				footmanInfo.upLeft.Reset();
+				footmanInfo.upLeft.speed = 0.0f;
 			}
-			else {
-
+			else
 				footmanInfo.upLeft.loop = true;
-				animation = &footmanInfo.upLeft;
-			}
+
+			animation = &footmanInfo.upLeft;
 
 			ret = true;
 			break;
@@ -595,31 +510,14 @@ bool Footman::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &footmanInfo.upRight) {
-
-					footmanInfo.upRight.loop = false;
-
-					if (footmanInfo.upRight.Finished()) {
-
-						footmanInfo.upRight.Reset();
-						footmanInfo.upRight.speed = 0.0f;
-
-						animation = &footmanInfo.upRight;
-					}
-				}
-				else {
-
-					footmanInfo.upRight.Reset();
-					footmanInfo.upRight.speed = 0.0f;
-
-					animation = &footmanInfo.upRight;
-				}
+				footmanInfo.upRight.loop = false;
+				footmanInfo.upRight.Reset();
+				footmanInfo.upRight.speed = 0.0f;
 			}
-			else {
-
+			else
 				footmanInfo.upRight.loop = true;
-				animation = &footmanInfo.upRight;
-			}
+
+			animation = &footmanInfo.upRight;
 
 			ret = true;
 			break;
@@ -628,31 +526,14 @@ bool Footman::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &footmanInfo.downLeft) {
-
-					footmanInfo.downLeft.loop = false;
-
-					if (footmanInfo.downLeft.Finished()) {
-
-						footmanInfo.downLeft.Reset();
-						footmanInfo.downLeft.speed = 0.0f;
-
-						animation = &footmanInfo.downLeft;
-					}
-				}
-				else {
-
-					footmanInfo.downLeft.Reset();
-					footmanInfo.downLeft.speed = 0.0f;
-
-					animation = &footmanInfo.downLeft;
-				}
+				footmanInfo.downLeft.loop = false;
+				footmanInfo.downLeft.Reset();
+				footmanInfo.downLeft.speed = 0.0f;
 			}
-			else {
-
+			else
 				footmanInfo.downLeft.loop = true;
-				animation = &footmanInfo.downLeft;
-			}
+
+			animation = &footmanInfo.downLeft;
 
 			ret = true;
 			break;
@@ -661,31 +542,14 @@ bool Footman::ChangeAnimation()
 
 			if (isStill) {
 
-				if (animation == &footmanInfo.downRight) {
-
-					footmanInfo.downRight.loop = false;
-
-					if (footmanInfo.downRight.Finished()) {
-
-						footmanInfo.downRight.Reset();
-						footmanInfo.downRight.speed = 0.0f;
-
-						animation = &footmanInfo.downRight;
-					}
-				}
-				else {
-
-					footmanInfo.downRight.Reset();
-					footmanInfo.downRight.speed = 0.0f;
-
-					animation = &footmanInfo.downRight;
-				}
+				footmanInfo.downRight.loop = false;
+				footmanInfo.downRight.Reset();
+				footmanInfo.downRight.speed = 0.0f;
 			}
-			else {
-
+			else
 				footmanInfo.downRight.loop = true;
-				animation = &footmanInfo.downRight;
-			}
+
+			animation = &footmanInfo.downRight;
 
 			ret = true;
 			break;

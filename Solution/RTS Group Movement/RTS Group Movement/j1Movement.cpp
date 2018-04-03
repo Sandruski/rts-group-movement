@@ -243,6 +243,12 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 	fPoint movePos;
 	iPoint newGoal;
 
+	if (singleUnit->unit->IsUnitStill()) {
+		LOG("---Is Still");
+	}
+	else
+		LOG("+++Is Moving");
+
 	switch (singleUnit->movementState) {
 
 	case MovementState_WaitForPath:
@@ -665,8 +671,6 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 			break;
 		}
 
-		singleUnit->unit->SetIsStill(false);
-
 		// ---------------------------------------------------------------------
 		// TILE FITTING
 		// ---------------------------------------------------------------------
@@ -690,6 +694,8 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 				break;
 			}
 		}
+
+		singleUnit->unit->SetIsStill(false);
 
 		// Add the movePos to the unit's current position
 		singleUnit->unit->AddToPos(movePos);
@@ -811,9 +817,6 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 					/// The unit with the highest area inside the nextTile must deal with the collision
 
 					else if (singleUnit->nextTile == (*units)->nextTile && !(*units)->wait) {
-						
-						UnitDirection dirA = singleUnit->unit->GetUnitDirection();
-						UnitDirection dirB = (*units)->unit->GetUnitDirection();
 
 						singleUnit->waitUnit = *units;
 						singleUnit->waitTile = singleUnit->nextTile;
@@ -866,41 +869,122 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 						iPoint myLeft = { singleUnit->currTile.x - 1, singleUnit->currTile.y };
 						iPoint myRight = { singleUnit->currTile.x + 1, singleUnit->currTile.y };
 
+						// The agent that is already inside the tile has the priority. If none of them are, choose one randomly
+						SDL_Rect posA = { (int)singleUnit->unit->GetPos().x, (int)singleUnit->unit->GetPos().y, App->map->data.tile_width, App->map->data.tile_height };
+						SDL_Rect posB = { (int)(*units)->unit->GetPos().x, (int)(*units)->unit->GetPos().y,  App->map->data.tile_width, App->map->data.tile_height };
+
+						iPoint tilePosA = App->map->MapToWorld(singleUnit->nextTile.x, singleUnit->nextTile.y);
+						iPoint tilePosB = App->map->MapToWorld((*units)->nextTile.x, (*units)->nextTile.y);
+						SDL_Rect tileA = { tilePosA.x, tilePosA.y, App->map->data.tile_width, App->map->data.tile_height };
+						SDL_Rect tileB = { tilePosB.x, tilePosB.y, App->map->data.tile_width, App->map->data.tile_height };
+						SDL_Rect resultA, resultB;
+
+						SDL_IntersectRect(&posA, &tileA, &resultA);
+						SDL_IntersectRect(&posB, &tileB, &resultB);
+
+						// Compare the areas of the two intersections
+						int areaA = resultA.w * resultA.h;
+						int areaB = resultB.w * resultB.h;
+
 						if (singleUnit->nextTile == up) {
 
 							// We are sure than nextTile of this unit is valid, but what about the other unit's nextTile? We haven't check it yet
-							if ((*units)->nextTile == myUp && !(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
+							if ((*units)->nextTile == myUp) {
 
-								singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myUp);
-								LOG("%s: Up CROSSING", singleUnit->unit->GetColorName().data());
+								// Decide which unit waits
+								// The unit who has the smaller area waits
+								if (areaA <= areaB) {
+
+									if (!(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
+
+										singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myUp);
+										LOG("%s: Up CROSSING", singleUnit->unit->GetColorName().data());
+									}
+								}
+								else {
+
+									if (!singleUnit->wait && IsValidTile(nullptr, singleUnit->nextTile, true)) {
+
+										(*units)->SetCollisionParameters(CollisionType_DiagonalCrossing, singleUnit, up);
+										LOG("%s: Up CROSSING", (*units)->unit->GetColorName().data());
+									}
+								}
 							}
 						}
 						else if (singleUnit->nextTile == down) {
 
 							// We are sure than nextTile of this unit is valid, but what about the other unit's nextTile? We haven't check it yet
-							if ((*units)->nextTile == myDown && !(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
+							if ((*units)->nextTile == myDown) {
+							
+								// Decide which unit waits
+								// The unit who has the smaller area waits
+								if (areaA <= areaB) {
 
-								singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myDown);
-								LOG("%s: Down CROSSING", singleUnit->unit->GetColorName().data());
+									if (!(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
+
+										singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myDown);
+										LOG("%s: Down CROSSING", singleUnit->unit->GetColorName().data());
+									}
+								}
+								else {
+
+									if (!singleUnit->wait && IsValidTile(nullptr, singleUnit->nextTile, true)) {
+
+										(*units)->SetCollisionParameters(CollisionType_DiagonalCrossing, singleUnit, down);
+										LOG("%s: Down CROSSING", (*units)->unit->GetColorName().data());
+									}
+								}
 							}
 						}
 						else if (singleUnit->nextTile == left) {
 
 							// We are sure than nextTile of this unit is valid, but what about the other unit's nextTile? We haven't check it yet
-							if ((*units)->nextTile == myLeft && !(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
+							if ((*units)->nextTile == myLeft) {
+							
+								// Decide which unit waits
+								// The unit who has the smaller area waits
+								if (areaA <= areaB) {
 
-								singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myLeft);
-								LOG("%s: Left CROSSING", singleUnit->unit->GetColorName().data());
-							}
+									if (!(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
+
+										singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myLeft);
+										LOG("%s: Left CROSSING", singleUnit->unit->GetColorName().data());
+									}
+								}
+								else {
+
+									if (!singleUnit->wait && IsValidTile(nullptr, singleUnit->nextTile, true)) {
+
+										(*units)->SetCollisionParameters(CollisionType_DiagonalCrossing, singleUnit, left);
+										LOG("%s: Left CROSSING", (*units)->unit->GetColorName().data());
+									}
+								}
+							} 
 						}
 						else if (singleUnit->nextTile == right) {
 
 							// We are sure than nextTile of this unit is valid, but what about the other unit's nextTile? We haven't check it yet
-							if ((*units)->nextTile == myRight && !(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
+							if ((*units)->nextTile == myRight) {
+							
+								// Decide which unit waits
+								// The unit who has the smaller area waits
+								if (areaA <= areaB) {
 
-								singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myRight);
-								LOG("%s: Right CROSSING", singleUnit->unit->GetColorName().data());
-							}
+									if (!(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
+
+										singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myRight);
+										LOG("%s: Right CROSSING", singleUnit->unit->GetColorName().data());
+									}
+								}
+								else {
+
+									if (!singleUnit->wait && IsValidTile(nullptr, singleUnit->nextTile, true)) {
+
+										(*units)->SetCollisionParameters(CollisionType_DiagonalCrossing, singleUnit, right);
+										LOG("%s: Right CROSSING", (*units)->unit->GetColorName().data());
+									}
+								}
+							} 
 						}
 					}
 				}
@@ -1473,8 +1557,6 @@ void SingleUnit::ResetUnitCollisionParameters()
 	wait = false;
 
 	reversePriority = false;
-
-	unit->SetIsStill(false);
 }
 
 // When detected a collision, to set the collision parameters of the unit
