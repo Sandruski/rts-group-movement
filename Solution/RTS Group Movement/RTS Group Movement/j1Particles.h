@@ -8,7 +8,7 @@
 
 #include "j1Collision.h"
 
-#define MAX_ACTIVE_PARTICLES 500
+#define MAX_ACTIVE_PARTICLES 500 // if max particles are exceeded, they should not be created nor printed (not crush!)
 
 struct SDL_Texture;
 
