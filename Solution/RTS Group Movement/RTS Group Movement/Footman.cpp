@@ -204,6 +204,9 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 			// The Horde is within the SIGHT radius
 			isSightSatisfied = true;
 			target = c2->entity;
+
+			// The unit faces towards the enemy. If a new enemy enters the radius, but the unit is attacking another unit, it
+			// continues facing towards the first enemy seen
 		}
 		else if (c1->colliderType == ColliderType_PlayerAttackRadius && c2->colliderType == ColliderType_EnemyUnit) { // || c2->colliderType == ColliderType_EnemyBuilding
 

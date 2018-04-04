@@ -59,7 +59,7 @@ void CritterBoar::Move(float dt)
 	if (!isSpawned) {
 
 		// Collisions
-		CreateEntityCollider(EntitySide_Player);	
+		CreateEntityCollider(EntitySide_NoSide);
 		entityCollider->isTrigger = true;
 
 		isSpawned = true;

@@ -82,6 +82,7 @@ private:
 public:
 
 	EntityType entityType = EntityType_NoType;
+
 	bool isCheckingCurrTile = false;
 	bool isCheckingNextTile = false;
 	bool isCheckingGoalTile = true;
@@ -170,6 +171,7 @@ public:
 private:
 
 	Entity* entity = nullptr; // a pointer to the owner of this class
+
 	bool isSearchRequested = false;
 	bool isSearchCompleted = false;
 	bool isPathRequested = false;
