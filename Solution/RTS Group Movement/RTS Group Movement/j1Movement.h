@@ -160,9 +160,6 @@ struct SingleUnit
 	/// endPos is the tile that the unit would reach during this move
 	bool IsTileReached(iPoint nextPos, fPoint endPos) const;
 
-	// Stops the unit
-	void StopUnit();
-
 	// Resets the parameters of the unit (general info)
 	void ResetUnitParameters();
 
@@ -178,9 +175,9 @@ struct SingleUnit
 	// Sets the state of the unit to UnitState_Walk
 	void WakeUp();
 
-	bool IsUnitGoingSomewhere() const;
-
 	bool IsFittingTile() const;
+
+	void SetGoal(iPoint goal);
 
 	// -----
 
@@ -194,10 +191,14 @@ struct SingleUnit
 	iPoint nextTile = { -1,-1 }; // next waypoint of the path (next tile the unit is heading to in map coords)
 
 	iPoint goal = { -1,-1 }; // goal of the unit
-	iPoint shapedGoal = { -1,-1 };
+	iPoint shapedGoal = { -1,-1 }; // shaped goal of the unit
+
+	/// Changed goals
 	bool isGoalChanged = false; // if true, it means that the goal has been changed
+
+	/// Goal planning
+	bool isGoalNeeded = false; // if true, it means that the unit needs to search for a new goal using Dijkstra
 	bool isSearching = false; // if true, it means that the unit is searching a tile using Dijkstra
-	bool isGoalNeeded = false;
 
 	bool reversePriority = false; // if true, the priority of the unit is not taken into account
 

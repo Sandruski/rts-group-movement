@@ -2,6 +2,7 @@
 #define __j1COLLISION_H__
 
 #include "j1Module.h"
+#include "p2Point.h"
 
 #include "SDL\include\SDL_rect.h"
 
@@ -15,6 +16,7 @@ enum ColliderType {
 	ColliderType_NoType = -1,
 	ColliderType_PlayerUnit,
 	ColliderType_EnemyUnit,
+	ColliderType_NeutralUnit,
 	ColliderType_PlayerSightRadius,
 	ColliderType_EnemySightRadius,
 	ColliderType_PlayerAttackRadius,
@@ -78,12 +80,15 @@ struct ColliderGroup
 	~ColliderGroup();
 
 	bool IsColliderInGroup(Collider* collider);
+	void RemoveCollider(Collider* collider);
+	bool RemoveAllColliders();
 
 	// -----
 
 	ColliderType colliderType = ColliderType_NoType;
 	bool isRemove = false;
 	bool isTrigger = false;
+	bool isValid = true;
 	vector<Collider*> colliders;
 	list<ColliderGroup*> collidingGroups;
 	list<ColliderGroup*> lastCollidingGroups;
@@ -103,6 +108,8 @@ struct Collider
 	~Collider();
 
 	void SetPos(int x, int y);
+	iPoint GetPos() const;
+
 	void SetColliderGroup(ColliderGroup* colliderGroup);
 
 	bool CheckCollision(const SDL_Rect& r) const;

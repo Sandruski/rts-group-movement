@@ -89,6 +89,8 @@ bool Entity::CreateEntityCollider(EntitySide entitySide)
 		collType = ColliderType_PlayerUnit;
 	else if (entitySide == EntitySide_Enemy)
 		collType = ColliderType_EnemyUnit;
+	else if (entitySide == EntitySide_NoSide)
+		collType = ColliderType_NeutralUnit;
 
 	if (collType == ColliderType_NoType)
 		return false;

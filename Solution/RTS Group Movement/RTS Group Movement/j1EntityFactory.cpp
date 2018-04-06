@@ -35,6 +35,7 @@ bool j1EntityFactory::Awake(pugi::xml_node& config) {
 	pugi::xml_node spritesheets = config.child("spritesheets");
 	footmanTexName = spritesheets.child("footman").attribute("name").as_string();
 	gruntTexName = spritesheets.child("grunt").attribute("name").as_string();
+	crittersTexName = spritesheets.child("critters").attribute("name").as_string();
 
 	// Load animations
 	// Footman
@@ -97,13 +98,6 @@ bool j1EntityFactory::Awake(pugi::xml_node& config) {
 	footmanInfo.downLeft.loop = currentAnimation.attribute("loop").as_bool();
 	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
 		footmanInfo.downLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
-	}
-	// idle
-	currentAnimation = footmanAnimations.child("idle");
-	footmanInfo.idle.speed = currentAnimation.attribute("speed").as_float();
-	footmanInfo.idle.loop = currentAnimation.attribute("loop").as_bool();
-	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
-		footmanInfo.idle.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 
 	/// Attack
@@ -238,13 +232,6 @@ bool j1EntityFactory::Awake(pugi::xml_node& config) {
 	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
 		gruntInfo.downRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
-	// idle
-	currentAnimation = gruntAnimations.child("idle");
-	gruntInfo.idle.speed = currentAnimation.attribute("speed").as_float();
-	gruntInfo.idle.loop = currentAnimation.attribute("loop").as_bool();
-	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
-		gruntInfo.idle.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
-	}
 
 	/// Attack
 	// attack up
@@ -318,6 +305,184 @@ bool j1EntityFactory::Awake(pugi::xml_node& config) {
 		gruntInfo.deathDown.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
 	}
 
+	// Critter sheep
+	pugi::xml_node sheepAnimations = config.child("animations").child("sheep");
+
+	// up
+	currentAnimation = sheepAnimations.child("up");
+	critterSheepInfo.up.speed = currentAnimation.attribute("speed").as_float();
+	critterSheepInfo.up.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterSheepInfo.up.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// down
+	currentAnimation = sheepAnimations.child("down");
+	critterSheepInfo.down.speed = currentAnimation.attribute("speed").as_float();
+	critterSheepInfo.down.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterSheepInfo.down.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// left
+	currentAnimation = sheepAnimations.child("left");
+	critterSheepInfo.left.speed = currentAnimation.attribute("speed").as_float();
+	critterSheepInfo.left.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterSheepInfo.left.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// right
+	currentAnimation = sheepAnimations.child("right");
+	critterSheepInfo.right.speed = currentAnimation.attribute("speed").as_float();
+	critterSheepInfo.right.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterSheepInfo.right.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// up-left
+	currentAnimation = sheepAnimations.child("upLeft");
+	critterSheepInfo.upLeft.speed = currentAnimation.attribute("speed").as_float();
+	critterSheepInfo.upLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterSheepInfo.upLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// up-right
+	currentAnimation = sheepAnimations.child("upRight");
+	critterSheepInfo.upRight.speed = currentAnimation.attribute("speed").as_float();
+	critterSheepInfo.upRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterSheepInfo.upRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// down-left
+	currentAnimation = sheepAnimations.child("downLeft");
+	critterSheepInfo.downLeft.speed = currentAnimation.attribute("speed").as_float();
+	critterSheepInfo.downLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterSheepInfo.downLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// down-right
+	currentAnimation = sheepAnimations.child("downRight");
+	critterSheepInfo.downRight.speed = currentAnimation.attribute("speed").as_float();
+	critterSheepInfo.downRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterSheepInfo.downRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+
+	// death up-left
+	currentAnimation = sheepAnimations.child("deathUpLeft");
+	critterSheepInfo.deathUpLeft.speed = currentAnimation.attribute("speed").as_float();
+	critterSheepInfo.deathUpLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterSheepInfo.deathUpLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// death up-right
+	currentAnimation = sheepAnimations.child("deathUpRight");
+	critterSheepInfo.deathUpRight.speed = currentAnimation.attribute("speed").as_float();
+	critterSheepInfo.deathUpRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterSheepInfo.deathUpRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// death down-left
+	currentAnimation = sheepAnimations.child("deathDownLeft");
+	critterSheepInfo.deathDownLeft.speed = currentAnimation.attribute("speed").as_float();
+	critterSheepInfo.deathDownLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterSheepInfo.deathDownLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// death down-right
+	currentAnimation = sheepAnimations.child("deathDownRight");
+	critterSheepInfo.deathDownRight.speed = currentAnimation.attribute("speed").as_float();
+	critterSheepInfo.deathDownRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterSheepInfo.deathDownRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+
+	// Critter boar
+	pugi::xml_node boarAnimations = config.child("animations").child("boar");
+
+	// up
+	currentAnimation = boarAnimations.child("up");
+	critterBoarInfo.up.speed = currentAnimation.attribute("speed").as_float();
+	critterBoarInfo.up.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterBoarInfo.up.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// down
+	currentAnimation = boarAnimations.child("down");
+	critterBoarInfo.down.speed = currentAnimation.attribute("speed").as_float();
+	critterBoarInfo.down.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterBoarInfo.down.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// left
+	currentAnimation = boarAnimations.child("left");
+	critterBoarInfo.left.speed = currentAnimation.attribute("speed").as_float();
+	critterBoarInfo.left.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterBoarInfo.left.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// right
+	currentAnimation = boarAnimations.child("right");
+	critterBoarInfo.right.speed = currentAnimation.attribute("speed").as_float();
+	critterBoarInfo.right.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterBoarInfo.right.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// up-left
+	currentAnimation = boarAnimations.child("upLeft");
+	critterBoarInfo.upLeft.speed = currentAnimation.attribute("speed").as_float();
+	critterBoarInfo.upLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterBoarInfo.upLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// up-right
+	currentAnimation = boarAnimations.child("upRight");
+	critterBoarInfo.upRight.speed = currentAnimation.attribute("speed").as_float();
+	critterBoarInfo.upRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterBoarInfo.upRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// down-left
+	currentAnimation = boarAnimations.child("downLeft");
+	critterBoarInfo.downLeft.speed = currentAnimation.attribute("speed").as_float();
+	critterBoarInfo.downLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterBoarInfo.downLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// down-right
+	currentAnimation = boarAnimations.child("downRight");
+	critterBoarInfo.downRight.speed = currentAnimation.attribute("speed").as_float();
+	critterBoarInfo.downRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterBoarInfo.downRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+
+	// death up-left
+	currentAnimation = boarAnimations.child("deathUpLeft");
+	critterBoarInfo.deathUpLeft.speed = currentAnimation.attribute("speed").as_float();
+	critterBoarInfo.deathUpLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterBoarInfo.deathUpLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// death up-right
+	currentAnimation = boarAnimations.child("deathUpRight");
+	critterBoarInfo.deathUpRight.speed = currentAnimation.attribute("speed").as_float();
+	critterBoarInfo.deathUpRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterBoarInfo.deathUpRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// death down-left
+	currentAnimation = boarAnimations.child("deathDownLeft");
+	critterBoarInfo.deathDownLeft.speed = currentAnimation.attribute("speed").as_float();
+	critterBoarInfo.deathDownLeft.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterBoarInfo.deathDownLeft.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+	// death down-right
+	currentAnimation = boarAnimations.child("deathDownRight");
+	critterBoarInfo.deathDownRight.speed = currentAnimation.attribute("speed").as_float();
+	critterBoarInfo.deathDownRight.loop = currentAnimation.attribute("loop").as_bool();
+	for (currentAnimation = currentAnimation.child("frame"); currentAnimation; currentAnimation = currentAnimation.next_sibling("frame")) {
+		critterBoarInfo.deathDownRight.PushBack({ currentAnimation.attribute("x").as_int(), currentAnimation.attribute("y").as_int(), currentAnimation.attribute("w").as_int(), currentAnimation.attribute("h").as_int() });
+	}
+
 	return ret;
 }
 
@@ -329,12 +494,15 @@ bool j1EntityFactory::Start()
 
 	footmanTex = App->tex->Load(footmanTexName.data());
 	gruntTex = App->tex->Load(gruntTexName.data());
+	crittersTex = App->tex->Load(crittersTexName.data());
 
 	return ret;
 }
 
 bool j1EntityFactory::PreUpdate()
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	bool ret = true;
 
 	// Spawn entities
@@ -361,6 +529,8 @@ bool j1EntityFactory::PreUpdate()
 // Called before render is available
 bool j1EntityFactory::Update(float dt)
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	bool ret = true;
 
 	// Update active entities
@@ -377,6 +547,8 @@ bool j1EntityFactory::Update(float dt)
 
 bool j1EntityFactory::PostUpdate()
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	bool ret = true;
 
 	// Dead entities cannot be selected. Remove them from the unitsSelected list
@@ -447,6 +619,7 @@ bool j1EntityFactory::CleanUp()
 	// Free all textures
 	App->tex->UnLoad(footmanTex);
 	App->tex->UnLoad(gruntTex);
+	App->tex->UnLoad(crittersTex);
 
 	return ret;
 }
@@ -471,6 +644,8 @@ void j1EntityFactory::OnCollision(ColliderGroup* c1, ColliderGroup* c2, Collisio
 
 void j1EntityFactory::Draw()
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	// Blit active entities
 	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
 
@@ -484,6 +659,11 @@ void j1EntityFactory::Draw()
 
 		case DynamicEntityType_Grunt:
 			(*it)->Draw(gruntTex);
+			break;
+
+		case DynamicEntityType_CritterSheep:
+		case DynamicEntityType_CritterBoar:
+			(*it)->Draw(crittersTex);
 			break;
 		}
 
@@ -517,6 +697,30 @@ DynamicEntity* j1EntityFactory::AddDynamicEntity(DynamicEntityType dynamicEntity
 
 		toSpawnEntities.push_back((Entity*)grunt);
 		return (DynamicEntity*)grunt;
+	}
+	break;
+
+	case DynamicEntityType_CritterSheep:
+	{
+		CritterSheep* critterSheep = new CritterSheep(pos, size, currLife, maxLife, unitInfo, (const CritterSheepInfo&)entityInfo);
+		critterSheep->entityType = EntityType_DynamicEntity;
+		critterSheep->entitySide = EntitySide_NoSide;
+		critterSheep->dynamicEntityType = DynamicEntityType_CritterSheep;
+
+		toSpawnEntities.push_back((Entity*)critterSheep);
+		return (DynamicEntity*)critterSheep;
+	}
+	break;
+
+	case DynamicEntityType_CritterBoar:
+	{
+		CritterBoar* critterBoar = new CritterBoar(pos, size, currLife, maxLife, unitInfo, (const CritterBoarInfo&)entityInfo);
+		critterBoar->entityType = EntityType_DynamicEntity;
+		critterBoar->entitySide = EntitySide_NoSide;
+		critterBoar->dynamicEntityType = DynamicEntityType_CritterBoar;
+
+		toSpawnEntities.push_back((Entity*)critterBoar);
+		return (DynamicEntity*)critterBoar;
 	}
 	break;
 
@@ -756,7 +960,30 @@ EntityInfo& j1EntityFactory::GetDynamicEntityInfo(DynamicEntityType dynamicEntit
 
 	case DynamicEntityType_Grunt:
 		return (EntityInfo&)gruntInfo;
+
+	case DynamicEntityType_CritterSheep:
+		return (EntityInfo&)critterSheepInfo;
+
+	case DynamicEntityType_CritterBoar:
+		return (EntityInfo&)critterBoarInfo;
 	}
+}
+
+bool j1EntityFactory::CommandToUnits(list<DynamicEntity*> units, UnitCommand unitCommand) 
+{
+	bool ret = false;
+
+	list<DynamicEntity*>::const_iterator it = units.begin();
+
+	while (it != units.end()) {
+	
+		if ((*it)->SetCommand(unitCommand))
+			ret = true;
+	
+		it++;
+	}
+
+	return ret;
 }
 
 // -------------------------------------------------------------

@@ -12,6 +12,7 @@
 #include "j1Input.h"
 #include "j1Movement.h"
 #include "j1PathManager.h"
+#include "Goal.h"
 
 #include "Brofiler\Brofiler.h"
 
@@ -32,27 +33,35 @@ DynamicEntity::DynamicEntity(fPoint pos, iPoint size, int currLife, uint maxLife
 
 	/// PathPlanner
 	pathPlanner = new PathPlanner(this, *navgraph);
+
+	// Goals
+	brain = new Goal_Think(this);
 }
 
 DynamicEntity::~DynamicEntity() 
 {
 	animation = nullptr;
 
-	// Remove Movement
-	if (pathPlanner != nullptr)
-		delete pathPlanner;
-	pathPlanner = nullptr;
+	// Remove goals
+	if (brain != nullptr)
+		delete brain;
+	brain = nullptr;
 
+	// Remove Movement
 	if (navgraph != nullptr)
 		delete navgraph;
 	navgraph = nullptr;
+
+	if (pathPlanner != nullptr)
+		delete pathPlanner;
+	pathPlanner = nullptr;
 
 	if (singleUnit != nullptr)
 		delete singleUnit;
 	singleUnit = nullptr;
 
 	// Remove Attack
-	attackingTarget = nullptr;
+	target = nullptr;
 
 	// Remove Colliders
 	if (sightRadiusCollider != nullptr)
@@ -85,6 +94,32 @@ void DynamicEntity::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionS
 
 // -------------------------------------------------------------
 
+Animation* DynamicEntity::GetAnimation() const 
+{
+	return animation;
+}
+
+Goal_Think* DynamicEntity::GetBrain() const
+{
+	return brain;
+}
+
+// UnitInfo
+float DynamicEntity::GetSpeed() const
+{
+	return unitInfo.currSpeed;
+}
+
+uint DynamicEntity::GetPriority() const
+{
+	return unitInfo.priority;
+}
+
+uint DynamicEntity::GetDamage() const
+{
+	return unitInfo.damage;
+}
+
 // State machine
 void DynamicEntity::UnitStateMachine(float dt) {}
 
@@ -109,14 +144,19 @@ PathPlanner* DynamicEntity::GetPathPlanner() const
 	return pathPlanner;
 }
 
-float DynamicEntity::GetSpeed() const 
+Navgraph* DynamicEntity::GetNavgraph() const 
 {
-	return unitInfo.currSpeed;
+	return navgraph;
 }
 
-uint DynamicEntity::GetPriority() const 
+void DynamicEntity::SetIsStill(bool isStill)
 {
-	return unitInfo.priority;
+	this->isStill = isStill;
+}
+
+bool DynamicEntity::IsUnitStill() const
+{
+	return isStill;
 }
 
 // Animations
@@ -267,6 +307,50 @@ ColliderGroup* DynamicEntity::GetAttackRadiusCollider() const
 ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, uint radius)
 {
 	vector<Collider*> colliders;
+
+	// Perform a BFS
+	queue<iPoint> queue;
+	list<iPoint> visited;
+
+	iPoint curr = singleUnit->currTile;
+	queue.push(curr);
+
+	while (queue.size() > 0) {
+
+		curr = queue.front();
+		queue.pop();
+
+		iPoint neighbors[8];
+		neighbors[0].create(curr.x + 1, curr.y + 0);
+		neighbors[1].create(curr.x + 0, curr.y + 1);
+		neighbors[2].create(curr.x - 1, curr.y + 0);
+		neighbors[3].create(curr.x + 0, curr.y - 1);
+		neighbors[4].create(curr.x + 1, curr.y + 1);
+		neighbors[5].create(curr.x + 1, curr.y - 1);
+		neighbors[6].create(curr.x - 1, curr.y + 1);
+		neighbors[7].create(curr.x - 1, curr.y - 1);
+
+		for (uint i = 0; i < 8; ++i)
+		{
+			if (neighbors[i].DistanceManhattan(singleUnit->currTile) < radius) {
+
+				if (find(visited.begin(), visited.end(), neighbors[i]) == visited.end()) {
+
+					queue.push(neighbors[i]);
+					visited.push_back(neighbors[i]);
+
+					iPoint collPos = App->map->MapToWorld(neighbors[i].x, neighbors[i].y);
+					SDL_Rect rect = { collPos.x, collPos.y, App->map->data.tile_width, App->map->data.tile_height };
+
+					Collider* coll = App->collision->CreateCollider(rect);
+					colliders.push_back(coll);
+				}
+			}
+		}
+	}
+
+	/*
+	vector<Collider*> colliders;
 	iPoint currTilePos = App->map->MapToWorld(singleUnit->currTile.x, singleUnit->currTile.y);
 
 	int sign = 1;
@@ -281,12 +365,57 @@ ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, u
 			colliders.push_back(App->collision->CreateCollider(rect));
 		}
 	}
-	
+	*/
+
 	return App->collision->CreateAndAddColliderGroup(colliders, colliderType, App->entities, this);
 }
 
 void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radius)
 {
+	collider->RemoveAllColliders();
+
+	// Perform a BFS
+	queue<iPoint> queue;
+	list<iPoint> visited;
+
+	iPoint curr = singleUnit->currTile;
+	queue.push(curr);
+
+	while (queue.size() > 0) {
+
+		curr = queue.front();
+		queue.pop();
+
+		iPoint neighbors[8];
+		neighbors[0].create(curr.x + 1, curr.y + 0);
+		neighbors[1].create(curr.x + 0, curr.y + 1);
+		neighbors[2].create(curr.x - 1, curr.y + 0);
+		neighbors[3].create(curr.x + 0, curr.y - 1);
+		neighbors[4].create(curr.x + 1, curr.y + 1);
+		neighbors[5].create(curr.x + 1, curr.y - 1);
+		neighbors[6].create(curr.x - 1, curr.y + 1);
+		neighbors[7].create(curr.x - 1, curr.y - 1);
+
+		for (uint i = 0; i < 8; ++i)
+		{
+			if (navgraph->IsWalkable(neighbors[i]) && neighbors[i].DistanceManhattan(singleUnit->currTile) < radius) {
+
+				if (find(visited.begin(), visited.end(), neighbors[i]) == visited.end()) {
+
+					queue.push(neighbors[i]);
+					visited.push_back(neighbors[i]);
+
+					iPoint collPos = App->map->MapToWorld(neighbors[i].x, neighbors[i].y);
+					SDL_Rect rect = { collPos.x, collPos.y, App->map->data.tile_width, App->map->data.tile_height };
+
+					Collider* coll = App->collision->CreateCollider(rect);
+					App->collision->AddColliderToAColliderGroup(collider, coll);
+				}
+			}
+		}
+	}
+
+	/*
 	vector<Collider*>::const_iterator it = collider->colliders.begin();
 
 	while (it != collider->colliders.end()) {
@@ -301,25 +430,78 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 
 			for (int x = (-sign * y) - (int)radius + 1; x < (int)radius + (sign * y); ++x) {
 
-				SDL_Rect rect = { currTilePos.x + x * App->map->data.tile_width, currTilePos.y + y * App->map->data.tile_height, App->map->data.tile_width, App->map->data.tile_height };
-				(*it)->SetPos(rect.x, rect.y);
+				iPoint definitivePos = { currTilePos.x + x * App->map->data.tile_width, currTilePos.y + y * App->map->data.tile_height };
+				iPoint definitiveTile = App->map->WorldToMap(definitivePos.x, definitivePos.y);
+
+				if (App->pathfinding->IsWalkable(definitiveTile)) {
+
+					(*it)->isValid = true;
+
+					SDL_Rect rect = { definitivePos.x, definitivePos.y, App->map->data.tile_width, App->map->data.tile_height };
+					(*it)->SetPos(rect.x, rect.y);
+				}
+				else
+					(*it)->isValid = false;
+
 				it++;
 			}
 		}
 	}
+	*/
 }
 
 // Attack
-void DynamicEntity::ResetUnitAttackParameters() 
+Entity* DynamicEntity::GetTarget() const 
 {
-	attackingTarget = nullptr;
-
-	isSightSatisfied = false;
-	isAttackSatisfied = false;
-	isAttacking = false;
+	return target;
 }
 
-void DynamicEntity::IsUnitWantingAttack(bool isWantingAttack) 
+void DynamicEntity::SetTarget(Entity* target) 
 {
-	this->isWantingAttack = isWantingAttack;
+	this->target = target;
+}
+
+bool DynamicEntity::IsTargetPresent() const 
+{
+	if (target == nullptr)
+		return false;
+
+	if (target->GetCurrLife() <= 0)
+		return false;
+
+	return true;
+}
+
+bool DynamicEntity::IsSightSatisfied() const
+{
+	return isSightSatisfied;
+}
+
+bool DynamicEntity::IsAttackSatisfied() const
+{
+	return isSightSatisfied && isAttackSatisfied;
+}
+
+void DynamicEntity::SetHitting(bool isHitting) 
+{
+	this->isHitting = isHitting;
+}
+
+bool DynamicEntity::IsHitting() const 
+{
+	return isHitting;
+}
+
+// Player commands
+bool DynamicEntity::SetCommand(UnitCommand unitCommand) 
+{
+	bool ret = false;
+
+	if (this->unitCommand == UnitCommand_NoCommand) {
+
+		this->unitCommand = unitCommand;
+		ret = true;
+	}
+
+	return ret;
 }

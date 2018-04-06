@@ -295,6 +295,11 @@ void PathPlanner::SetCheckingGoalTile(bool isCheckingGoalTile)
 		trigger->isCheckingGoalTile = isCheckingGoalTile;
 }
 
+j1PathFinding* PathPlanner::GetCurrentSearch() const 
+{
+	return currentSearch;
+}
+
 // WalkabilityMap struct ---------------------------------------------------------------------------------
 
 bool Navgraph::CreateNavgraph()
@@ -310,6 +315,29 @@ bool Navgraph::SetNavgraph(j1PathFinding* currentSearch) const
 	currentSearch->SetMap(w, h, data);
 
 	return true;
+}
+
+// Utility: return true if pos is inside the map boundaries
+bool Navgraph::CheckBoundaries(const iPoint& pos) const
+{
+	return (pos.x >= 0 && pos.x <= (int)(w - 1) &&
+		pos.y >= 0 && pos.y <= (int)(h - 1));
+}
+
+// Utility: returns true if the tile is walkable
+bool Navgraph::IsWalkable(const iPoint& pos) const
+{
+	int t = GetTileAt(pos);
+	return INVALID_WALK_CODE && t > 0;
+}
+
+// Utility: return the walkability value of a tile
+int Navgraph::GetTileAt(const iPoint& pos) const
+{
+	if (CheckBoundaries(pos))
+		return data[(pos.y*w) + pos.x];
+
+	return INVALID_WALK_CODE;
 }
 
 // FindActiveTrigger class ---------------------------------------------------------------------------------

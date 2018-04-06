@@ -116,10 +116,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h" />
+    <ClInclude Include="CritterBoar.h" />
+    <ClInclude Include="CritterSheep.h" />
     <ClInclude Include="Defs.h" />
     <ClInclude Include="DynamicEntity.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="Footman.h" />
+    <ClInclude Include="Goal.h" />
     <ClInclude Include="Grunt.h" />
     <ClInclude Include="j1App.h" />
     <ClInclude Include="j1Collision.h" />
@@ -128,6 +131,7 @@
     <ClInclude Include="j1Map.h" />
     <ClInclude Include="j1Module.h" />
     <ClInclude Include="j1Movement.h" />
+    <ClInclude Include="j1Particles.h" />
     <ClInclude Include="j1Pathfinding.h" />
     <ClInclude Include="j1PerfTimer.h" />
     <ClInclude Include="j1Render.h" />
@@ -142,9 +146,12 @@
     <ClInclude Include="PugiXml\src\pugixml.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CritterBoar.cpp" />
+    <ClCompile Include="CritterSheep.cpp" />
     <ClCompile Include="DynamicEntity.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="Footman.cpp" />
+    <ClCompile Include="Goal.cpp" />
     <ClCompile Include="Grunt.cpp" />
     <ClCompile Include="j1App.cpp" />
     <ClCompile Include="j1Collision.cpp" />
@@ -153,6 +160,7 @@
     <ClCompile Include="j1Main.cpp" />
     <ClCompile Include="j1Map.cpp" />
     <ClCompile Include="j1Movement.cpp" />
+    <ClCompile Include="j1Particles.cpp" />
     <ClCompile Include="j1Pathfinding.cpp" />
     <ClCompile Include="j1PerfTimer.cpp" />
     <ClCompile Include="j1Render.cpp" />

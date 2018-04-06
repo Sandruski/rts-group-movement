@@ -13,6 +13,7 @@
 #include "j1Movement.h"
 #include "j1EntityFactory.h"
 #include "j1Collision.h"
+#include "j1Particles.h"
 
 #include"Brofiler\Brofiler.h"
 
@@ -89,19 +90,28 @@ bool j1Scene::PreUpdate()
 	/// Entity
 	fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
 	iPoint size = { App->map->data.tile_width,App->map->data.tile_height };
-	uint maxLife = 20;
+	uint maxLife = 30;
 	int currLife = (int)maxLife;
 
 	/// DynamicEntity
 	UnitInfo unitInfo;
 	unitInfo.maxSpeed = 50.0f;
 	unitInfo.damage = 2;
+	unitInfo.priority = 1; // TODO: change to 3 or so
 
 	/// Footman
 	FootmanInfo footmanInfo;
 
 	/// Grunt
 	GruntInfo gruntInfo;
+
+	/// Sheep
+	CritterSheepInfo critterSheepInfo;
+	critterSheepInfo.restoredHealth = 5;
+
+	/// Boar
+	CritterBoarInfo critterBoarInfo;
+	critterBoarInfo.restoredHealth = 10;
 
 	// Entities creation
 	if (App->entities->IsEntityOnTile(mouseTile, EntityType_DynamicEntity) == nullptr && App->pathfinding->IsWalkable(mouseTile)) {
@@ -114,11 +124,33 @@ bool j1Scene::PreUpdate()
 			App->entities->AddDynamicEntity(DynamicEntityType_Footman, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)footmanInfo);
 
 		// 2: spawn a Grunt with priority 1
-		unitInfo.sightRadius = 4;
+		unitInfo.sightRadius = 5;
 		unitInfo.attackRadius = 3;
+		maxLife = 20;
+		currLife = (int)maxLife;
 
 		if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
 			App->entities->AddDynamicEntity(DynamicEntityType_Grunt, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)gruntInfo);
+
+		// 3: spawn a Sheep
+		unitInfo.sightRadius = 0;
+		unitInfo.attackRadius = 0;
+		unitInfo.priority = 1;
+		maxLife = 10;
+		currLife = (int)maxLife;
+
+		if (App->input->GetKey(SDL_SCANCODE_3) == KEY_DOWN)
+			App->entities->AddDynamicEntity(DynamicEntityType_CritterSheep, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)critterSheepInfo);
+
+		// 4: spawn a Boar
+		unitInfo.sightRadius = 0;
+		unitInfo.attackRadius = 0;
+		unitInfo.priority = 2;
+		maxLife = 20;
+		currLife = (int)maxLife;
+
+		if (App->input->GetKey(SDL_SCANCODE_4) == KEY_DOWN)
+			App->entities->AddDynamicEntity(DynamicEntityType_CritterBoar, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)critterBoarInfo);
 	}
 
 	return ret;
@@ -127,6 +159,8 @@ bool j1Scene::PreUpdate()
 // Called each loop iteration
 bool j1Scene::Update(float dt)
 {
+	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
+
 	bool ret = true;
 
 	// Save mouse position (world and map coords)
@@ -138,23 +172,24 @@ bool j1Scene::Update(float dt)
 
 	// ---------------------------------------------------------------------
 
-	if (App->input->GetKey(SDL_SCANCODE_I) == KEY_DOWN)
+	if (App->input->GetKey(SDL_SCANCODE_F1) == KEY_DOWN)
 		isFrameByFrame = !isFrameByFrame;
 
-	if (App->input->GetKey(SDL_SCANCODE_F1) == KEY_DOWN)
+	if (App->input->GetKey(SDL_SCANCODE_F2) == KEY_DOWN)
 		debugDrawMovement = !debugDrawMovement;
 
-	if (App->input->GetKey(SDL_SCANCODE_F2) == KEY_DOWN)
+	if (App->input->GetKey(SDL_SCANCODE_F3) == KEY_DOWN)
 		debugDrawPath = !debugDrawPath;
 
-	if (App->input->GetKey(SDL_SCANCODE_F3) == KEY_DOWN)
+	if (App->input->GetKey(SDL_SCANCODE_F4) == KEY_DOWN)
 		debugDrawMap = !debugDrawMap;
 
-	if (App->input->GetKey(SDL_SCANCODE_F4) == KEY_DOWN)
+	if (App->input->GetKey(SDL_SCANCODE_F5) == KEY_DOWN)
 		debugDrawAttack = !debugDrawAttack;
 
 	// Draw
 	App->map->Draw(); // map
+	App->particles->Draw(); // particles
 	App->entities->Draw(); // entities
 
 	if (debugDrawAttack)
@@ -180,6 +215,7 @@ bool j1Scene::Update(float dt)
 	int width = mousePos.x - startRectangle.x;
 	int height = mousePos.y - startRectangle.y;
 
+	/// SELECT UNITS
 	// Select units by rectangle drawing
 	if (abs(width) >= RECTANGLE_MIN_AREA && abs(height) >= RECTANGLE_MIN_AREA && App->input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_REPEAT) {
 
@@ -200,27 +236,44 @@ bool j1Scene::Update(float dt)
 		App->entities->SelectEntitiesWithinRectangle(mouseRect);
 	}
 
-	// Select a new goal for the selected units (single click or drag)
-	if (App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_REPEAT) {
+	list<DynamicEntity*> units = App->entities->GetLastUnitsSelected();
 
-		if (App->movement->GetGroupByUnits(App->entities->GetLastUnitsSelected()) == nullptr)
+	if (units.size() > 0) {
 
-			// Selected units will now behave as a group
-			App->movement->CreateGroupFromUnits(App->entities->GetLastUnitsSelected());
+		UnitGroup* group = App->movement->GetGroupByUnits(units);
 
-		App->movement->GetGroupByUnits(App->entities->GetLastUnitsSelected())->DrawShapedGoal(mouseTile);
-	}
-	if (App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_UP) {
-
-		if (App->movement->GetGroupByUnits(App->entities->GetLastUnitsSelected()) == nullptr)
+		if (group == nullptr)
 
 			// Selected units will now behave as a group
-			App->movement->CreateGroupFromUnits(App->entities->GetLastUnitsSelected());
+			group = App->movement->CreateGroupFromUnits(units);
 
-		UnitGroup* group = App->movement->GetGroupByUnits(App->entities->GetLastUnitsSelected());
-	
-		if (!group->SetShapedGoal())
-			group->SetGoal(mouseTile);
+		if (group != nullptr) {
+
+			/// SET GOAL
+			// Draw a shaped goal
+			if (App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_REPEAT)
+
+				group->DrawShapedGoal(mouseTile);
+
+			// Set a normal or shaped goal
+			if (App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_UP) {
+
+				if (!group->SetShapedGoal()) /// shaped goal
+					group->SetGoal(mouseTile); /// normal goal
+			}
+
+			/// COMMAND PATROL
+			if (App->input->GetKey(SDL_SCANCODE_P) == KEY_DOWN) {
+			
+				App->entities->CommandToUnits(units, UnitCommand_Patrol);
+			}
+
+			/// STOP UNIT (FROM WHATEVER THEY ARE DOING)
+			if (App->input->GetKey(SDL_SCANCODE_S) == KEY_DOWN) {
+
+				App->entities->CommandToUnits(units, UnitCommand_Stop);
+			}
+		}
 	}
 
 	return ret;

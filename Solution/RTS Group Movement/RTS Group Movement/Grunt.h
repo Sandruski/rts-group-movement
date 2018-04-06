@@ -12,7 +12,6 @@ struct GruntInfo
 {
 	UnitInfo unitInfo;
 
-	Animation idle;
 	Animation up, down, left, right;
 	Animation upLeft, upRight, downLeft, downRight;
 	Animation attackUp, attackDown, attackLeft, attackRight;
@@ -44,7 +43,6 @@ private:
 	GruntInfo gruntInfo;
 
 	// Animations speed
-	float idleSpeed = 0.0f;
 	float upSpeed = 0.0f, downSpeed = 0.0f, leftSpeed = 0.0f, rightSpeed = 0.0f;
 	float upLeftSpeed = 0.0f, upRightSpeed = 0.0f, downLeftSpeed = 0.0f, downRightSpeed = 0.0f;
 	float attackUpSpeed = 0.0f, attackDownSpeed = 0.0f, attackLeftSpeed = 0.0f, attackRightSpeed = 0.0f;

@@ -21,6 +21,7 @@ class j1Textures;
 class j1Scene;
 class j1Map;
 class j1Collision;
+class j1Particles;
 class j1PathFinding;
 class j1EntityFactory;
 class j1Movement;
@@ -98,6 +99,7 @@ public:
 	j1Scene*					scene = nullptr;
 	j1Map*						map = nullptr;
 	j1Collision*				collision = nullptr;
+	j1Particles*				particles = nullptr;
 	j1EntityFactory*			entities = nullptr;
 	j1PathFinding*				pathfinding = nullptr;
 	j1Movement*					movement = nullptr;
@@ -107,7 +109,7 @@ private:
 
 	list<j1Module*>		modules;
 	uint				frames = 0;
-	double				dt = 0;
+
 	int					argc;
 	char**				args;
 
@@ -130,6 +132,7 @@ public:
 	bool				toCap = true;
 	bool				quit_game = false;
 	double				auxiliar_dt = 0;
+	double				dt = 0;
 };
 
 extern j1App* App; // No student is asking me about that ... odd :-S
