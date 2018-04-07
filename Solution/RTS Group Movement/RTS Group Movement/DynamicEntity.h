@@ -7,8 +7,7 @@
 
 #include "Entity.h"
 
-#include <string>
-#include <vector>
+#include <list>
 using namespace std;
 
 struct SDL_Texture;
@@ -73,8 +72,8 @@ enum UnitDirection
 	UnitDirection_DownRight
 };
 
-enum UnitCommand {
-
+enum UnitCommand 
+{
 	UnitCommand_NoCommand,
 
 	UnitCommand_Stop,
@@ -95,6 +94,18 @@ struct UnitInfo
 
 	float maxSpeed = 0.0f;
 	float currSpeed = 0.0f;
+};
+
+struct TargetInfo 
+{
+	bool isSightSatisfied = false; // if true, sight distance is satisfied
+	bool isAttackSatisfied = false; // if true, attack distance is satisfied
+
+	Entity* target = nullptr;
+
+	// -----
+
+	bool IsTargetPresent() const;
 };
 
 class DynamicEntity :public Entity
@@ -155,12 +166,14 @@ public:
 	void UpdateRhombusColliderPos(ColliderGroup* collider, uint radius);
 
 	// Attack
-	Entity* GetTarget() const;
-	void SetTarget(Entity* target);
-	bool IsTargetPresent() const;
+	/// Unit is being attacked
+	void SetIsBeingAttacked(bool isBeingAttacked);
+	bool IsBeingAttacked() const;
 
-	bool IsSightSatisfied() const;
-	bool IsAttackSatisfied() const;
+	/// Unit attacks a target
+	Entity* GetCurrTarget() const;
+	bool SetCurrTarget(Entity* target);
+	bool RemoveTarget(Entity* target);
 
 	void SetHitting(bool isHitting);
 	bool IsHitting() const;
@@ -199,11 +212,12 @@ protected:
 	bool isStill = true; // if true, the unit is still. Else, the unit is moving
 
 	// Attack
-	bool isSightSatisfied = false; // if true, sight distance is satisfied
-	bool isAttackSatisfied = false; // if true, attack distance is satisfied
-	Entity* target = nullptr;
+	list<TargetInfo*> targets;
+	TargetInfo* currTarget = nullptr;
 
-	bool isHitting = false; // if true, the unit is hitting their target (to change animation)
+	//bool isAttacking = false; // if true, the unit is attacking their target (chasing or hitting them) -> Useful to decide whether attack a unit or not
+	bool isHitting = false; // if true, the unit is hitting their target -> Useful to change animation
+	bool isBeingAttacked = false;
 
 	// Collision
 	ColliderGroup* sightRadiusCollider = nullptr;

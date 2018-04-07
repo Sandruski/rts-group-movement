@@ -61,7 +61,7 @@ DynamicEntity::~DynamicEntity()
 	singleUnit = nullptr;
 
 	// Remove Attack
-	target = nullptr;
+	currTarget = nullptr;
 
 	// Remove Colliders
 	if (sightRadiusCollider != nullptr)
@@ -451,35 +451,76 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 }
 
 // Attack
-Entity* DynamicEntity::GetTarget() const 
+/// Unit is being attacked
+void DynamicEntity::SetIsBeingAttacked(bool isBeingAttacked) 
 {
-	return target;
+	this->isBeingAttacked = isBeingAttacked;
 }
 
-void DynamicEntity::SetTarget(Entity* target) 
+bool DynamicEntity::IsBeingAttacked() const 
 {
-	this->target = target;
+	return isBeingAttacked;
 }
 
-bool DynamicEntity::IsTargetPresent() const 
+/// Unit attacks a target
+Entity* DynamicEntity::GetCurrTarget() const 
+{
+	if (currTarget != nullptr)
+		return currTarget->target;
+	else
+		return nullptr;
+}
+
+bool DynamicEntity::SetCurrTarget(Entity* target) 
 {
 	if (target == nullptr)
 		return false;
 
-	if (target->GetCurrLife() <= 0)
+	list<TargetInfo*>::const_iterator it = targets.begin();
+
+	while (it != targets.end()) {
+
+		if ((*it)->target == target) {
+
+			RemoveTarget(target);
+			break;
+		}
+		it++;
+	}
+
+	// Push the target to the front of the list, so it is the new currTarget
+	TargetInfo targetInfo;
+	targetInfo.target = target;
+
+	targets.push_back(&targetInfo);
+}
+
+bool DynamicEntity::RemoveTarget(Entity* target) 
+{
+	if (target == nullptr)
 		return false;
 
-	return true;
-}
+	// If the target matches the currTarget, set currTarget to null
+	if (currTarget != nullptr) {
 
-bool DynamicEntity::IsSightSatisfied() const
-{
-	return isSightSatisfied;
-}
+		if (currTarget->target == target)
+			currTarget = nullptr;
+	}
 
-bool DynamicEntity::IsAttackSatisfied() const
-{
-	return isSightSatisfied && isAttackSatisfied;
+	// Remove the target from the targets list
+	list<TargetInfo*>::const_iterator it = targets.begin();
+
+	while (it != targets.end()) {
+	
+		if ((*it)->target == target) {
+
+			delete *it;
+			targets.erase(it);
+
+			return true;
+		}
+		it++;
+	}
 }
 
 void DynamicEntity::SetHitting(bool isHitting) 
@@ -504,4 +545,18 @@ bool DynamicEntity::SetCommand(UnitCommand unitCommand)
 	}
 
 	return ret;
+}
+
+// TargetInfo struct ---------------------------------------------------------------------------------
+
+bool TargetInfo::IsTargetPresent() const
+{
+	if (target == nullptr)
+		return false;
+
+	// The target is dead
+	if (target->GetCurrLife() <= 0)
+		return false;
+
+	return true;
 }

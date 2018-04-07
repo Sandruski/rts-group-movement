@@ -88,14 +88,12 @@ bool j1Scene::PreUpdate()
 
 	// Entities info
 	/// Entity
-	fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
 	iPoint size = { App->map->data.tile_width,App->map->data.tile_height };
 	uint maxLife = 30;
 	int currLife = (int)maxLife;
 
 	/// DynamicEntity
 	UnitInfo unitInfo;
-	unitInfo.maxSpeed = 50.0f;
 	unitInfo.damage = 2;
 	unitInfo.priority = 1; // TODO: change to 3 or so
 
@@ -119,18 +117,54 @@ bool j1Scene::PreUpdate()
 		// 1: spawn a Footman with priority 1
 		unitInfo.sightRadius = 6;
 		unitInfo.attackRadius = 3;
+		unitInfo.maxSpeed = 80.0f;
 
-		if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN)
-			App->entities->AddDynamicEntity(DynamicEntityType_Footman, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)footmanInfo);
+		if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN) {
 
+			iPoint tile = { 10,10 };
+
+			// Make sure that there are no entities on the spawn tile and that the tile is walkable
+			if (App->entities->IsEntityOnTile(tile) != nullptr || !App->pathfinding->IsWalkable(tile))
+			
+				tile = FindClosestValidTile(tile);
+
+			// Make sure that the spawn tile is valid
+			if (tile.x != -1 && tile.y != -1) {
+
+				iPoint tilePos = App->map->MapToWorld(tile.x, tile.y);
+				fPoint pos = { (float)tilePos.x,(float)tilePos.y };
+
+				App->entities->AddDynamicEntity(DynamicEntityType_Footman, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)footmanInfo);
+			}
+		}
 		// 2: spawn a Grunt with priority 1
 		unitInfo.sightRadius = 5;
 		unitInfo.attackRadius = 3;
+		unitInfo.maxSpeed = 50.0f;
+
 		maxLife = 20;
 		currLife = (int)maxLife;
 
-		if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
-			App->entities->AddDynamicEntity(DynamicEntityType_Grunt, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)gruntInfo);
+		if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN) {
+
+			iPoint tile = { 15,11 };
+
+			// Make sure that there are no entities on the spawn tile and that the tile is walkable
+			if (App->entities->IsEntityOnTile(tile) != nullptr || !App->pathfinding->IsWalkable(tile))
+
+				tile = FindClosestValidTile(tile);
+
+			// Make sure that the spawn tile is valid
+			if (tile.x != -1 && tile.y != -1) {
+
+				iPoint tilePos = App->map->MapToWorld(tile.x, tile.y);
+				fPoint pos = { (float)tilePos.x,(float)tilePos.y };
+
+				App->entities->AddDynamicEntity(DynamicEntityType_Grunt, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)gruntInfo);
+			}
+		}
+
+		fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
 
 		// 3: spawn a Sheep
 		unitInfo.sightRadius = 0;
@@ -304,6 +338,49 @@ bool j1Scene::CleanUp()
 	App->tex->UnLoad(debugTex);
 
 	return ret;
+}
+
+iPoint j1Scene::FindClosestValidTile(iPoint tile) const 
+{
+	// Perform a BFS
+	queue<iPoint> queue;
+	list<iPoint> visited;
+
+	iPoint curr = tile;
+	queue.push(curr);
+
+	while (queue.size() > 0) {
+
+		curr = queue.front();
+		queue.pop();
+
+		if (!App->entities->IsEntityOnTile(curr))
+			return curr;
+
+		iPoint neighbors[8];
+		neighbors[0].create(curr.x + 1, curr.y + 0);
+		neighbors[1].create(curr.x + 0, curr.y + 1);
+		neighbors[2].create(curr.x - 1, curr.y + 0);
+		neighbors[3].create(curr.x + 0, curr.y - 1);
+		neighbors[4].create(curr.x + 1, curr.y + 1);
+		neighbors[5].create(curr.x + 1, curr.y - 1);
+		neighbors[6].create(curr.x - 1, curr.y + 1);
+		neighbors[7].create(curr.x - 1, curr.y - 1);
+
+		for (uint i = 0; i < 8; ++i)
+		{
+			if (App->pathfinding->IsWalkable(neighbors[i])) {
+
+				if (find(visited.begin(), visited.end(), neighbors[i]) == visited.end()) {
+
+					queue.push(neighbors[i]);
+					visited.push_back(neighbors[i]);
+				}
+			}
+		}
+	}
+
+	return { -1,-1 };
 }
 
 // -------------------------------------------------------------

@@ -137,8 +137,7 @@ bool j1Collision::Update(float dt)
 			continue;
 		}
 
-		list<ColliderGroup*>::const_iterator J = I;
-		J++;
+		list<ColliderGroup*>::const_iterator J = colliderGroups.begin();
 
 		// Avoid checking collisions already checked
 		while (J != colliderGroups.end()) {
@@ -244,6 +243,7 @@ void j1Collision::HandleTriggers()
 				(*groups)->callback->OnCollision(*groups, *collisions, CollisionState_OnExit);
 
 				(*groups)->collidingGroups.remove(*collisions);
+
 				collisions = (*groups)->collidingGroups.begin();
 				continue;
 			}

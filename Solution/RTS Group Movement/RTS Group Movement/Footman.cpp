@@ -118,13 +118,25 @@ void Footman::Move(float dt)
 
 	case UnitCommand_AttackTarget:
 
-		if (target != nullptr) {
+		// The unit has found a new target to attack
+		if (currTarget == nullptr) {
 
-			list<DynamicEntity*> unit;
-			unit.push_back(this);
-			UnitGroup* group = App->movement->CreateGroupFromUnits(unit);
+			// Prioritize a type of target (static or dynamic)
+			if (targets.front() != nullptr) {
 
-			brain->AddGoal_AttackTarget(target);
+				currTarget = targets.front();
+				targets.pop_front();
+			}
+			// TODO: do the same for staticEntities
+
+			if (currTarget != nullptr) {
+
+				list<DynamicEntity*> unit;
+				unit.push_back(this);
+				App->movement->CreateGroupFromUnits(unit);
+
+				brain->AddGoal_AttackTarget(currTarget);
+			}
 		}
 
 		break;
@@ -202,8 +214,7 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 			LOG("Player Sight Radius");
 
 			// The Horde is within the SIGHT radius
-			isSightSatisfied = true;
-			target = c2->entity;
+			//isSightSatisfied = true;
 
 			// The unit faces towards the enemy. If a new enemy enters the radius, but the unit is attacking another unit, it
 			// continues facing towards the first enemy seen
@@ -213,7 +224,7 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 			LOG("Player Attack Radius");
 
 			// The Horde is within the ATTACK radius
-			isAttackSatisfied = true;
+			//isAttackSatisfied = true;
 		}
 
 		break;
@@ -224,13 +235,12 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 		if (c1->colliderType == ColliderType_PlayerSightRadius && c2->colliderType == ColliderType_EnemyUnit) { // || c2->colliderType == ColliderType_EnemyBuilding
 
 			// The Horde is NO longer within the SIGHT radius
-			isSightSatisfied = false;
-			target = nullptr;
+			//isSightSatisfied = false;
 		}
 		else if (c1->colliderType == ColliderType_PlayerAttackRadius && c2->colliderType == ColliderType_EnemyUnit) { // || c2->colliderType == ColliderType_EnemyBuilding
 
 			// The Horde is NO longer within the ATTACK radius
-			isAttackSatisfied = false;
+			//isAttackSatisfied = false;
 		}
 
 		break;
@@ -355,9 +365,9 @@ bool Footman::ChangeAnimation()
 	else if (isHitting) {
 
 		// Set the direction of the unit as the orientation towards the attacking target
-		if (target != nullptr) {
+		if (currTarget != nullptr) {
 
-			fPoint orientation = { target->GetPos().x - pos.x, (float)target->GetPos().y - pos.y };
+			fPoint orientation = { currTarget->target->GetPos().x - pos.x, currTarget->target->GetPos().y - pos.y };
 
 			float m = sqrtf(pow(orientation.x, 2.0f) + pow(orientation.y, 2.0f));
 

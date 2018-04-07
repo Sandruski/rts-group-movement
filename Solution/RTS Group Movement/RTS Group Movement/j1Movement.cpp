@@ -243,12 +243,6 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 	fPoint movePos;
 	iPoint newGoal;
 
-	if (singleUnit->unit->IsUnitStill()) {
-		LOG("---Is Still");
-	}
-	else
-		LOG("+++Is Moving");
-
 	switch (singleUnit->movementState) {
 
 	case MovementState_WaitForPath:
