@@ -77,88 +77,109 @@ void Footman::Move(float dt)
 
 	// Is the unit dead?
 	/// The unit must fit the tile (it is more attractive for the player)
-	if (currLife <= 0 && unitState != UnitState_Die && singleUnit->IsFittingTile()) {
+	if (singleUnit != nullptr) {
 
-		isDead = true;
+		if (currLife <= 0 
+			&& unitState != UnitState_Die 
+			&& singleUnit->IsFittingTile()) {
 
-		// Invalidate colliders
-		sightRadiusCollider->isValid = false;
-		attackRadiusCollider->isValid = false;
-		entityCollider->isValid = false;
+			isDead = true;
 
-		// If the player dies, remove all their goals
-		unitCommand = UnitCommand_Stop;
+			// Remove Movement (so other units can walk above them)
+			if (navgraph != nullptr)
+				delete navgraph;
+			navgraph = nullptr;
+
+			if (pathPlanner != nullptr)
+				delete pathPlanner;
+			pathPlanner = nullptr;
+
+			if (singleUnit != nullptr)
+				delete singleUnit;
+			singleUnit = nullptr;
+
+			// Invalidate colliders
+			sightRadiusCollider->isValid = false;
+			attackRadiusCollider->isValid = false;
+			entityCollider->isValid = false;
+
+			// If the player dies, remove all their goals
+			unitCommand = UnitCommand_Stop;
+		}
 	}
 
-	// PROCESS THE COMMANDS
-	switch (unitCommand) {
+	if (!isDead) {
 
-	case UnitCommand_Stop:
+		// PROCESS THE COMMANDS
+		switch (unitCommand) {
 
-		if (singleUnit->IsFittingTile()) {
+		case UnitCommand_Stop:
 
-			brain->RemoveAllSubgoals();
+			if (singleUnit->IsFittingTile()) {
 
-			unitCommand = UnitCommand_NoCommand;
-		}
+				brain->RemoveAllSubgoals();
 
-		break;
-
-	case UnitCommand_Patrol:
-
-		// The goal of the unit has been changed manually (to patrol)
-		if (singleUnit->isGoalChanged) {
-
-			brain->AddGoal_Patrol(singleUnit->currTile, singleUnit->goal);
-
-			unitCommand = UnitCommand_NoCommand;
-		}
-
-		break;
-
-	case UnitCommand_AttackTarget:
-
-		// The unit has found a new target to attack
-		if (currTarget == nullptr) {
-
-			// Prioritize a type of target (static or dynamic)
-			if (targets.front() != nullptr) {
-
-				currTarget = targets.front();
-				targets.pop_front();
+				unitCommand = UnitCommand_NoCommand;
 			}
-			// TODO: do the same for staticEntities
 
-			if (currTarget != nullptr) {
+			break;
 
-				list<DynamicEntity*> unit;
-				unit.push_back(this);
-				App->movement->CreateGroupFromUnits(unit);
+		case UnitCommand_Patrol:
 
-				brain->AddGoal_AttackTarget(currTarget);
+			// The goal of the unit has been changed manually (to patrol)
+			if (singleUnit->isGoalChanged) {
+
+				brain->AddGoal_Patrol(singleUnit->currTile, singleUnit->goal);
+
+				unitCommand = UnitCommand_NoCommand;
 			}
+
+			break;
+
+		case UnitCommand_AttackTarget:
+
+			// The unit has found a new target to attack
+			if (currTarget == nullptr) {
+
+				// Prioritize a type of target (static or dynamic)
+				if (targets.front() != nullptr) {
+
+					currTarget = targets.front();
+					targets.pop_front();
+				}
+				// TODO: do the same for staticEntities
+
+				if (currTarget != nullptr) {
+
+					list<DynamicEntity*> unit;
+					unit.push_back(this);
+					App->movement->CreateGroupFromUnits(unit);
+
+					brain->AddGoal_AttackTarget(currTarget);
+				}
+			}
+
+			break;
+
+		case UnitCommand_NoCommand:
+		default:
+
+			// The goal of the unit has been changed manually (to move to position)
+			if (!isDead) {
+
+				if (singleUnit->isGoalChanged)
+
+					brain->AddGoal_MoveToPosition(singleUnit->goal);
+			}
+
+			break;
 		}
 
-		break;
+		// ---------------------------------------------------------------------
 
-	case UnitCommand_NoCommand:
-	default:
-
-		// The goal of the unit has been changed manually (to move to position)
-		if (!isDead) {
-
-			if (singleUnit->isGoalChanged)
-
-				brain->AddGoal_MoveToPosition(singleUnit->goal);
-		}
-
-		break;
+		// PROCESS THE CURRENTLY ACTIVE GOAL
+		brain->Process(dt);
 	}
-
-	// ---------------------------------------------------------------------
-
-	// PROCESS THE CURRENTLY ACTIVE GOAL
-	brain->Process(dt);
 
 	UnitStateMachine(dt);
 
@@ -211,8 +232,6 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 		// An enemy is within the sight of this player unit
 		if (c1->colliderType == ColliderType_PlayerSightRadius && c2->colliderType == ColliderType_EnemyUnit) { // || c2->colliderType == ColliderType_EnemyBuilding
 
-			LOG("Player Sight Radius");
-
 			// The Horde is within the SIGHT radius
 			//isSightSatisfied = true;
 
@@ -220,8 +239,6 @@ void Footman::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState c
 			// continues facing towards the first enemy seen
 		}
 		else if (c1->colliderType == ColliderType_PlayerAttackRadius && c2->colliderType == ColliderType_EnemyUnit) { // || c2->colliderType == ColliderType_EnemyBuilding
-
-			LOG("Player Attack Radius");
 
 			// The Horde is within the ATTACK radius
 			//isAttackSatisfied = true;

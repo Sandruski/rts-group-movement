@@ -47,19 +47,6 @@ DynamicEntity::~DynamicEntity()
 		delete brain;
 	brain = nullptr;
 
-	// Remove Movement
-	if (navgraph != nullptr)
-		delete navgraph;
-	navgraph = nullptr;
-
-	if (pathPlanner != nullptr)
-		delete pathPlanner;
-	pathPlanner = nullptr;
-
-	if (singleUnit != nullptr)
-		delete singleUnit;
-	singleUnit = nullptr;
-
 	// Remove Attack
 	currTarget = nullptr;
 
@@ -306,6 +293,7 @@ ColliderGroup* DynamicEntity::GetAttackRadiusCollider() const
 
 ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, uint radius)
 {
+	/*
 	vector<Collider*> colliders;
 
 	// Perform a BFS
@@ -348,8 +336,8 @@ ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, u
 			}
 		}
 	}
+	*/
 
-	/*
 	vector<Collider*> colliders;
 	iPoint currTilePos = App->map->MapToWorld(singleUnit->currTile.x, singleUnit->currTile.y);
 
@@ -365,13 +353,13 @@ ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, u
 			colliders.push_back(App->collision->CreateCollider(rect));
 		}
 	}
-	*/
 
 	return App->collision->CreateAndAddColliderGroup(colliders, colliderType, App->entities, this);
 }
 
 void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radius)
 {
+	/*
 	collider->RemoveAllColliders();
 
 	// Perform a BFS
@@ -414,8 +402,8 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 			}
 		}
 	}
+	*/
 
-	/*
 	vector<Collider*>::const_iterator it = collider->colliders.begin();
 
 	while (it != collider->colliders.end()) {
@@ -433,21 +421,13 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 				iPoint definitivePos = { currTilePos.x + x * App->map->data.tile_width, currTilePos.y + y * App->map->data.tile_height };
 				iPoint definitiveTile = App->map->WorldToMap(definitivePos.x, definitivePos.y);
 
-				if (App->pathfinding->IsWalkable(definitiveTile)) {
-
-					(*it)->isValid = true;
-
-					SDL_Rect rect = { definitivePos.x, definitivePos.y, App->map->data.tile_width, App->map->data.tile_height };
-					(*it)->SetPos(rect.x, rect.y);
-				}
-				else
-					(*it)->isValid = false;
+				SDL_Rect rect = { definitivePos.x, definitivePos.y, App->map->data.tile_width, App->map->data.tile_height };
+				(*it)->SetPos(rect.x, rect.y);
 
 				it++;
 			}
 		}
 	}
-	*/
 }
 
 // Attack

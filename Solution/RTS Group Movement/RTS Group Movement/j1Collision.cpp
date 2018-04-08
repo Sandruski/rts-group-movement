@@ -177,6 +177,7 @@ bool j1Collision::Update(float dt)
 									isCollision = true;
 								}
 								else {
+
 									c1->colliderGroup->lastCollidingGroups.push_back(c2->colliderGroup);
 									isCollision = true;
 								}
@@ -185,6 +186,7 @@ bool j1Collision::Update(float dt)
 								c1->colliderGroup->callback->OnCollision(c1->colliderGroup, c2->colliderGroup, CollisionState_OnEnter);
 						}
 
+						/*
 						if (matrix[c2->colliderGroup->colliderType][c1->colliderGroup->colliderType] && c2->colliderGroup->callback != nullptr) {
 
 							if (c2->colliderGroup->isTrigger) {
@@ -206,6 +208,7 @@ bool j1Collision::Update(float dt)
 							else
 								c2->colliderGroup->callback->OnCollision(c2->colliderGroup, c1->colliderGroup, CollisionState_OnEnter);
 						}
+						*/
 					}
 
 					if (isCollision)
@@ -240,7 +243,7 @@ void j1Collision::HandleTriggers()
 			if (find((*groups)->lastCollidingGroups.begin(), (*groups)->lastCollidingGroups.end(), *collisions) == (*groups)->lastCollidingGroups.end()) {
 
 				// Not collision anymore...
-				(*groups)->callback->OnCollision(*groups, *collisions, CollisionState_OnExit);
+				(*groups)->callback->OnCollision(*collisions, *groups, CollisionState_OnExit);
 
 				(*groups)->collidingGroups.remove(*collisions);
 

@@ -112,80 +112,81 @@ bool j1Scene::PreUpdate()
 	critterBoarInfo.restoredHealth = 10;
 
 	// Entities creation
-	if (App->entities->IsEntityOnTile(mouseTile, EntityType_DynamicEntity) == nullptr && App->pathfinding->IsWalkable(mouseTile)) {
 
-		// 1: spawn a Footman with priority 1
-		unitInfo.sightRadius = 6;
-		unitInfo.attackRadius = 3;
-		unitInfo.maxSpeed = 80.0f;
+	// 1: spawn a Footman with priority 1
+	unitInfo.sightRadius = 6;
+	unitInfo.attackRadius = 3;
+	unitInfo.maxSpeed = 80.0f;
 
-		if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN) {
+	if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN) {
 
-			iPoint tile = { 10,10 };
+		iPoint tile = { 10,10 };
 
-			// Make sure that there are no entities on the spawn tile and that the tile is walkable
-			if (App->entities->IsEntityOnTile(tile) != nullptr || !App->pathfinding->IsWalkable(tile))
-			
-				tile = FindClosestValidTile(tile);
+		// Make sure that there are no entities on the spawn tile and that the tile is walkable
+		if (App->entities->IsEntityOnTile(tile) != nullptr || !App->pathfinding->IsWalkable(tile))
 
-			// Make sure that the spawn tile is valid
-			if (tile.x != -1 && tile.y != -1) {
+			tile = FindClosestValidTile(tile);
 
-				iPoint tilePos = App->map->MapToWorld(tile.x, tile.y);
-				fPoint pos = { (float)tilePos.x,(float)tilePos.y };
+		// Make sure that the spawn tile is valid
+		if (tile.x != -1 && tile.y != -1) {
 
-				App->entities->AddDynamicEntity(DynamicEntityType_Footman, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)footmanInfo);
-			}
+			iPoint tilePos = App->map->MapToWorld(tile.x, tile.y);
+			//fPoint pos = { (float)tilePos.x,(float)tilePos.y }; // TODO: uncomment this line
+
+			fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y }; // TODO: delete this debug
+			App->entities->AddDynamicEntity(DynamicEntityType_Footman, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)footmanInfo);
 		}
-		// 2: spawn a Grunt with priority 1
-		unitInfo.sightRadius = 5;
-		unitInfo.attackRadius = 3;
-		unitInfo.maxSpeed = 50.0f;
-
-		maxLife = 20;
-		currLife = (int)maxLife;
-
-		if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN) {
-
-			iPoint tile = { 15,11 };
-
-			// Make sure that there are no entities on the spawn tile and that the tile is walkable
-			if (App->entities->IsEntityOnTile(tile) != nullptr || !App->pathfinding->IsWalkable(tile))
-
-				tile = FindClosestValidTile(tile);
-
-			// Make sure that the spawn tile is valid
-			if (tile.x != -1 && tile.y != -1) {
-
-				iPoint tilePos = App->map->MapToWorld(tile.x, tile.y);
-				fPoint pos = { (float)tilePos.x,(float)tilePos.y };
-
-				App->entities->AddDynamicEntity(DynamicEntityType_Grunt, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)gruntInfo);
-			}
-		}
-
-		fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
-
-		// 3: spawn a Sheep
-		unitInfo.sightRadius = 0;
-		unitInfo.attackRadius = 0;
-		unitInfo.priority = 1;
-		maxLife = 10;
-		currLife = (int)maxLife;
-
-		if (App->input->GetKey(SDL_SCANCODE_3) == KEY_DOWN)
-			App->entities->AddDynamicEntity(DynamicEntityType_CritterSheep, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)critterSheepInfo);
-
-		// 4: spawn a Boar
-		unitInfo.sightRadius = 0;
-		unitInfo.attackRadius = 0;
-		unitInfo.priority = 2;
-		maxLife = 20;
-		currLife = (int)maxLife;
-
-		if (App->input->GetKey(SDL_SCANCODE_4) == KEY_DOWN)
-			App->entities->AddDynamicEntity(DynamicEntityType_CritterBoar, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)critterBoarInfo);
 	}
+
+	// 2: spawn a Grunt with priority 1
+	unitInfo.sightRadius = 5;
+	unitInfo.attackRadius = 3;
+	unitInfo.maxSpeed = 50.0f;
+
+	maxLife = 20;
+	currLife = (int)maxLife;
+
+	if (App->input->GetKey(SDL_SCANCODE_2) == KEY_DOWN) {
+
+		iPoint tile = { 15,11 };
+
+		// Make sure that there are no entities on the spawn tile and that the tile is walkable
+		if (App->entities->IsEntityOnTile(tile) != nullptr || !App->pathfinding->IsWalkable(tile))
+
+			tile = FindClosestValidTile(tile);
+
+		// Make sure that the spawn tile is valid
+		if (tile.x != -1 && tile.y != -1) {
+
+			iPoint tilePos = App->map->MapToWorld(tile.x, tile.y);
+			//fPoint pos = { (float)tilePos.x,(float)tilePos.y }; // TODO: uncomment this line
+
+			fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y }; // TODO: delete this debug
+			App->entities->AddDynamicEntity(DynamicEntityType_Grunt, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)gruntInfo);
+		}
+	}
+
+	fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
+
+	// 3: spawn a Sheep
+	unitInfo.sightRadius = 0;
+	unitInfo.attackRadius = 0;
+	unitInfo.priority = 1;
+	maxLife = 10;
+	currLife = (int)maxLife;
+
+	if (App->input->GetKey(SDL_SCANCODE_3) == KEY_DOWN)
+		App->entities->AddDynamicEntity(DynamicEntityType_CritterSheep, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)critterSheepInfo);
+
+	// 4: spawn a Boar
+	unitInfo.sightRadius = 0;
+	unitInfo.attackRadius = 0;
+	unitInfo.priority = 2;
+	maxLife = 20;
+	currLife = (int)maxLife;
+
+	if (App->input->GetKey(SDL_SCANCODE_4) == KEY_DOWN)
+		App->entities->AddDynamicEntity(DynamicEntityType_CritterBoar, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)critterBoarInfo);
 
 	return ret;
 }

@@ -173,7 +173,8 @@ void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState col
 		// An player is within the sight of this player unit
 		if (c1->colliderType == ColliderType_EnemySightRadius && c2->colliderType == ColliderType_PlayerUnit) { // || c2->colliderType == ColliderType_PlayerBuilding
 
-			LOG("Enemy Sight Radius");
+			DynamicEntity* dynEnt = (DynamicEntity*)c2->entity;
+			LOG("Enemy Sight Radius %s", dynEnt->GetColorName().data());
 
 			// The Alliance is within the SIGHT radius
 
@@ -204,7 +205,8 @@ void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState col
 		}
 		else if (c1->colliderType == ColliderType_EnemyAttackRadius && c2->colliderType == ColliderType_PlayerUnit) { // || c2->colliderType == ColliderType_PlayerBuilding
 
-			LOG("Enemy Attack Radius");
+			DynamicEntity* dynEnt = (DynamicEntity*)c2->entity;
+			LOG("Enemy Attack Radius %s", dynEnt->GetColorName().data());
 
 			// The Alliance is within the ATTACK radius
 
@@ -228,6 +230,9 @@ void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState col
 		// Reset attack parameters
 		if (c1->colliderType == ColliderType_EnemySightRadius && c2->colliderType == ColliderType_PlayerUnit) { // || c2->colliderType == ColliderType_PlayerBuilding
 
+			DynamicEntity* dynEnt = (DynamicEntity*)c2->entity;
+			LOG("NO MORE Enemy Sight Radius %s", dynEnt->GetColorName().data());
+
 			// The Alliance is NO longer within the SIGHT radius
 
 			// Remove the target from the targets list
@@ -237,12 +242,11 @@ void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState col
 
 				if ((*it)->target == c2->entity) {
 
-
 					// If currTarget matches the target that needs to be removed, set its isSightSatisfied to false and it will be removed later
-					if (currTarget->target == c2->entity) {
+					if (currTarget->target == c2->entity)
 
 						currTarget->isSightSatisfied = false;
-					}
+
 					// If currTarget is different from the target that needs to be removed, remove the target from the list
 					else {
 
@@ -256,6 +260,9 @@ void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState col
 			}
 		}
 		else if (c1->colliderType == ColliderType_EnemyAttackRadius && c2->colliderType == ColliderType_PlayerUnit) { // || c2->colliderType == ColliderType_PlayerBuilding
+
+			DynamicEntity* dynEnt = (DynamicEntity*)c2->entity;
+			LOG("NO MORE Enemy Attack Radius %s", dynEnt->GetColorName().data());
 
 			// The Alliance is NO longer within the ATTACK radius
 
