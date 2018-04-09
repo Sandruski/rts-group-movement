@@ -47,21 +47,8 @@ DynamicEntity::~DynamicEntity()
 		delete brain;
 	brain = nullptr;
 
-	// Remove Movement
-	if (navgraph != nullptr)
-		delete navgraph;
-	navgraph = nullptr;
-
-	if (pathPlanner != nullptr)
-		delete pathPlanner;
-	pathPlanner = nullptr;
-
-	if (singleUnit != nullptr)
-		delete singleUnit;
-	singleUnit = nullptr;
-
 	// Remove Attack
-	target = nullptr;
+	currTarget = nullptr;
 
 	// Remove Colliders
 	if (sightRadiusCollider != nullptr)
@@ -306,6 +293,7 @@ ColliderGroup* DynamicEntity::GetAttackRadiusCollider() const
 
 ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, uint radius)
 {
+	/*
 	vector<Collider*> colliders;
 
 	// Perform a BFS
@@ -348,8 +336,8 @@ ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, u
 			}
 		}
 	}
+	*/
 
-	/*
 	vector<Collider*> colliders;
 	iPoint currTilePos = App->map->MapToWorld(singleUnit->currTile.x, singleUnit->currTile.y);
 
@@ -365,13 +353,13 @@ ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, u
 			colliders.push_back(App->collision->CreateCollider(rect));
 		}
 	}
-	*/
 
 	return App->collision->CreateAndAddColliderGroup(colliders, colliderType, App->entities, this);
 }
 
 void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radius)
 {
+	/*
 	collider->RemoveAllColliders();
 
 	// Perform a BFS
@@ -414,8 +402,8 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 			}
 		}
 	}
+	*/
 
-	/*
 	vector<Collider*>::const_iterator it = collider->colliders.begin();
 
 	while (it != collider->colliders.end()) {
@@ -433,53 +421,86 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 				iPoint definitivePos = { currTilePos.x + x * App->map->data.tile_width, currTilePos.y + y * App->map->data.tile_height };
 				iPoint definitiveTile = App->map->WorldToMap(definitivePos.x, definitivePos.y);
 
-				if (App->pathfinding->IsWalkable(definitiveTile)) {
-
-					(*it)->isValid = true;
-
-					SDL_Rect rect = { definitivePos.x, definitivePos.y, App->map->data.tile_width, App->map->data.tile_height };
-					(*it)->SetPos(rect.x, rect.y);
-				}
-				else
-					(*it)->isValid = false;
+				SDL_Rect rect = { definitivePos.x, definitivePos.y, App->map->data.tile_width, App->map->data.tile_height };
+				(*it)->SetPos(rect.x, rect.y);
 
 				it++;
 			}
 		}
 	}
-	*/
 }
 
 // Attack
-Entity* DynamicEntity::GetTarget() const 
+/// Unit is being attacked
+void DynamicEntity::SetIsBeingAttacked(bool isBeingAttacked) 
 {
-	return target;
+	this->isBeingAttacked = isBeingAttacked;
 }
 
-void DynamicEntity::SetTarget(Entity* target) 
+bool DynamicEntity::IsBeingAttacked() const 
 {
-	this->target = target;
+	return isBeingAttacked;
 }
 
-bool DynamicEntity::IsTargetPresent() const 
+/// Unit attacks a target
+Entity* DynamicEntity::GetCurrTarget() const 
+{
+	if (currTarget != nullptr)
+		return currTarget->target;
+	else
+		return nullptr;
+}
+
+bool DynamicEntity::SetCurrTarget(Entity* target) 
 {
 	if (target == nullptr)
 		return false;
 
-	if (target->GetCurrLife() <= 0)
+	list<TargetInfo*>::const_iterator it = targets.begin();
+
+	while (it != targets.end()) {
+
+		if ((*it)->target == target) {
+
+			RemoveTarget(target);
+			break;
+		}
+		it++;
+	}
+
+	// Push the target to the front of the list, so it is the new currTarget
+	TargetInfo targetInfo;
+	targetInfo.target = target;
+
+	targets.push_back(&targetInfo);
+}
+
+bool DynamicEntity::RemoveTarget(Entity* target) 
+{
+	if (target == nullptr)
 		return false;
 
-	return true;
-}
+	// If the target matches the currTarget, set currTarget to null
+	if (currTarget != nullptr) {
 
-bool DynamicEntity::IsSightSatisfied() const
-{
-	return isSightSatisfied;
-}
+		if (currTarget->target == target)
+			currTarget = nullptr;
+	}
 
-bool DynamicEntity::IsAttackSatisfied() const
-{
-	return isSightSatisfied && isAttackSatisfied;
+	// Remove the target from the targets list
+	list<TargetInfo*>::const_iterator it = targets.begin();
+
+	while (it != targets.end()) {
+	
+		if ((*it)->target == target) {
+
+			delete *it;
+			targets.erase(it);
+
+			return true;
+		}
+		it++;
+	}
 }
 
 void DynamicEntity::SetHitting(bool isHitting) 
@@ -504,4 +525,18 @@ bool DynamicEntity::SetCommand(UnitCommand unitCommand)
 	}
 
 	return ret;
+}
+
+// TargetInfo struct ---------------------------------------------------------------------------------
+
+bool TargetInfo::IsTargetPresent() const
+{
+	if (target == nullptr)
+		return false;
+
+	// The target is dead
+	if (target->GetCurrLife() <= 0)
+		return false;
+
+	return true;
 }

@@ -4,6 +4,7 @@
 #include "j1Module.h"
 
 #include <vector>
+#include <queue>
 #include <string>
 using namespace std;
 
@@ -39,6 +40,8 @@ public:
 
 	// Called before quitting
 	bool CleanUp();
+
+	iPoint FindClosestValidTile(iPoint tile) const;
 
 	// Save
 	bool Save(pugi::xml_node&) const;

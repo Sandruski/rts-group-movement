@@ -12,6 +12,7 @@ using namespace std;
 
 class Entity;
 class DynamicEntity;
+struct TargetInfo;
 
 enum UnitDirection;
 
@@ -156,7 +157,7 @@ public:
 	// to be pursued. Calculate the desirability of the strategies
 	//void Arbitrate();
 	void AddGoal_Wander(uint maxDistance);
-	void AddGoal_AttackTarget(Entity* target);
+	void AddGoal_AttackTarget(TargetInfo* targetInfo);
 	void AddGoal_MoveToPosition(iPoint destinationTile);
 	void AddGoal_Patrol(iPoint originTile, iPoint destinationTile);
 };
@@ -165,7 +166,7 @@ class Goal_AttackTarget :public CompositeGoal
 {
 public:
 
-	Goal_AttackTarget(DynamicEntity* owner, Entity* target);
+	Goal_AttackTarget(DynamicEntity* owner, TargetInfo* targetInfo);
 
 	void Activate();
 	GoalStatus Process(float dt);
@@ -173,7 +174,7 @@ public:
 
 private:
 
-	Entity* target = nullptr;
+	TargetInfo* targetInfo = nullptr;
 };
 
 class Goal_Patrol :public CompositeGoal
@@ -230,7 +231,7 @@ class Goal_HitTarget :public AtomicGoal
 {
 public:
 
-	Goal_HitTarget(DynamicEntity* owner, Entity* target);
+	Goal_HitTarget(DynamicEntity* owner, TargetInfo* target);
 
 	void Activate();
 	GoalStatus Process(float dt);
@@ -238,7 +239,7 @@ public:
 
 private:
 
-	Entity* target = nullptr;
+	TargetInfo* targetInfo = nullptr;
 };
 
 class Goal_LookAround :public AtomicGoal

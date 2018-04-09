@@ -170,9 +170,9 @@ void Goal_Think::AddGoal_Wander(uint maxDistance)
 	AddSubgoal(new Goal_Wander(owner, maxDistance));
 }
 
-void Goal_Think::AddGoal_AttackTarget(Entity* target)
+void Goal_Think::AddGoal_AttackTarget(TargetInfo* targetInfo)
 {
-	AddSubgoal(new Goal_AttackTarget(owner, target));
+	AddSubgoal(new Goal_AttackTarget(owner, targetInfo));
 }
 
 void Goal_Think::AddGoal_MoveToPosition(iPoint destinationTile) 
@@ -187,7 +187,7 @@ void Goal_Think::AddGoal_Patrol(iPoint originTile, iPoint destinationTile)
 
 // Goal_AttackTarget ---------------------------------------------------------------------
 
-Goal_AttackTarget::Goal_AttackTarget(DynamicEntity* owner, Entity* target) :CompositeGoal(owner, GoalType_AttackTarget), target(target) {}
+Goal_AttackTarget::Goal_AttackTarget(DynamicEntity* owner, TargetInfo* targetInfo) :CompositeGoal(owner, GoalType_AttackTarget), targetInfo(targetInfo) {}
 
 void Goal_AttackTarget::Activate() 
 {
@@ -197,18 +197,27 @@ void Goal_AttackTarget::Activate()
 
 	// It is possible for a bot's target to die while this goal is active,
 	// so we must test to make sure the bot always has an active target
-	if (!owner->IsTargetPresent()) {
+	if (!targetInfo->IsTargetPresent()) {
 
 		goalStatus = GoalStatus_Completed;
 		return;
 	}
 
-	AddSubgoal(new Goal_HitTarget(owner, target));
+	// The attack is only performed if the sight distance is satisfied
+	else if (!targetInfo->isSightSatisfied) {
+
+		goalStatus = GoalStatus_Failed;
+		return;	
+	}
+
+	// -----
+
+	AddSubgoal(new Goal_HitTarget(owner, targetInfo));
 
 	// If the target is far from the unit, head directly at the target's position
-	if (!owner->IsAttackSatisfied()) {
+	if (!targetInfo->isAttackSatisfied) {
 	
-		iPoint targetTile = App->map->WorldToMap(target->GetPos().x, target->GetPos().y);
+		iPoint targetTile = App->map->WorldToMap(targetInfo->target->GetPos().x, targetInfo->target->GetPos().y);
 		AddSubgoal(new Goal_MoveToPosition(owner, targetTile));
 	}
 
@@ -220,7 +229,7 @@ GoalStatus Goal_AttackTarget::Process(float dt)
 	ActivateIfInactive();
 
 	// The unit was chasing their target, but the attack distance has been suddenly satisfied
-	if (owner->IsAttackSatisfied() && owner->GetSingleUnit()->IsFittingTile() 
+	if (targetInfo->isAttackSatisfied && owner->GetSingleUnit()->IsFittingTile()
 		&& subgoals.front()->GetType() == GoalType_MoveToPosition) {
 
 		subgoals.front()->Terminate();
@@ -238,12 +247,18 @@ GoalStatus Goal_AttackTarget::Process(float dt)
 
 void Goal_AttackTarget::Terminate() 
 {
+	LOG("Terminated attack");
+
 	RemoveAllSubgoals();
 
-	if (target == owner->GetTarget())
-		owner->SetTarget(nullptr);
+	// -----
 
-	target = nullptr;
+	// If the target has died or the sight distance is not satisfied, remove the target
+	if (!targetInfo->IsTargetPresent() || !targetInfo->isSightSatisfied)
+
+		owner->RemoveTarget(targetInfo->target);
+
+	targetInfo = nullptr;
 
 	owner->SetUnitState(UnitState_Idle);
 }
@@ -333,7 +348,7 @@ GoalStatus Goal_Wander::Process(float dt)
 		Activate();
 
 	if (goalStatus == GoalStatus_Failed) {
-		LOG("GOAL FAILEEEEEEEEED");
+
 		RemoveAllSubgoals();
 		Activate();
 	}
@@ -404,7 +419,7 @@ void Goal_MoveToPosition::Terminate()
 
 // Goal_HitTarget ---------------------------------------------------------------------
 
-Goal_HitTarget::Goal_HitTarget(DynamicEntity* owner, Entity* target) :AtomicGoal(owner, GoalType_HitTarget), target(target) {}
+Goal_HitTarget::Goal_HitTarget(DynamicEntity* owner, TargetInfo* targetInfo) :AtomicGoal(owner, GoalType_HitTarget), targetInfo(targetInfo) {}
 
 void Goal_HitTarget::Activate() 
 {
@@ -412,12 +427,12 @@ void Goal_HitTarget::Activate()
 
 	// It is possible for a bot's target to die while this goal is active,
 	// so we must test to make sure the bot always has an active target
-	if (!owner->IsTargetPresent()) {
+	if (!targetInfo->IsTargetPresent()) {
 
 		goalStatus = GoalStatus_Completed;
 		return;
 	}
-	else if (!owner->IsAttackSatisfied()) {
+	else if (!targetInfo->isAttackSatisfied || !targetInfo->isSightSatisfied) {
 
 		goalStatus = GoalStatus_Failed;
 		return;
@@ -430,12 +445,12 @@ GoalStatus Goal_HitTarget::Process(float dt)
 {
 	ActivateIfInactive();
 
-	if (!owner->IsTargetPresent()) {
+	if (!targetInfo->IsTargetPresent()) {
 
 		goalStatus = GoalStatus_Completed;
 		return goalStatus;
 	}
-	else if (!owner->IsAttackSatisfied()) {
+	else if (!targetInfo->isAttackSatisfied || !targetInfo->isSightSatisfied) {
 
 		goalStatus = GoalStatus_Failed;
 		return goalStatus;
@@ -443,7 +458,7 @@ GoalStatus Goal_HitTarget::Process(float dt)
 
 	if (((DynamicEntity*)owner)->GetAnimation()->Finished()) {
 
-		owner->GetTarget()->ApplyDamage(owner->GetDamage());
+		targetInfo->target->ApplyDamage(owner->GetDamage());
 		((DynamicEntity*)owner)->GetAnimation()->Reset();
 	}
 

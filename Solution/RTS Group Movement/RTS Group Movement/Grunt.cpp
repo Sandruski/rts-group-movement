@@ -90,10 +90,32 @@ void Grunt::Move(float dt)
 		unitCommand = UnitCommand_Stop;
 	}
 
+	/// GOAL: MoveToPosition
 	// The goal of the unit has been changed manually
 	if (singleUnit->isGoalChanged)
 
 		brain->AddGoal_MoveToPosition(singleUnit->goal);
+
+	/// GOAL: AttackTarget
+	// If currTarget is null, check if there are available targets
+	if (currTarget == nullptr) {
+
+		/// Prioritize a type of target (static or dynamic)
+
+		// If the targets list is not empty, pick the next currTarget
+		if (targets.size() > 0)
+			currTarget = targets.front();
+
+		// If currTarget is not null, attack them
+		if (currTarget != nullptr) {
+
+			list<DynamicEntity*> unit;
+			unit.push_back(this);
+			App->movement->CreateGroupFromUnits(unit);
+
+			brain->AddGoal_AttackTarget(currTarget);
+		}
+	}
 
 	// ---------------------------------------------------------------------
 
@@ -151,27 +173,54 @@ void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState col
 		// An player is within the sight of this player unit
 		if (c1->colliderType == ColliderType_EnemySightRadius && c2->colliderType == ColliderType_PlayerUnit) { // || c2->colliderType == ColliderType_PlayerBuilding
 
-			LOG("Enemy Sight Radius");
+			DynamicEntity* dynEnt = (DynamicEntity*)c2->entity;
+			LOG("Enemy Sight Radius %s", dynEnt->GetColorName().data());
 
 			// The Alliance is within the SIGHT radius
-			isSightSatisfied = true;
-			target = c2->entity;
 
-			if (target != nullptr) {
+			list<TargetInfo*>::const_iterator it = targets.begin();
+			bool isTargetFound = false;
 
-				list<DynamicEntity*> unit;
-				unit.push_back(this);
-				UnitGroup* group = App->movement->CreateGroupFromUnits(unit);
+			// If the target is already in the targets list, set its isSightSatisfied to true
+			while (it != targets.end()) {
 
-				brain->AddGoal_AttackTarget(target);
+				if ((*it)->target == c2->entity) {
+
+					(*it)->isSightSatisfied = true;
+					isTargetFound = true;
+					break;
+				}
+				it++;
+			}
+
+			// Else, add the new target to the targets list (and set its isSightSatisfied to true)
+			if (!isTargetFound) {
+
+				TargetInfo* targetInfo = new TargetInfo();
+				targetInfo->target = c2->entity;
+				targetInfo->isSightSatisfied = true;
+
+				targets.push_back(targetInfo);
 			}
 		}
 		else if (c1->colliderType == ColliderType_EnemyAttackRadius && c2->colliderType == ColliderType_PlayerUnit) { // || c2->colliderType == ColliderType_PlayerBuilding
 
-			LOG("Enemy Attack Radius");
+			DynamicEntity* dynEnt = (DynamicEntity*)c2->entity;
+			LOG("Enemy Attack Radius %s", dynEnt->GetColorName().data());
 
 			// The Alliance is within the ATTACK radius
-			isAttackSatisfied = true;
+
+			list<TargetInfo*>::const_iterator it = targets.begin();
+
+			while (it != targets.end()) {
+
+				if ((*it)->target == c2->entity) {
+
+					(*it)->isAttackSatisfied = true;
+					break;
+				}
+				it++;
+			}
 		}
 
 		break;
@@ -181,14 +230,53 @@ void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState col
 		// Reset attack parameters
 		if (c1->colliderType == ColliderType_EnemySightRadius && c2->colliderType == ColliderType_PlayerUnit) { // || c2->colliderType == ColliderType_PlayerBuilding
 
+			DynamicEntity* dynEnt = (DynamicEntity*)c2->entity;
+			LOG("NO MORE Enemy Sight Radius %s", dynEnt->GetColorName().data());
+
 			// The Alliance is NO longer within the SIGHT radius
-			isSightSatisfied = false;
-			target = nullptr;
+
+			// Remove the target from the targets list
+			list<TargetInfo*>::const_iterator it = targets.begin();
+
+			while (it != targets.end()) {
+
+				if ((*it)->target == c2->entity) {
+
+					// If currTarget matches the target that needs to be removed, set its isSightSatisfied to false and it will be removed later
+					if (currTarget->target == c2->entity)
+
+						currTarget->isSightSatisfied = false;
+
+					// If currTarget is different from the target that needs to be removed, remove the target from the list
+					else {
+
+						delete *it;
+						targets.erase(it);
+					}
+
+					break;
+				}
+				it++;
+			}
 		}
 		else if (c1->colliderType == ColliderType_EnemyAttackRadius && c2->colliderType == ColliderType_PlayerUnit) { // || c2->colliderType == ColliderType_PlayerBuilding
 
+			DynamicEntity* dynEnt = (DynamicEntity*)c2->entity;
+			LOG("NO MORE Enemy Attack Radius %s", dynEnt->GetColorName().data());
+
 			// The Alliance is NO longer within the ATTACK radius
-			isAttackSatisfied = false;
+
+			list<TargetInfo*>::const_iterator it = targets.begin();
+
+			while (it != targets.end()) {
+
+				if ((*it)->target == c2->entity) {
+
+					(*it)->isAttackSatisfied = false;
+					break;
+				}
+				it++;
+			}
 		}
 
 		break;
@@ -313,9 +401,9 @@ bool Grunt::ChangeAnimation()
 	else if (isHitting) {
 
 		// Set the direction of the unit as the orientation towards the attacking target
-		if (target != nullptr) {
+		if (currTarget != nullptr) {
 
-			fPoint orientation = { target->GetPos().x - pos.x, (float)target->GetPos().y - pos.y };
+			fPoint orientation = { currTarget->target->GetPos().x - pos.x, currTarget->target->GetPos().y - pos.y };
 
 			float m = sqrtf(pow(orientation.x, 2.0f) + pow(orientation.y, 2.0f));
 
