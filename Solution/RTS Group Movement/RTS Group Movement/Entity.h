@@ -30,6 +30,20 @@ enum EntitySide
 	EntitySide_MaxSides
 };
 
+class Entity;
+
+struct TargetInfo
+{
+	bool isSightSatisfied = false; // if true, sight distance is satisfied
+	bool isAttackSatisfied = false; // if true, attack distance is satisfied
+
+	Entity* target = nullptr;
+
+	// -----
+
+	bool IsTargetPresent() const;
+};
+
 struct EntityInfo; // empty container
 
 class Entity
@@ -59,6 +73,11 @@ public:
 	bool CreateEntityCollider(EntitySide entitySide);
 	void UpdateEntityColliderPos();
 
+	// Attack
+	/// Entity is being attacked
+	void SetIsBeingAttacked(bool isBeingAttacked);
+	bool IsBeingAttacked() const;
+
 public:
 
 	EntityType entityType = EntityType_NoType;
@@ -77,6 +96,9 @@ protected:
 
 	// Collision
 	ColliderGroup* entityCollider = nullptr;
+
+	// Attack
+	bool isBeingAttacked = false;
 };
 
 #endif //__Entity_H__

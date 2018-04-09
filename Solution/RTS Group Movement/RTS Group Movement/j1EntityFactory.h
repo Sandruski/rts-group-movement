@@ -66,6 +66,8 @@ public:
 	// Returns a list with the last selected units (unitsSelected list)
 	list<DynamicEntity*> GetLastUnitsSelected() const;
 
+	bool RemoveUnitFromUnitsSelected(Entity* entity);
+
 	// Updates the selection color of all entities
 	void SetUnitsSelectedColor();
 

@@ -67,14 +67,6 @@ void Grunt::Move(float dt)
 	iPoint mouseTile = App->map->WorldToMap(mousePos.x, mousePos.y);
 	iPoint mouseTilePos = App->map->MapToWorld(mouseTile.x, mouseTile.y);
 
-	// Create colliders
-	if (!isSpawned) {
-
-
-
-		isSpawned = true;
-	}
-
 	// ---------------------------------------------------------------------
 
 	// Is the unit dead?
@@ -102,11 +94,24 @@ void Grunt::Move(float dt)
 	// If currTarget is null, check if there are available targets
 	if (currTarget == nullptr) {
 
-		/// Prioritize a type of target (static or dynamic)
-
 		// If the targets list is not empty, pick the next currTarget
-		if (targets.size() > 0)
-			currTarget = targets.front();
+		if (targets.size() > 0) {
+
+			/// Prioritize a type of target (static or dynamic)
+			list<TargetInfo*>::const_iterator it = targets.begin();
+
+			while (it != targets.end()) {
+
+				if (!(*it)->target->IsBeingAttacked()) {
+
+					currTarget = targets.front();
+					break;
+				}
+				// If it is the last target and other units were being attacked, attack it!
+
+				it++;
+			}
+		}
 
 		// If currTarget is not null, attack them
 		if (currTarget != nullptr) {

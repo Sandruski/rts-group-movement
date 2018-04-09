@@ -221,6 +221,7 @@ void Goal_AttackTarget::Activate()
 		AddSubgoal(new Goal_MoveToPosition(owner, targetTile));
 	}
 
+	targetInfo->target->SetIsBeingAttacked(true);
 	owner->SetUnitState(UnitState_AttackTarget);
 }
 
@@ -252,6 +253,8 @@ void Goal_AttackTarget::Terminate()
 	RemoveAllSubgoals();
 
 	// -----
+
+	targetInfo->target->SetIsBeingAttacked(false);
 
 	// If the target has died or the sight distance is not satisfied, remove the target
 	if (!targetInfo->IsTargetPresent() || !targetInfo->isSightSatisfied)

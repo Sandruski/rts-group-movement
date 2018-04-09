@@ -442,19 +442,8 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 }
 
 // Attack
-/// Unit is being attacked
-void DynamicEntity::SetIsBeingAttacked(bool isBeingAttacked) 
-{
-	this->isBeingAttacked = isBeingAttacked;
-}
-
-bool DynamicEntity::IsBeingAttacked() const 
-{
-	return isBeingAttacked;
-}
-
 /// Unit attacks a target
-Entity* DynamicEntity::GetCurrTarget() const 
+Entity* DynamicEntity::GetCurrTarget() const
 {
 	if (currTarget != nullptr)
 		return currTarget->target;
@@ -462,7 +451,7 @@ Entity* DynamicEntity::GetCurrTarget() const
 		return nullptr;
 }
 
-bool DynamicEntity::SetCurrTarget(Entity* target) 
+bool DynamicEntity::SetCurrTarget(Entity* target)
 {
 	if (target == nullptr)
 		return false;
@@ -486,7 +475,7 @@ bool DynamicEntity::SetCurrTarget(Entity* target)
 	targets.push_back(&targetInfo);
 }
 
-bool DynamicEntity::RemoveTarget(Entity* target) 
+bool DynamicEntity::RemoveTarget(Entity* target)
 {
 	if (target == nullptr)
 		return false;
@@ -502,7 +491,7 @@ bool DynamicEntity::RemoveTarget(Entity* target)
 	list<TargetInfo*>::const_iterator it = targets.begin();
 
 	while (it != targets.end()) {
-	
+
 		if ((*it)->target == target) {
 
 			delete *it;
