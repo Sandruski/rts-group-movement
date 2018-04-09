@@ -47,6 +47,7 @@ public:
 	bool CleanUp();
 	void DebugDraw();
 
+	bool ProcessCollision(ColliderGroup* I, ColliderGroup* J);
 	void HandleTriggers();
 
 	// ColliderGroups
@@ -80,15 +81,22 @@ struct ColliderGroup
 	~ColliderGroup();
 
 	bool IsColliderInGroup(Collider* collider);
+
+	void CreateOffsetCollider();
+	Collider* GetCollider(bool left = false, bool right = false, bool top = false, bool bottom = false);
+
 	void RemoveCollider(Collider* collider);
 	bool RemoveAllColliders();
 
 	// -----
 
 	ColliderType colliderType = ColliderType_NoType;
-	bool isRemove = false;
-	bool isTrigger = false;
-	bool isValid = true;
+
+	bool isTrigger = false; // the collider behaves as a trigger
+	bool isRemove = false; // the collider will be removed
+	bool isValid = true; // the collider is not valid anymore
+
+	Collider* offsetCollider = nullptr;
 	vector<Collider*> colliders;
 	list<ColliderGroup*> collidingGroups;
 	list<ColliderGroup*> lastCollidingGroups;
@@ -117,6 +125,7 @@ struct Collider
 	// -----
 
 	SDL_Rect colliderRect = { 0,0,0,0 };
+
 	ColliderGroup* colliderGroup = nullptr; // parent
 };
 

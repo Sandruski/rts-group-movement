@@ -109,4 +109,19 @@ bool Entity::CreateEntityCollider(EntitySide entitySide)
 void Entity::UpdateEntityColliderPos() 
 {
 	entityCollider->colliders.front()->SetPos(pos.x, pos.y);
+
+	// 2. Create/Update the offset collider
+	entityCollider->CreateOffsetCollider();
+}
+
+// Attack
+/// Entity is being attacked
+void Entity::SetIsBeingAttacked(bool isBeingAttacked)
+{
+	this->isBeingAttacked = isBeingAttacked;
+}
+
+bool Entity::IsBeingAttacked() const
+{
+	return isBeingAttacked;
 }

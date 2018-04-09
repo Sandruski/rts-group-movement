@@ -96,18 +96,6 @@ struct UnitInfo
 	float currSpeed = 0.0f;
 };
 
-struct TargetInfo 
-{
-	bool isSightSatisfied = false; // if true, sight distance is satisfied
-	bool isAttackSatisfied = false; // if true, attack distance is satisfied
-
-	Entity* target = nullptr;
-
-	// -----
-
-	bool IsTargetPresent() const;
-};
-
 class DynamicEntity :public Entity
 {
 public:
@@ -166,10 +154,6 @@ public:
 	void UpdateRhombusColliderPos(ColliderGroup* collider, uint radius);
 
 	// Attack
-	/// Unit is being attacked
-	void SetIsBeingAttacked(bool isBeingAttacked);
-	bool IsBeingAttacked() const;
-
 	/// Unit attacks a target
 	Entity* GetCurrTarget() const;
 	bool SetCurrTarget(Entity* target);
@@ -217,12 +201,10 @@ protected:
 
 	//bool isAttacking = false; // if true, the unit is attacking their target (chasing or hitting them) -> Useful to decide whether attack a unit or not
 	bool isHitting = false; // if true, the unit is hitting their target -> Useful to change animation
-	bool isBeingAttacked = false;
 
 	// Collision
 	ColliderGroup* sightRadiusCollider = nullptr;
 	ColliderGroup* attackRadiusCollider = nullptr;
-	bool isSpawned = false; // the colliders must start working once the unit has been spawned
 	iPoint lastColliderUpdateTile = { -1,-1 };
 
 	// Death

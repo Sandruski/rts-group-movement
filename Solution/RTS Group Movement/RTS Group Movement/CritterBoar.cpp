@@ -44,6 +44,10 @@ CritterBoar::CritterBoar(fPoint pos, iPoint size, int currLife, uint maxLife, co
 	brain->RemoveAllSubgoals();
 
 	brain->AddGoal_Wander(5);
+
+	// Collisions
+	CreateEntityCollider(EntitySide_NoSide);
+	entityCollider->isTrigger = true;
 }
 
 void CritterBoar::Move(float dt)
@@ -54,16 +58,6 @@ void CritterBoar::Move(float dt)
 	iPoint mousePos = App->render->ScreenToWorld(x, y);
 	iPoint mouseTile = App->map->WorldToMap(mousePos.x, mousePos.y);
 	iPoint mouseTilePos = App->map->MapToWorld(mouseTile.x, mouseTile.y);
-
-	// Create colliders
-	if (!isSpawned) {
-
-		// Collisions
-		CreateEntityCollider(EntitySide_NoSide);
-		entityCollider->isTrigger = true;
-
-		isSpawned = true;
-	}
 
 	// ---------------------------------------------------------------------
 

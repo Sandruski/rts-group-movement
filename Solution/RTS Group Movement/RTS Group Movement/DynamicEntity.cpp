@@ -293,7 +293,6 @@ ColliderGroup* DynamicEntity::GetAttackRadiusCollider() const
 
 ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, uint radius)
 {
-	/*
 	vector<Collider*> colliders;
 
 	// Perform a BFS
@@ -308,17 +307,20 @@ ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, u
 		curr = queue.front();
 		queue.pop();
 
-		iPoint neighbors[8];
+		iPoint neighbors[4];
 		neighbors[0].create(curr.x + 1, curr.y + 0);
 		neighbors[1].create(curr.x + 0, curr.y + 1);
 		neighbors[2].create(curr.x - 1, curr.y + 0);
 		neighbors[3].create(curr.x + 0, curr.y - 1);
+
+		/*
 		neighbors[4].create(curr.x + 1, curr.y + 1);
 		neighbors[5].create(curr.x + 1, curr.y - 1);
 		neighbors[6].create(curr.x - 1, curr.y + 1);
 		neighbors[7].create(curr.x - 1, curr.y - 1);
+		*/
 
-		for (uint i = 0; i < 8; ++i)
+		for (uint i = 0; i < 4; ++i)
 		{
 			if (neighbors[i].DistanceManhattan(singleUnit->currTile) < radius) {
 
@@ -336,8 +338,8 @@ ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, u
 			}
 		}
 	}
-	*/
 
+	/*
 	vector<Collider*> colliders;
 	iPoint currTilePos = App->map->MapToWorld(singleUnit->currTile.x, singleUnit->currTile.y);
 
@@ -353,14 +355,16 @@ ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, u
 			colliders.push_back(App->collision->CreateCollider(rect));
 		}
 	}
+	*/
 
 	return App->collision->CreateAndAddColliderGroup(colliders, colliderType, App->entities, this);
 }
 
 void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radius)
 {
-	/*
 	collider->RemoveAllColliders();
+
+	// 1. Create the small colliders
 
 	// Perform a BFS
 	queue<iPoint> queue;
@@ -374,17 +378,20 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 		curr = queue.front();
 		queue.pop();
 
-		iPoint neighbors[8];
+		iPoint neighbors[4];
 		neighbors[0].create(curr.x + 1, curr.y + 0);
 		neighbors[1].create(curr.x + 0, curr.y + 1);
 		neighbors[2].create(curr.x - 1, curr.y + 0);
 		neighbors[3].create(curr.x + 0, curr.y - 1);
+
+		/*
 		neighbors[4].create(curr.x + 1, curr.y + 1);
 		neighbors[5].create(curr.x + 1, curr.y - 1);
 		neighbors[6].create(curr.x - 1, curr.y + 1);
 		neighbors[7].create(curr.x - 1, curr.y - 1);
+		*/
 
-		for (uint i = 0; i < 8; ++i)
+		for (uint i = 0; i < 4; ++i)
 		{
 			if (navgraph->IsWalkable(neighbors[i]) && neighbors[i].DistanceManhattan(singleUnit->currTile) < radius) {
 
@@ -402,8 +409,11 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 			}
 		}
 	}
-	*/
 
+	// 2. Create/Update the offset collider
+	collider->CreateOffsetCollider();
+
+	/*
 	vector<Collider*>::const_iterator it = collider->colliders.begin();
 
 	while (it != collider->colliders.end()) {
@@ -428,22 +438,12 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 			}
 		}
 	}
+	*/
 }
 
 // Attack
-/// Unit is being attacked
-void DynamicEntity::SetIsBeingAttacked(bool isBeingAttacked) 
-{
-	this->isBeingAttacked = isBeingAttacked;
-}
-
-bool DynamicEntity::IsBeingAttacked() const 
-{
-	return isBeingAttacked;
-}
-
 /// Unit attacks a target
-Entity* DynamicEntity::GetCurrTarget() const 
+Entity* DynamicEntity::GetCurrTarget() const
 {
 	if (currTarget != nullptr)
 		return currTarget->target;
@@ -451,7 +451,7 @@ Entity* DynamicEntity::GetCurrTarget() const
 		return nullptr;
 }
 
-bool DynamicEntity::SetCurrTarget(Entity* target) 
+bool DynamicEntity::SetCurrTarget(Entity* target)
 {
 	if (target == nullptr)
 		return false;
@@ -475,7 +475,7 @@ bool DynamicEntity::SetCurrTarget(Entity* target)
 	targets.push_back(&targetInfo);
 }
 
-bool DynamicEntity::RemoveTarget(Entity* target) 
+bool DynamicEntity::RemoveTarget(Entity* target)
 {
 	if (target == nullptr)
 		return false;
@@ -491,7 +491,7 @@ bool DynamicEntity::RemoveTarget(Entity* target)
 	list<TargetInfo*>::const_iterator it = targets.begin();
 
 	while (it != targets.end()) {
-	
+
 		if ((*it)->target == target) {
 
 			delete *it;

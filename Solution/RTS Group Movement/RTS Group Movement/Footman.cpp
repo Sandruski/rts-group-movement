@@ -48,6 +48,14 @@ Footman::Footman(fPoint pos, iPoint size, int currLife, uint maxLife, const Unit
 
 	// Initialize the goals
 	brain->RemoveAllSubgoals();
+
+	// Collisions
+	CreateEntityCollider(EntitySide_Player);
+	sightRadiusCollider = CreateRhombusCollider(ColliderType_PlayerSightRadius, unitInfo.sightRadius);
+	attackRadiusCollider = CreateRhombusCollider(ColliderType_PlayerAttackRadius, unitInfo.attackRadius);
+	entityCollider->isTrigger = true;
+	sightRadiusCollider->isTrigger = true;
+	attackRadiusCollider->isTrigger = true;
 }
 
 void Footman::Move(float dt)
@@ -59,31 +67,20 @@ void Footman::Move(float dt)
 	iPoint mouseTile = App->map->WorldToMap(mousePos.x, mousePos.y);
 	iPoint mouseTilePos = App->map->MapToWorld(mouseTile.x, mouseTile.y);
 
-	// Create colliders
-	if (!isSpawned) {
-
-		// Collisions
-		CreateEntityCollider(EntitySide_Player);
-		sightRadiusCollider = CreateRhombusCollider(ColliderType_PlayerSightRadius, unitInfo.sightRadius);
-		attackRadiusCollider = CreateRhombusCollider(ColliderType_PlayerAttackRadius, unitInfo.attackRadius);
-		entityCollider->isTrigger = true;
-		sightRadiusCollider->isTrigger = true;
-		attackRadiusCollider->isTrigger = true;
-
-		isSpawned = true;
-	}
-
 	// ---------------------------------------------------------------------
 
 	// Is the unit dead?
 	/// The unit must fit the tile (it is more attractive for the player)
 	if (singleUnit != nullptr) {
 
-		if (currLife <= 0 
+		if (currLife <= 0
 			&& unitState != UnitState_Die 
 			&& singleUnit->IsFittingTile()) {
 
 			isDead = true;
+
+			// Remove entity from the unitsSelected list
+			App->entities->RemoveUnitFromUnitsSelected(this);
 
 			// Remove Movement (so other units can walk above them)
 			if (navgraph != nullptr)

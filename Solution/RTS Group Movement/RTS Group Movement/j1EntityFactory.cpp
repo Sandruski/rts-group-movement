@@ -923,6 +923,21 @@ list<DynamicEntity*> j1EntityFactory::GetLastUnitsSelected() const
 	return unitsSelected;
 }
 
+bool j1EntityFactory::RemoveUnitFromUnitsSelected(Entity* entity) 
+{
+	bool ret = false;
+
+	list<DynamicEntity*>::const_iterator it = find(unitsSelected.begin(), unitsSelected.end(), entity);
+
+	if (it != unitsSelected.end()) {
+
+		unitsSelected.remove(*it);
+		ret = true;
+	}
+
+	return ret;
+}
+
 // Updates the selection color of all entities
 void j1EntityFactory::SetUnitsSelectedColor()
 {
