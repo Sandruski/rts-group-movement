@@ -125,8 +125,8 @@ bool j1Collision::Update(float dt)
 
 	bool ret = true;
 
-	Collider* c1 = nullptr;
-	Collider* c2 = nullptr;
+	Collider* offsetCollider1 = nullptr;
+	Collider* offsetCollider2 = nullptr;
 
 	list<ColliderGroup*>::const_iterator I = colliderGroups.begin();
 
@@ -137,6 +137,8 @@ bool j1Collision::Update(float dt)
 			I++;
 			continue;
 		}
+
+		offsetCollider1 = (*I)->offsetCollider;
 
 		list<ColliderGroup*>::const_iterator J = colliderGroups.begin();
 
@@ -150,74 +152,14 @@ bool j1Collision::Update(float dt)
 				continue;
 			}
 
-			for (uint i = 0; i < (*I)->colliders.size(); ++i) {
+			offsetCollider2 = (*J)->offsetCollider;
 
-				c1 = (*I)->colliders[i];
+			if (offsetCollider1 != nullptr && offsetCollider2 != nullptr) {
 
-				bool isCollision = false;
+				// Check if there is a collision between the offsetColliders
+				if (offsetCollider1->CheckCollision(offsetCollider2->colliderRect) && offsetCollider1->colliderGroup->callback != nullptr)
 
-				for (uint j = 0; j < (*J)->colliders.size(); ++j) {
-
-					c2 = (*J)->colliders[j];
-
-					// Check for the collision
-					if (c1->CheckCollision(c2->colliderRect)) {
-
-						if (c1->colliderGroup->callback != nullptr) {
-
-							if (c1->colliderGroup->isTrigger) {
-
-								if (find(c1->colliderGroup->collidingGroups.begin(), c1->colliderGroup->collidingGroups.end(), c2->colliderGroup) == c1->colliderGroup->collidingGroups.end()) {
-
-									c1->colliderGroup->collidingGroups.push_back(c2->colliderGroup);
-									c1->colliderGroup->lastCollidingGroups.push_back(c2->colliderGroup);
-
-									// Collision!
-									c1->colliderGroup->callback->OnCollision(c1->colliderGroup, c2->colliderGroup, CollisionState_OnEnter);
-									isCollision = true;
-								}
-
-								else {
-
-									c1->colliderGroup->lastCollidingGroups.push_back(c2->colliderGroup);
-									isCollision = true;
-								}
-							}
-							else
-								c1->colliderGroup->callback->OnCollision(c1->colliderGroup, c2->colliderGroup, CollisionState_OnEnter);
-						}
-
-						/*
-						if (matrix[c2->colliderGroup->colliderType][c1->colliderGroup->colliderType] && c2->colliderGroup->callback != nullptr) {
-
-							if (c2->colliderGroup->isTrigger) {
-
-								if (find(c2->colliderGroup->collidingGroups.begin(), c2->colliderGroup->collidingGroups.end(), c1->colliderGroup) == c2->colliderGroup->collidingGroups.end()) {
-
-									c2->colliderGroup->collidingGroups.push_back(c1->colliderGroup);
-									c2->colliderGroup->lastCollidingGroups.push_back(c1->colliderGroup);
-
-									// Collision!
-									c2->colliderGroup->callback->OnCollision(c2->colliderGroup, c1->colliderGroup, CollisionState_OnEnter);
-									isCollision = true;
-								}
-								else {
-									c2->colliderGroup->lastCollidingGroups.push_back(c1->colliderGroup);
-									isCollision = true;
-								}
-							}
-							else
-								c2->colliderGroup->callback->OnCollision(c2->colliderGroup, c1->colliderGroup, CollisionState_OnEnter);
-						}
-						*/
-					}
-
-					if (isCollision)
-						break;
-				}
-
-				if (isCollision)
-					break;
+					ProcessCollision(offsetCollider1->colliderGroup, offsetCollider2->colliderGroup);
 			}
 			J++;
 		}
@@ -225,6 +167,80 @@ bool j1Collision::Update(float dt)
 	}
 	
 	HandleTriggers();
+
+	return ret;
+}
+
+bool j1Collision::ProcessCollision(ColliderGroup* I, ColliderGroup* J) 
+{
+	bool ret = false;
+
+	Collider* c1 = nullptr;
+	Collider* c2 = nullptr;
+
+	for (uint i = 0; i < I->colliders.size(); ++i) {
+
+		c1 = I->colliders[i];
+
+		for (uint j = 0; j < J->colliders.size(); ++j) {
+
+			c2 = J->colliders[j];
+
+			// Check for the collision
+			if (c1->CheckCollision(c2->colliderRect) && c1->colliderGroup->callback != nullptr) {
+
+				if (c1->colliderGroup->isTrigger) {
+
+					if (find(c1->colliderGroup->collidingGroups.begin(), c1->colliderGroup->collidingGroups.end(), c2->colliderGroup) == c1->colliderGroup->collidingGroups.end()) {
+
+						c1->colliderGroup->collidingGroups.push_back(c2->colliderGroup);
+						c1->colliderGroup->lastCollidingGroups.push_back(c2->colliderGroup);
+
+						// Collision!
+						c1->colliderGroup->callback->OnCollision(c1->colliderGroup, c2->colliderGroup, CollisionState_OnEnter);
+						ret = true;
+					}
+					else {
+
+						c1->colliderGroup->lastCollidingGroups.push_back(c2->colliderGroup);
+						ret = true;
+					}
+				}
+				else
+					c1->colliderGroup->callback->OnCollision(c1->colliderGroup, c2->colliderGroup, CollisionState_OnEnter);
+
+				/*
+				if (matrix[c2->colliderGroup->colliderType][c1->colliderGroup->colliderType] && c2->colliderGroup->callback != nullptr) {
+
+				if (c2->colliderGroup->isTrigger) {
+
+				if (find(c2->colliderGroup->collidingGroups.begin(), c2->colliderGroup->collidingGroups.end(), c1->colliderGroup) == c2->colliderGroup->collidingGroups.end()) {
+
+				c2->colliderGroup->collidingGroups.push_back(c1->colliderGroup);
+				c2->colliderGroup->lastCollidingGroups.push_back(c1->colliderGroup);
+
+				// Collision!
+				c2->colliderGroup->callback->OnCollision(c2->colliderGroup, c1->colliderGroup, CollisionState_OnEnter);
+				isCollision = true;
+				}
+				else {
+				c2->colliderGroup->lastCollidingGroups.push_back(c1->colliderGroup);
+				isCollision = true;
+				}
+				}
+				else
+				c2->colliderGroup->callback->OnCollision(c2->colliderGroup, c1->colliderGroup, CollisionState_OnEnter);
+				}
+				*/
+			}
+
+			if (ret)
+				break;
+		}
+
+		if (ret)
+			break;
+	}
 
 	return ret;
 }
@@ -450,6 +466,7 @@ void ColliderGroup::CreateOffsetCollider()
 	colliderRect.h = (bottom->GetPos().y + App->map->data.tile_height) - top->GetPos().y;
 
 	offsetCollider = new Collider(colliderRect);
+	offsetCollider->SetColliderGroup(this);
 }
 
 Collider* ColliderGroup::GetCollider(bool left, bool right, bool top, bool bottom) 

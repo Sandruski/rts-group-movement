@@ -48,6 +48,14 @@ Grunt::Grunt(fPoint pos, iPoint size, int currLife, uint maxLife, const UnitInfo
 
 	// Initialize the goals
 	brain->RemoveAllSubgoals();
+
+	// Collisions
+	CreateEntityCollider(EntitySide_Enemy);
+	sightRadiusCollider = CreateRhombusCollider(ColliderType_EnemySightRadius, unitInfo.sightRadius);
+	attackRadiusCollider = CreateRhombusCollider(ColliderType_EnemyAttackRadius, unitInfo.attackRadius);
+	entityCollider->isTrigger = true;
+	sightRadiusCollider->isTrigger = true;
+	attackRadiusCollider->isTrigger = true;
 }
 
 void Grunt::Move(float dt)
@@ -62,13 +70,7 @@ void Grunt::Move(float dt)
 	// Create colliders
 	if (!isSpawned) {
 
-		// Collisions
-		CreateEntityCollider(EntitySide_Enemy);
-		sightRadiusCollider = CreateRhombusCollider(ColliderType_EnemySightRadius, unitInfo.sightRadius);
-		attackRadiusCollider = CreateRhombusCollider(ColliderType_EnemyAttackRadius, unitInfo.attackRadius);
-		entityCollider->isTrigger = true;
-		sightRadiusCollider->isTrigger = true;
-		attackRadiusCollider->isTrigger = true;
+
 
 		isSpawned = true;
 	}

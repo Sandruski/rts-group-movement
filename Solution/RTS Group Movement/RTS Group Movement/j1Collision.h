@@ -47,6 +47,7 @@ public:
 	bool CleanUp();
 	void DebugDraw();
 
+	bool ProcessCollision(ColliderGroup* I, ColliderGroup* J);
 	void HandleTriggers();
 
 	// ColliderGroups
