@@ -109,4 +109,7 @@ bool Entity::CreateEntityCollider(EntitySide entitySide)
 void Entity::UpdateEntityColliderPos() 
 {
 	entityCollider->colliders.front()->SetPos(pos.x, pos.y);
+
+	// 2. Create/Update the offset collider
+	entityCollider->CreateOffsetCollider();
 }
