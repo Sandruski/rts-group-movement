@@ -94,24 +94,8 @@ void Grunt::Move(float dt)
 	// If currTarget is null, check if there are available targets
 	if (currTarget == nullptr) {
 
-		// If the targets list is not empty, pick the next currTarget
-		if (targets.size() > 0) {
-
-			/// Prioritize a type of target (static or dynamic)
-			list<TargetInfo*>::const_iterator it = targets.begin();
-
-			while (it != targets.end()) {
-
-				if (!(*it)->target->IsBeingAttacked()) {
-
-					currTarget = targets.front();
-					break;
-				}
-				// If it is the last target and other units were being attacked, attack it!
-
-				it++;
-			}
-		}
+		/// Prioritize a type of target (static or dynamic)
+		currTarget = ChooseTargetToAttack();
 
 		// If currTarget is not null, attack them
 		if (currTarget != nullptr) {
@@ -123,6 +107,8 @@ void Grunt::Move(float dt)
 			brain->AddGoal_AttackTarget(currTarget);
 		}
 	}
+
+	// TODO: change target if another target appears (targets.size > 1) and the target that the unit is currently attacking is also being attacked by another unit
 
 	// ---------------------------------------------------------------------
 

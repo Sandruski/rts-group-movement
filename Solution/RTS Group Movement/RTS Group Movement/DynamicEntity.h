@@ -159,6 +159,8 @@ public:
 	bool SetCurrTarget(Entity* target);
 	bool RemoveTarget(Entity* target);
 
+	TargetInfo* ChooseTargetToAttack() const;
+
 	void SetHitting(bool isHitting);
 	bool IsHitting() const;
 

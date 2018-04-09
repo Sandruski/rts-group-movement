@@ -503,6 +503,35 @@ bool DynamicEntity::RemoveTarget(Entity* target)
 	}
 }
 
+TargetInfo* DynamicEntity::ChooseTargetToAttack() const 
+{
+	// 1. If there are no targets
+	if (targets.size() == 0)
+
+		return nullptr;
+
+	// 2. If there is only one target
+	else if (targets.size() == 1)
+
+		return targets.front();
+
+	// 3. If there are more targets
+	list<TargetInfo*>::const_iterator it = targets.begin();
+
+	while (it != targets.end()) {
+
+		// 3a. If a target is not being attacked, attack it
+		if (!(*it)->target->IsBeingAttacked())
+
+			return *it;
+
+		it++;
+	}
+
+	// 3b. If all the targets are being attacked, return the first target seen
+	return targets.front();
+}
+
 void DynamicEntity::SetHitting(bool isHitting) 
 {
 	this->isHitting = isHitting;
