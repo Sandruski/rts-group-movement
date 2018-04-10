@@ -259,14 +259,19 @@ void Goal_AttackTarget::Terminate()
 
 	targetInfo->target->RemoveAttackingUnit(owner);
 
-	// If the target has died or the sight distance is not satisfied, remove the target
-	if (!targetInfo->IsTargetPresent() || !targetInfo->isSightSatisfied)
+	// If the sight distance is not satisfied, remove the target from the entity targets list
+	if (!targetInfo->isSightSatisfied)
 
 		owner->RemoveTarget(targetInfo->target);
 
-	if (!targetInfo->IsTargetPresent())
+	// If the target has died, remove the target from all the entities targets lists
+	if (!targetInfo->IsTargetPresent()) {
 
-		App->entities->RemoveEntityFromTargetLists(targetInfo->target);
+		App->entities->InvalidateTarget(targetInfo->target);
+
+		// Then, remove the target
+		owner->RemoveTarget(targetInfo->target);
+	}
 
 	targetInfo = nullptr;
 

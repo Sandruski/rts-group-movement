@@ -156,6 +156,7 @@ public:
 	// Attack
 	/// Unit attacks a target
 	bool IsEntityInTargetsList(Entity* entity) const;
+	bool InvalidateTarget(Entity* entity);
 
 	Entity* GetCurrTarget() const;
 	bool SetCurrTarget(Entity* target);

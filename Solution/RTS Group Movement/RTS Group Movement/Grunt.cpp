@@ -91,10 +91,8 @@ void Grunt::Move(float dt)
 		brain->AddGoal_MoveToPosition(singleUnit->goal);
 
 	/// GOAL: AttackTarget
-	//Check if there are available targets
-
+	// Check if there are available targets
 	/// Prioritize a type of target (static or dynamic)
-
 	TargetInfo* newTarget = GetTargetWithLessAttackingUnits();
 
 	if (newTarget != nullptr) {
@@ -102,7 +100,7 @@ void Grunt::Move(float dt)
 		// A new target has found, update the attacking target
 		if (currTarget != newTarget) {
 
-			//currTarget = newTarget;
+			currTarget = newTarget;
 
 			list<DynamicEntity*> unit;
 			unit.push_back(this);

@@ -76,7 +76,7 @@ public:
 
 	bool CommandToUnits(list<DynamicEntity*> units, UnitCommand unitCommand = UnitCommand_NoCommand);
 
-	bool RemoveEntityFromTargetLists(Entity* entity);
+	bool InvalidateTarget(Entity* entity);
 
 	bool Save(pugi::xml_node& save) const;
 	bool Load(pugi::xml_node& save);

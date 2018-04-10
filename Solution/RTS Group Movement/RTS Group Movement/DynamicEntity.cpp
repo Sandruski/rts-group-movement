@@ -467,6 +467,31 @@ bool DynamicEntity::IsEntityInTargetsList(Entity* entity) const
 	return false;
 }
 
+bool DynamicEntity::InvalidateTarget(Entity* entity)
+{
+	bool ret = false;
+
+	TargetInfo* targetInfo = nullptr;
+
+	list<TargetInfo*>::const_iterator it = targets.begin();
+
+	while (it != targets.end()) {
+
+		if ((*it)->target == entity)
+			targetInfo = *it;
+
+		it++;
+	}
+
+	if (it != targets.end()) {
+
+		(*it)->target = nullptr;
+		ret = true;
+	}
+
+	return ret;
+}
+
 Entity* DynamicEntity::GetCurrTarget() const
 {
 	if (currTarget != nullptr)
@@ -518,6 +543,8 @@ bool DynamicEntity::RemoveTarget(Entity* target)
 
 		if ((*it)->target == target) {
 
+			(*it)->target = nullptr;
+
 			delete *it;
 			targets.erase(it);
 
@@ -552,7 +579,7 @@ TargetInfo* DynamicEntity::GetTargetWithLessAttackingUnits() const
 	return result;
 }
 
-void DynamicEntity::SetHitting(bool isHitting) 
+void DynamicEntity::SetHitting(bool isHitting)
 {
 	this->isHitting = isHitting;
 }
