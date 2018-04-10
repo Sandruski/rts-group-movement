@@ -8,6 +8,7 @@
 #include "j1Map.h"
 #include "j1PathManager.h"
 #include "j1Movement.h"
+#include "j1EntityFactory.h"
 
 #include "Brofiler\Brofiler.h"
 
@@ -221,7 +222,9 @@ void Goal_AttackTarget::Activate()
 		AddSubgoal(new Goal_MoveToPosition(owner, targetTile));
 	}
 
-	targetInfo->target->SetIsBeingAttacked(true);
+	/// The target is being attacked by this unit
+	targetInfo->target->AddAttackingUnit(owner);
+
 	owner->SetUnitState(UnitState_AttackTarget);
 }
 
@@ -254,12 +257,16 @@ void Goal_AttackTarget::Terminate()
 
 	// -----
 
-	targetInfo->target->SetIsBeingAttacked(false);
+	targetInfo->target->RemoveAttackingUnit(owner);
 
 	// If the target has died or the sight distance is not satisfied, remove the target
 	if (!targetInfo->IsTargetPresent() || !targetInfo->isSightSatisfied)
 
 		owner->RemoveTarget(targetInfo->target);
+
+	if (!targetInfo->IsTargetPresent())
+
+		App->entities->RemoveEntityFromTargetLists(targetInfo->target);
 
 	targetInfo = nullptr;
 

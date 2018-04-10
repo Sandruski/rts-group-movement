@@ -247,6 +247,9 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 
 	case MovementState_WaitForPath:
 
+		// The unit is still
+		singleUnit->unit->SetIsStill(true);
+
 		// The goal of a unit cannot be the goal of another unit
 		if (!IsValidTile(singleUnit, singleUnit->goal, false, false, true))
 
@@ -329,6 +332,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 
 		if (singleUnit->coll != CollisionType_NoCollision) {
 
+			// The unit is still
 			singleUnit->unit->SetIsStill(true);
 
 			// waitUnit doesn't exist
@@ -661,6 +665,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 
 		if (singleUnit->wait) {
 
+			// The unit is still
 			singleUnit->unit->SetIsStill(true);
 			break;
 		}

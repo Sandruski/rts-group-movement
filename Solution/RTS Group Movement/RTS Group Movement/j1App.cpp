@@ -45,10 +45,10 @@ j1App::j1App(int argc, char* args[]) : argc(argc), args(args)
 	AddModule(tex);
 	AddModule(map);
 	AddModule(pathfinding);
-	AddModule(pathmanager);
 	AddModule(collision);
 	AddModule(particles);
 	AddModule(movement);
+	AddModule(pathmanager);
 	AddModule(entities);
 
 	AddModule(scene);

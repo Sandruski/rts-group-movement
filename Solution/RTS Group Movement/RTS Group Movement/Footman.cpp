@@ -79,18 +79,12 @@ void Footman::Move(float dt)
 
 			isDead = true;
 
-			// Remove entity from the unitsSelected list
+			// Remove the entity from the unitsSelected list
 			App->entities->RemoveUnitFromUnitsSelected(this);
 
+			// Remove the entity from all of the unitsAttacking lists
+
 			// Remove Movement (so other units can walk above them)
-			if (navgraph != nullptr)
-				delete navgraph;
-			navgraph = nullptr;
-
-			if (pathPlanner != nullptr)
-				delete pathPlanner;
-			pathPlanner = nullptr;
-
 			if (singleUnit != nullptr)
 				delete singleUnit;
 			singleUnit = nullptr;

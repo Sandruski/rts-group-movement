@@ -116,7 +116,7 @@ bool j1Scene::PreUpdate()
 	// 1: spawn a Footman with priority 1
 	unitInfo.sightRadius = 6;
 	unitInfo.attackRadius = 3;
-	unitInfo.maxSpeed = 120.0f;
+	unitInfo.maxSpeed = 80.0f;
 
 	if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN) {
 

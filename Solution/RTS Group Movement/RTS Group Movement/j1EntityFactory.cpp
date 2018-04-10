@@ -1001,6 +1001,27 @@ bool j1EntityFactory::CommandToUnits(list<DynamicEntity*> units, UnitCommand uni
 	return ret;
 }
 
+bool j1EntityFactory::RemoveEntityFromTargetLists(Entity* entity)
+{
+	bool ret = false;
+
+	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
+
+	while (it != activeDynamicEntities.end()) {
+
+		/*
+		if ((*it)->IsEntityInTargetsList(entity)) {
+
+			(*it)->RemoveTarget(entity);
+			ret = true;
+		}*/
+
+		it++;
+	}
+
+	return ret;
+}
+
 // -------------------------------------------------------------
 // -------------------------------------------------------------
 

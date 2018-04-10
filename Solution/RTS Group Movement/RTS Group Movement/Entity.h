@@ -5,6 +5,7 @@
 #include "Animation.h"
 
 #include <vector>
+#include <list>
 using namespace std;
 
 struct SDL_Texture;
@@ -32,6 +33,8 @@ enum EntitySide
 
 class Entity;
 
+struct EntityInfo; // empty container
+
 struct TargetInfo
 {
 	bool isSightSatisfied = false; // if true, sight distance is satisfied
@@ -43,8 +46,6 @@ struct TargetInfo
 
 	bool IsTargetPresent() const;
 };
-
-struct EntityInfo; // empty container
 
 class Entity
 {
@@ -74,9 +75,10 @@ public:
 	void UpdateEntityColliderPos();
 
 	// Attack
-	/// Entity is being attacked
-	void SetIsBeingAttacked(bool isBeingAttacked);
-	bool IsBeingAttacked() const;
+	/// Entity is being attacked by units
+	bool AddAttackingUnit(Entity* entity);
+	bool RemoveAttackingUnit(Entity* entity);
+	uint GetAttackingUnitsSize() const;
 
 public:
 
@@ -98,7 +100,7 @@ protected:
 	ColliderGroup* entityCollider = nullptr;
 
 	// Attack
-	bool isBeingAttacked = false;
+	list<Entity*> unitsAttacking;
 };
 
 #endif //__Entity_H__

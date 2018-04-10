@@ -31,7 +31,8 @@ enum CollisionState {
 	CollisionState_OnExit
 };
 
-struct Entity;
+class Entity;
+
 struct Collider;
 struct ColliderGroup;
 

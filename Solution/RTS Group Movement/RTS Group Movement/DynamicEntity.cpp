@@ -42,7 +42,16 @@ DynamicEntity::~DynamicEntity()
 {
 	animation = nullptr;
 
-	// Remove goals
+	// Remove Movement
+	if (navgraph != nullptr)
+		delete navgraph;
+	navgraph = nullptr;
+
+	if (pathPlanner != nullptr)
+		delete pathPlanner;
+	pathPlanner = nullptr;
+
+	// Remove Goals
 	if (brain != nullptr)
 		delete brain;
 	brain = nullptr;
@@ -443,6 +452,21 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 
 // Attack
 /// Unit attacks a target
+bool DynamicEntity::IsEntityInTargetsList(Entity* entity) const
+{
+	list<TargetInfo*>::const_iterator it = targets.begin();
+
+	while (it != targets.end()) {
+	
+		if ((*it)->target == entity)
+			return true;
+
+		it++;
+	}
+
+	return false;
+}
+
 Entity* DynamicEntity::GetCurrTarget() const
 {
 	if (currTarget != nullptr)
@@ -503,33 +527,29 @@ bool DynamicEntity::RemoveTarget(Entity* target)
 	}
 }
 
-TargetInfo* DynamicEntity::ChooseTargetToAttack() const 
+TargetInfo* DynamicEntity::GetTargetWithLessAttackingUnits() const 
 {
-	// 1. If there are no targets
+	// If there are no targets, return null
 	if (targets.size() == 0)
-
 		return nullptr;
 
-	// 2. If there is only one target
-	else if (targets.size() == 1)
+	// Else, check out the available targets
+	TargetInfo* result = targets.front();
 
-		return targets.front();
-
-	// 3. If there are more targets
 	list<TargetInfo*>::const_iterator it = targets.begin();
+	it++;
 
 	while (it != targets.end()) {
 
-		// 3a. If a target is not being attacked, attack it
-		if (!(*it)->target->IsBeingAttacked())
+		// Pick the target with the less units attacking them
+		if (result->target->GetAttackingUnitsSize() > (*it)->target->GetAttackingUnitsSize())
 
-			return *it;
+			result = *it;
 
 		it++;
 	}
 
-	// 3b. If all the targets are being attacked, return the first target seen
-	return targets.front();
+	return result;
 }
 
 void DynamicEntity::SetHitting(bool isHitting) 

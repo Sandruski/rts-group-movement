@@ -115,13 +115,34 @@ void Entity::UpdateEntityColliderPos()
 }
 
 // Attack
-/// Entity is being attacked
-void Entity::SetIsBeingAttacked(bool isBeingAttacked)
+/// Entity is being attacked by units
+bool Entity::AddAttackingUnit(Entity* entity)
 {
-	this->isBeingAttacked = isBeingAttacked;
+	bool ret = false;
+
+	/*
+	if (find(unitsAttacking.begin(), unitsAttacking.end(), entity) == unitsAttacking.end()) {
+		unitsAttacking.push_back(entity);
+		ret = true;
+	}*/
+
+	return ret;
 }
 
-bool Entity::IsBeingAttacked() const
+bool Entity::RemoveAttackingUnit(Entity* entity) 
 {
-	return isBeingAttacked;
+	bool ret = false;
+
+	/*
+	if (find(unitsAttacking.begin(), unitsAttacking.end(), entity) != unitsAttacking.end()) {
+		unitsAttacking.remove(entity);
+		ret = true;
+	}*/
+
+	return ret;
+}
+
+uint Entity::GetAttackingUnitsSize() const 
+{
+	return unitsAttacking.size();
 }
