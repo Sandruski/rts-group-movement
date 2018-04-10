@@ -120,11 +120,10 @@ bool Entity::AddAttackingUnit(Entity* entity)
 {
 	bool ret = false;
 
-	/*
 	if (find(unitsAttacking.begin(), unitsAttacking.end(), entity) == unitsAttacking.end()) {
 		unitsAttacking.push_back(entity);
 		ret = true;
-	}*/
+	}
 
 	return ret;
 }
@@ -133,11 +132,10 @@ bool Entity::RemoveAttackingUnit(Entity* entity)
 {
 	bool ret = false;
 
-	/*
 	if (find(unitsAttacking.begin(), unitsAttacking.end(), entity) != unitsAttacking.end()) {
 		unitsAttacking.remove(entity);
 		ret = true;
-	}*/
+	}
 
 	return ret;
 }

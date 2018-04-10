@@ -93,7 +93,7 @@ void Grunt::Move(float dt)
 	/// GOAL: AttackTarget
 	// Check if there are available targets
 	/// Prioritize a type of target (static or dynamic)
-	TargetInfo* newTarget = GetTargetWithLessAttackingUnits();
+	TargetInfo* newTarget = GetBestTargetInfo();
 
 	if (newTarget != nullptr) {
 
@@ -101,11 +101,6 @@ void Grunt::Move(float dt)
 		if (currTarget != newTarget) {
 
 			currTarget = newTarget;
-
-			list<DynamicEntity*> unit;
-			unit.push_back(this);
-			App->movement->CreateGroupFromUnits(unit);
-
 			brain->AddGoal_AttackTarget(currTarget);
 		}
 	}
@@ -118,7 +113,7 @@ void Grunt::Move(float dt)
 	UnitStateMachine(dt);
 
 	// Update animations
-	if (!isStill)
+	if (!isStill || isHitting)
 		UpdateAnimationsSpeed(dt);
 
 	ChangeAnimation();
@@ -393,19 +388,22 @@ bool Grunt::ChangeAnimation()
 	// The unit is hitting their target
 	else if (isHitting) {
 
-		// Set the direction of the unit as the orientation towards the attacking target
+		// Set the direction of the unit as the orientation towards the target
 		if (currTarget != nullptr) {
 
-			fPoint orientation = { currTarget->target->GetPos().x - pos.x, currTarget->target->GetPos().y - pos.y };
+			if (!currTarget->isRemoved) {
 
-			float m = sqrtf(pow(orientation.x, 2.0f) + pow(orientation.y, 2.0f));
+				fPoint orientation = { currTarget->target->GetPos().x - pos.x, currTarget->target->GetPos().y - pos.y };
 
-			if (m > 0.0f) {
-				orientation.x /= m;
-				orientation.y /= m;
+				float m = sqrtf(pow(orientation.x, 2.0f) + pow(orientation.y, 2.0f));
+
+				if (m > 0.0f) {
+					orientation.x /= m;
+					orientation.y /= m;
+				}
+
+				SetUnitDirectionByValue(orientation);
 			}
-
-			SetUnitDirectionByValue(orientation);
 		}
 
 		switch (GetUnitDirection()) {

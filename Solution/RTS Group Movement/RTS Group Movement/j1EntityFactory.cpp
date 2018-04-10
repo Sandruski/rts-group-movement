@@ -12,6 +12,7 @@
 #include "j1Map.h"
 #include "j1Pathfinding.h"
 #include "j1Collision.h"
+#include "j1Movement.h"
 
 #include "Entity.h"
 
@@ -779,20 +780,20 @@ Entity* j1EntityFactory::IsEntityOnTile(iPoint tile, EntityType entityType, Enti
 
 		case EntitySide_Player:
 
-			if ((*activeDyn)->entitySide == EntitySide_Player)
+			if ((*toSpawn)->entitySide == EntitySide_Player)
 				if (tile.x == entityTile.x && tile.y == entityTile.y)
-					return (Entity*)(*activeDyn);
+					return (Entity*)(*toSpawn);
 
 		case EntitySide_Enemy:
 
-			if ((*activeDyn)->entitySide == EntitySide_Enemy)
+			if ((*toSpawn)->entitySide == EntitySide_Enemy)
 				if (tile.x == entityTile.x && tile.y == entityTile.y)
-					return (Entity*)(*activeDyn);
+					return (Entity*)(*toSpawn);
 
 		case EntitySide_NoSide:
 
 			if (tile.x == entityTile.x && tile.y == entityTile.y)
-				return (Entity*)(*activeDyn);
+				return (Entity*)(*toSpawn);
 		}
 
 		toSpawn++;
@@ -849,6 +850,13 @@ void j1EntityFactory::SelectEntitiesWithinRectangle(SDL_Rect rectangleRect, Enti
 	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
 
 	while (it != activeDynamicEntities.end()) {
+
+		// The unit cannot be dead
+		if ((*it)->isDead) {
+
+			it++;
+			continue;
+		}
 
 		if (entitySide == EntitySide_NoSide
 			|| (entitySide == EntitySide_Player && (*it)->entitySide == EntitySide_Player)
@@ -931,6 +939,8 @@ bool j1EntityFactory::RemoveUnitFromUnitsSelected(Entity* entity)
 
 	if (it != unitsSelected.end()) {
 
+		(*it)->isSelected = false;
+
 		unitsSelected.remove(*it);
 		ret = true;
 	}
@@ -1001,24 +1011,43 @@ bool j1EntityFactory::CommandToUnits(list<DynamicEntity*> units, UnitCommand uni
 	return ret;
 }
 
-bool j1EntityFactory::InvalidateTarget(Entity* entity)
+void j1EntityFactory::InvalidateAttackEntity(Entity* entity)
 {
-	bool ret = false;
-
 	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
 
 	while (it != activeDynamicEntities.end()) {
 
-		if ((*it)->IsEntityInTargetsList(entity)) {
+		if ((*it)->IsEntityInTargetsList(entity))
 
+			// The dead entity was a target of another entity
 			(*it)->InvalidateTarget(entity);
-			ret = true;
+
+		// The dead entity may be attacking another unit
+		(*it)->RemoveAttackingUnit(entity);
+
+		it++;
+	}
+}
+
+void j1EntityFactory::InvalidateMovementEntity(Entity* entity) 
+{
+	list<DynamicEntity*>::const_iterator it = activeDynamicEntities.begin();
+
+	while (it != activeDynamicEntities.end()) {
+
+		if (!(*it)->isDead) {
+
+			if ((*it)->GetSingleUnit()->waitUnit != nullptr) {
+
+				// The dead entity was the waitUnit of another entity
+				if ((*it)->GetSingleUnit()->waitUnit->unit == entity)
+
+					(*it)->GetSingleUnit()->ResetUnitCollisionParameters();
+			}
 		}
 
 		it++;
 	}
-
-	return ret;
 }
 
 // -------------------------------------------------------------

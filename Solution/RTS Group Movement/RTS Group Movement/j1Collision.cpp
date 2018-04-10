@@ -449,6 +449,9 @@ void ColliderGroup::CreateOffsetCollider()
 	Collider* top = GetCollider(false, false, true);
 	Collider* bottom = GetCollider(false, false, false, true);
 
+	if (left == nullptr || right == nullptr || top == nullptr || bottom == nullptr)
+		return;
+
 	SDL_Rect colliderRect;
 	colliderRect.x = left->GetPos().x;
 	colliderRect.y = top->GetPos().y;

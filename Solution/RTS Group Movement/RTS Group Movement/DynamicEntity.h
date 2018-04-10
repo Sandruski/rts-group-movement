@@ -155,14 +155,14 @@ public:
 
 	// Attack
 	/// Unit attacks a target
-	bool IsEntityInTargetsList(Entity* entity) const;
-	bool InvalidateTarget(Entity* entity);
-
 	Entity* GetCurrTarget() const;
 	bool SetCurrTarget(Entity* target);
-	bool RemoveTarget(Entity* target);
 
-	TargetInfo* GetTargetWithLessAttackingUnits() const;
+	bool IsEntityInTargetsList(Entity* entity) const;
+	bool InvalidateTarget(Entity* entity); // sets isRemove to true
+	bool RemoveTargetInfo(TargetInfo* targetInfo);
+
+	TargetInfo* GetBestTargetInfo() const;
 
 	void SetHitting(bool isHitting);
 	bool IsHitting() const;

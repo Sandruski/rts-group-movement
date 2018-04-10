@@ -82,9 +82,9 @@ void Footman::Move(float dt)
 			// Remove the entity from the unitsSelected list
 			App->entities->RemoveUnitFromUnitsSelected(this);
 
-			// Remove the entity from all of the unitsAttacking lists
-
 			// Remove Movement (so other units can walk above them)
+			App->entities->InvalidateMovementEntity(this);
+
 			if (singleUnit != nullptr)
 				delete singleUnit;
 			singleUnit = nullptr;

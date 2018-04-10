@@ -452,6 +452,39 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 
 // Attack
 /// Unit attacks a target
+Entity* DynamicEntity::GetCurrTarget() const
+{
+	if (currTarget != nullptr)
+		return currTarget->target;
+	else
+		return nullptr;
+}
+
+bool DynamicEntity::SetCurrTarget(Entity* target)
+{
+	if (target == nullptr)
+		return false;
+
+	list<TargetInfo*>::const_iterator it = targets.begin();
+
+	// Check if the target is already in a TargetInfo
+	while (it != targets.end()) {
+
+		if ((*it)->target == target) {
+
+			RemoveTargetInfo(*it);
+			break;
+		}
+		it++;
+	}
+
+	// Push the target to the front of the list, so it is the new currTarget
+	TargetInfo targetInfo;
+	targetInfo.target = target;
+
+	targets.push_back(&targetInfo);
+}
+
 bool DynamicEntity::IsEntityInTargetsList(Entity* entity) const
 {
 	list<TargetInfo*>::const_iterator it = targets.begin();
@@ -475,64 +508,38 @@ bool DynamicEntity::InvalidateTarget(Entity* entity)
 
 	list<TargetInfo*>::const_iterator it = targets.begin();
 
+	// Find the TargetInfo of the target
 	while (it != targets.end()) {
 
-		if ((*it)->target == entity)
+		if ((*it)->target == entity) {
+
 			targetInfo = *it;
+			break;
+		}
 
 		it++;
 	}
 
-	if (it != targets.end()) {
+	// If TargetInfo is found, invalidate it
+	if (targetInfo != nullptr) {
 
 		(*it)->target = nullptr;
+		(*it)->isRemoved = true;
 		ret = true;
 	}
 
 	return ret;
 }
 
-Entity* DynamicEntity::GetCurrTarget() const
+bool DynamicEntity::RemoveTargetInfo(TargetInfo* targetInfo)
 {
-	if (currTarget != nullptr)
-		return currTarget->target;
-	else
-		return nullptr;
-}
-
-bool DynamicEntity::SetCurrTarget(Entity* target)
-{
-	if (target == nullptr)
-		return false;
-
-	list<TargetInfo*>::const_iterator it = targets.begin();
-
-	while (it != targets.end()) {
-
-		if ((*it)->target == target) {
-
-			RemoveTarget(target);
-			break;
-		}
-		it++;
-	}
-
-	// Push the target to the front of the list, so it is the new currTarget
-	TargetInfo targetInfo;
-	targetInfo.target = target;
-
-	targets.push_back(&targetInfo);
-}
-
-bool DynamicEntity::RemoveTarget(Entity* target)
-{
-	if (target == nullptr)
+	if (targetInfo == nullptr)
 		return false;
 
 	// If the target matches the currTarget, set currTarget to null
 	if (currTarget != nullptr) {
 
-		if (currTarget->target == target)
+		if (currTarget->target == targetInfo->target)
 			currTarget = nullptr;
 	}
 
@@ -541,9 +548,7 @@ bool DynamicEntity::RemoveTarget(Entity* target)
 
 	while (it != targets.end()) {
 
-		if ((*it)->target == target) {
-
-			(*it)->target = nullptr;
+		if (*it == targetInfo) {
 
 			delete *it;
 			targets.erase(it);
@@ -552,26 +557,39 @@ bool DynamicEntity::RemoveTarget(Entity* target)
 		}
 		it++;
 	}
+
+	return false;
 }
 
-TargetInfo* DynamicEntity::GetTargetWithLessAttackingUnits() const 
+TargetInfo* DynamicEntity::GetBestTargetInfo() const
 {
 	// If there are no targets, return null
 	if (targets.size() == 0)
 		return nullptr;
 
 	// Else, check out the available targets
-	TargetInfo* result = targets.front();
+	TargetInfo* result = nullptr;
 
 	list<TargetInfo*>::const_iterator it = targets.begin();
-	it++;
+	bool isChecked = false;
 
 	while (it != targets.end()) {
 
-		// Pick the target with the less units attacking them
-		if (result->target->GetAttackingUnitsSize() > (*it)->target->GetAttackingUnitsSize())
+		if (!(*it)->isRemoved) {
 
-			result = *it;
+			if (!isChecked) {
+
+				result = *it;
+				isChecked = true;
+			}
+			else {
+
+				// Pick the target with the less units attacking them
+				if (result->target->GetAttackingUnitsSize() > (*it)->target->GetAttackingUnitsSize())
+
+					result = *it;
+			}
+		}
 
 		it++;
 	}

@@ -196,6 +196,13 @@ void Goal_AttackTarget::Activate()
 
 	RemoveAllSubgoals();
 
+	/// The target has been removed from another unit!!!
+	if (targetInfo->isRemoved) {
+	
+		goalStatus = GoalStatus_Completed;
+		return;
+	}
+
 	// It is possible for a bot's target to die while this goal is active,
 	// so we must test to make sure the bot always has an active target
 	if (!targetInfo->IsTargetPresent()) {
@@ -232,13 +239,23 @@ GoalStatus Goal_AttackTarget::Process(float dt)
 {
 	ActivateIfInactive();
 
-	// The unit was chasing their target, but the attack distance has been suddenly satisfied
-	if (targetInfo->isAttackSatisfied && owner->GetSingleUnit()->IsFittingTile()
-		&& subgoals.front()->GetType() == GoalType_MoveToPosition) {
+	/// The target has been removed from another unit!!!
+	if (targetInfo->isRemoved) {
 
-		subgoals.front()->Terminate();
-		delete subgoals.front();
-		subgoals.pop_front();
+		goalStatus = GoalStatus_Completed;
+		return goalStatus;
+	}
+
+	// The unit was chasing their target, but the attack distance has been suddenly satisfied
+	if (subgoals.size() > 0) {
+
+		if (targetInfo->isAttackSatisfied && owner->GetSingleUnit()->IsFittingTile()
+			&& subgoals.front()->GetType() == GoalType_MoveToPosition) {
+
+			subgoals.front()->Terminate();
+			delete subgoals.front();
+			subgoals.pop_front();
+		}
 	}
 
 	// Process the subgoals
@@ -251,30 +268,41 @@ GoalStatus Goal_AttackTarget::Process(float dt)
 
 void Goal_AttackTarget::Terminate() 
 {
-	LOG("Terminated attack");
-
 	RemoveAllSubgoals();
 
 	// -----
 
-	targetInfo->target->RemoveAttackingUnit(owner);
+	/// The target has been removed from another unit!!!
+	if (targetInfo->isRemoved) {
 
-	// If the sight distance is not satisfied, remove the target from the entity targets list
-	if (!targetInfo->isSightSatisfied)
+		// Remove the target from this owner
+		owner->RemoveTargetInfo(targetInfo);
 
-		owner->RemoveTarget(targetInfo->target);
+		// -----
 
-	// If the target has died, remove the target from all the entities targets lists
-	if (!targetInfo->IsTargetPresent()) {
+		targetInfo = nullptr;
+		owner->SetUnitState(UnitState_Idle);
 
-		App->entities->InvalidateTarget(targetInfo->target);
-
-		// Then, remove the target
-		owner->RemoveTarget(targetInfo->target);
+		return;
 	}
 
-	targetInfo = nullptr;
+	// Remove this attacking unit from the owner's unitsAttacking list
+	targetInfo->target->RemoveAttackingUnit(owner);
 
+	// If the target has died, invalidate it from the rest of the units
+	if (!targetInfo->IsTargetPresent())
+
+		App->entities->InvalidateAttackEntity(targetInfo->target);
+
+	// If the sight distance is not satisfied, remove the target from the entity targets list
+	if (!targetInfo->isSightSatisfied || !targetInfo->IsTargetPresent())
+
+		// Remove the target from this owner
+		owner->RemoveTargetInfo(targetInfo);
+
+	// -----
+
+	targetInfo = nullptr;
 	owner->SetUnitState(UnitState_Idle);
 }
 
@@ -440,6 +468,13 @@ void Goal_HitTarget::Activate()
 {
 	goalStatus = GoalStatus_Active;
 
+	/// The target has been removed from another unit!!!
+	if (targetInfo->isRemoved) {
+
+		goalStatus = GoalStatus_Completed;
+		return;
+	}
+
 	// It is possible for a bot's target to die while this goal is active,
 	// so we must test to make sure the bot always has an active target
 	if (!targetInfo->IsTargetPresent()) {
@@ -447,7 +482,8 @@ void Goal_HitTarget::Activate()
 		goalStatus = GoalStatus_Completed;
 		return;
 	}
-	else if (!targetInfo->isAttackSatisfied || !targetInfo->isSightSatisfied) {
+	else if (!targetInfo->isAttackSatisfied || !targetInfo->isSightSatisfied
+		|| !owner->GetSingleUnit()->IsFittingTile()) {
 
 		goalStatus = GoalStatus_Failed;
 		return;
@@ -459,6 +495,13 @@ void Goal_HitTarget::Activate()
 GoalStatus Goal_HitTarget::Process(float dt) 
 {
 	ActivateIfInactive();
+
+	/// The target has been removed from another unit!!!
+	if (targetInfo->isRemoved) {
+
+		goalStatus = GoalStatus_Completed;
+		return goalStatus;
+	}
 
 	if (!targetInfo->IsTargetPresent()) {
 
