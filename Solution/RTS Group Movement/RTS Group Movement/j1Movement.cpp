@@ -356,7 +356,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 			// ---------------------------------------------------------------------
 
 			// a) The other unit is attacking and won't respond to any movement order
-			if (singleUnit->waitUnit->unit->IsHitting()) {
+			if (singleUnit->waitUnit->unit->IsHitting() || singleUnit->waitUnit->unit->IsStill()) {
 			
 				// Current unit must react to the collision
 				// Current unit moves
@@ -401,6 +401,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 					// ***IS THE PATH READY?***
 					if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
+						// TODO: sometimes crashes here
 						singleUnit->path = singleUnit->unit->GetPathPlanner()->GetPath();
 						singleUnit->unit->GetPathPlanner()->SetSearchRequested(false);
 
@@ -443,19 +444,20 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 				if ((singleUnit->unit->GetPriority() >= singleUnit->waitUnit->unit->GetPriority() || singleUnit->reversePriority)) {
 
 					// 1. waitUnit moves
-					singleUnit->unit->GetPathPlanner()->RequestDijkstra(singleUnit->waitUnit->goal, FindActiveTrigger::ActiveTriggerType_Goal);
-					singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
-					singleUnit->unit->GetPathPlanner()->SetCheckingNextTile(true); // TODO: trigger must be fully customizable
-					singleUnit->isSearching = true;
+					singleUnit->waitUnit->unit->GetPathPlanner()->RequestDijkstra(singleUnit->waitUnit->goal, FindActiveTrigger::ActiveTriggerType_Goal);
+					singleUnit->waitUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
+					singleUnit->waitUnit->unit->GetPathPlanner()->SetCheckingNextTile(true); // TODO: trigger must be fully customizable
+					singleUnit->waitUnit->isSearching = true;
 
 					// ***IS THE TILE READY?***
-					if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
+					if (singleUnit->waitUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
-						singleUnit->waitUnit->unit->GetBrain()->AddGoal_MoveToPosition(singleUnit->unit->GetPathPlanner()->GetTile());
-						singleUnit->unit->GetPathPlanner()->SetSearchRequested(false);
-						singleUnit->isSearching = false;
+						singleUnit->waitUnit->unit->GetBrain()->AddGoal_MoveToPosition(singleUnit->waitUnit->unit->GetPathPlanner()->GetTile());
+						singleUnit->waitUnit->unit->GetPathPlanner()->SetSearchRequested(false);
 
-						LOG("DEL changed path waitUnit Still Goal %i, %i", singleUnit->unit->GetPathPlanner()->GetTile().x, singleUnit->unit->GetPathPlanner()->GetTile().y);
+						singleUnit->waitUnit->isSearching = false;
+
+						LOG("DEL changed path waitUnit Still Goal %i, %i", singleUnit->waitUnit->unit->GetPathPlanner()->GetTile().x, singleUnit->waitUnit->unit->GetPathPlanner()->GetTile().y);
 
 						if (singleUnit->unit->isSelected)
 							LOG("%s: MOVED AWAY %s", singleUnit->unit->GetColorName().data(), singleUnit->waitUnit->unit->GetColorName().data());
@@ -511,7 +513,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 						if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
 							singleUnit->path = singleUnit->unit->GetPathPlanner()->GetPath();
-							singleUnit->waitUnit->unit->GetPathPlanner()->SetSearchRequested(false);
+							singleUnit->unit->GetPathPlanner()->SetSearchRequested(false);
 
 							singleUnit->isSearching = false;/// The unit has finished changing its nextTile
 
@@ -631,9 +633,9 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 					if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
 						singleUnit->path = singleUnit->unit->GetPathPlanner()->GetPath();
-						singleUnit->waitUnit->unit->GetPathPlanner()->SetSearchRequested(false);
+						singleUnit->unit->GetPathPlanner()->SetSearchRequested(false);
 
-						singleUnit->isSearching = false;/// The unit has finished changing its nextTile
+						singleUnit->isSearching = false; /// The unit has finished changing its nextTile
 
 						// Update the unit's nextTile
 						singleUnit->nextTile = singleUnit->path.front();
@@ -1574,7 +1576,10 @@ void SingleUnit::GetReadyForNewMove()
 	if (IsFittingTile()) {
 
 		ResetUnitParameters();
+
 		unit->GetPathPlanner()->SetSearchRequested(false);
+		isSearching = false;
+
 		movementState = MovementState_WaitForPath;
 
 		isGoalChanged = false;

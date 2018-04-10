@@ -239,18 +239,11 @@ GoalStatus Goal_AttackTarget::Process(float dt)
 {
 	ActivateIfInactive();
 
-	/// The target has been removed from another unit!!!
-	if (targetInfo->isRemoved) {
-
-		goalStatus = GoalStatus_Completed;
-		return goalStatus;
-	}
-
 	// The unit was chasing their target, but the attack distance has been suddenly satisfied
 	if (subgoals.size() > 0) {
 
-		if (targetInfo->isAttackSatisfied && owner->GetSingleUnit()->IsFittingTile()
-			&& subgoals.front()->GetType() == GoalType_MoveToPosition) {
+		if (owner->GetSingleUnit()->IsFittingTile() 
+			&& (targetInfo->isRemoved || (targetInfo->isAttackSatisfied && subgoals.front()->GetType() == GoalType_MoveToPosition))) {
 
 			subgoals.front()->Terminate();
 			delete subgoals.front();

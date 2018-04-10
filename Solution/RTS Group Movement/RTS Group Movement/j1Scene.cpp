@@ -131,14 +131,14 @@ bool j1Scene::PreUpdate()
 			tile = FindClosestValidTile(tile);
 
 		// Make sure that the spawn tile is valid
-		if (tile.x != -1 && tile.y != -1) {
+		//if (tile.x != -1 && tile.y != -1) {  // TODO: uncomment this line
 
 			iPoint tilePos = App->map->MapToWorld(tile.x, tile.y);
 			//fPoint pos = { (float)tilePos.x,(float)tilePos.y }; // TODO: uncomment this line
 
 			fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y }; // TODO: delete this debug
 			App->entities->AddDynamicEntity(DynamicEntityType_Footman, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)footmanInfo);
-		}
+		//}
 	}
 
 	// 2: spawn a Grunt with priority 1
@@ -159,40 +159,50 @@ bool j1Scene::PreUpdate()
 			tile = FindClosestValidTile(tile);
 
 		// Make sure that the spawn tile is valid
-		if (tile.x != -1 && tile.y != -1) {
+		//if (tile.x != -1 && tile.y != -1) { // TODO: uncomment this line
 
 			iPoint tilePos = App->map->MapToWorld(tile.x, tile.y);
 			//fPoint pos = { (float)tilePos.x,(float)tilePos.y }; // TODO: uncomment this line
 
 			fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y }; // TODO: delete this debug
 			App->entities->AddDynamicEntity(DynamicEntityType_Grunt, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)gruntInfo);
-		}
+		//}
 	}
 
-	fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
-
-	// 3: spawn a Sheep
-	unitInfo.sightRadius = 0;
-	unitInfo.attackRadius = 0;
-	unitInfo.priority = 1;
-	maxLife = 10;
-	currLife = (int)maxLife;
-
-	if (App->input->GetKey(SDL_SCANCODE_3) == KEY_DOWN)
-		App->entities->AddDynamicEntity(DynamicEntityType_CritterSheep, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)critterSheepInfo);
-
-	// 4: spawn a Boar
-	unitInfo.sightRadius = 0;
-	unitInfo.attackRadius = 0;
-	unitInfo.priority = 2;
-	maxLife = 20;
-	currLife = (int)maxLife;
-
-	if (App->input->GetKey(SDL_SCANCODE_4) == KEY_DOWN)
-		App->entities->AddDynamicEntity(DynamicEntityType_CritterBoar, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)critterBoarInfo);
-
-	// 5: spawn a group of Grunts
+	// 5: spawn a group of Footmans
 	if (App->input->GetKey(SDL_SCANCODE_5) == KEY_DOWN) {
+
+		list<DynamicEntity*> units;
+		uint maxFootmans = 4;
+
+		for (uint i = 0; i < maxFootmans; ++i) {
+
+			iPoint tile = { rand() % App->map->data.width,rand() % App->map->data.height };
+
+			// Make sure that there are no entities on the spawn tile and that the tile is walkable
+			if (App->entities->IsEntityOnTile(tile) != nullptr || !App->pathfinding->IsWalkable(tile))
+
+				tile = FindClosestValidTile(tile);
+
+			// Make sure that the spawn tile is valid
+			if (tile.x != -1 && tile.y != -1) {
+
+				iPoint tilePos = App->map->MapToWorld(tile.x, tile.y);
+				fPoint pos = { (float)tilePos.x,(float)tilePos.y };
+
+				DynamicEntity* dynEnt = App->entities->AddDynamicEntity(DynamicEntityType_Footman, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)footmanInfo);
+
+				if (dynEnt != nullptr)
+					units.push_back(dynEnt);
+			}
+		}
+
+		if (units.size() > 0)
+			App->movement->CreateGroupFromUnits(units);
+	}
+
+	// 6: spawn a group of Grunts
+	if (App->input->GetKey(SDL_SCANCODE_6) == KEY_DOWN) {
 
 		list<DynamicEntity*> units;
 		uint maxGrunts = 4;
@@ -222,6 +232,28 @@ bool j1Scene::PreUpdate()
 		if (units.size() > 0)
 			App->movement->CreateGroupFromUnits(units);
 	}
+
+	fPoint pos = { (float)mouseTilePos.x,(float)mouseTilePos.y };
+
+	// 3: spawn a Sheep
+	unitInfo.sightRadius = 0;
+	unitInfo.attackRadius = 0;
+	unitInfo.priority = 1;
+	maxLife = 10;
+	currLife = (int)maxLife;
+
+	if (App->input->GetKey(SDL_SCANCODE_3) == KEY_DOWN)
+		App->entities->AddDynamicEntity(DynamicEntityType_CritterSheep, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)critterSheepInfo);
+
+	// 4: spawn a Boar
+	unitInfo.sightRadius = 0;
+	unitInfo.attackRadius = 0;
+	unitInfo.priority = 2;
+	maxLife = 20;
+	currLife = (int)maxLife;
+
+	if (App->input->GetKey(SDL_SCANCODE_4) == KEY_DOWN)
+		App->entities->AddDynamicEntity(DynamicEntityType_CritterBoar, pos, size, currLife, maxLife, unitInfo, (EntityInfo&)critterBoarInfo);
 
 	return ret;
 }

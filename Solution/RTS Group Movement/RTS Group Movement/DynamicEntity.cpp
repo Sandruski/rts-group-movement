@@ -150,7 +150,7 @@ void DynamicEntity::SetIsStill(bool isStill)
 	this->isStill = isStill;
 }
 
-bool DynamicEntity::IsUnitStill() const
+bool DynamicEntity::IsStill() const
 {
 	return isStill;
 }
@@ -584,8 +584,8 @@ TargetInfo* DynamicEntity::GetBestTargetInfo() const
 			}
 			else {
 
-				// Pick the target with the less units attacking them
-				if (result->target->GetAttackingUnitsSize() > (*it)->target->GetAttackingUnitsSize())
+				// Pick the target with the less units attacking them (except for the unit)
+				if (result->target->GetAttackingUnitsSize((Entity*)this) > (*it)->target->GetAttackingUnitsSize((Entity*)this))
 
 					result = *it;
 			}

@@ -93,15 +93,27 @@ void Grunt::Move(float dt)
 	/// GOAL: AttackTarget
 	// Check if there are available targets
 	/// Prioritize a type of target (static or dynamic)
-	TargetInfo* newTarget = GetBestTargetInfo();
+	if (singleUnit->IsFittingTile()) {
 
-	if (newTarget != nullptr) {
+		newTarget = GetBestTargetInfo();
 
-		// A new target has found, update the attacking target
-		if (currTarget != newTarget) {
+		if (newTarget != nullptr) {
 
-			currTarget = newTarget;
-			brain->AddGoal_AttackTarget(currTarget);
+			// A new target has found, update the attacking target
+			if (currTarget != newTarget) {
+
+				if (currTarget != nullptr) {
+
+					if (!currTarget->isRemoved) {
+
+						currTarget->target->RemoveAttackingUnit(this);
+						isHitting = false;
+					}
+				}
+
+				currTarget = newTarget;
+				brain->AddGoal_AttackTarget(currTarget);
+			}
 		}
 	}
 
@@ -230,17 +242,18 @@ void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState col
 
 				if ((*it)->target == c2->entity) {
 
-					// If currTarget matches the target that needs to be removed, set its isSightSatisfied to false and it will be removed later
-					if (currTarget->target == c2->entity)
+					// If currTarget matches the target that needs to be removed, set its isSightSatisfied to false and it will be removed later		
+					if (currTarget != nullptr) {
 
-						currTarget->isSightSatisfied = false;
+						if (currTarget->target == c2->entity) {
 
-					// If currTarget is different from the target that needs to be removed, remove the target from the list
-					else {
-
-						delete *it;
-						targets.erase(it);
+							currTarget->isSightSatisfied = false;
+							break;
+						}
 					}
+					// If currTarget is different from the target that needs to be removed, remove the target from the list
+					delete *it;
+					targets.erase(it);
 
 					break;
 				}

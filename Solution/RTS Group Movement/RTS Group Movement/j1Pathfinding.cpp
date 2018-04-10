@@ -325,10 +325,13 @@ int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, D
 int j1PathFinding::BacktrackToCreatePath()
 {
 	// Backtrack to create the final path
-	for (PathNode iterator = close.pathNodeList.back(); iterator.parent != nullptr;
-		iterator = *close.Find(iterator.parent->pos)) {
+	if (close.pathNodeList.size() > 1) {
 
-		last_path.push_back(iterator.pos);
+		for (PathNode iterator = close.pathNodeList.back(); iterator.parent != nullptr;
+			iterator = *close.Find(iterator.parent->pos)) {
+
+			last_path.push_back(iterator.pos);
+		}
 	}
 
 	last_path.push_back(close.pathNodeList.front().pos);

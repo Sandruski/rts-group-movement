@@ -140,7 +140,18 @@ bool Entity::RemoveAttackingUnit(Entity* entity)
 	return ret;
 }
 
-uint Entity::GetAttackingUnitsSize() const 
+uint Entity::GetAttackingUnitsSize(Entity* attackingUnit) const 
 {
-	return unitsAttacking.size();
+	list<Entity*>::const_iterator it = unitsAttacking.begin();
+	uint size = 0;
+
+	while (it != unitsAttacking.end()) {
+	
+		if (*it != attackingUnit)
+			size++;
+	
+		it++;
+	}
+
+	return size;
 }

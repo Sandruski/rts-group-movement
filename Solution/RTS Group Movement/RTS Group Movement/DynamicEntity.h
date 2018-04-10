@@ -127,7 +127,7 @@ public:
 	Navgraph* GetNavgraph() const;
 
 	void SetIsStill(bool isStill);
-	bool IsUnitStill() const;
+	bool IsStill() const;
 
 	// Animations
 	virtual void LoadAnimationsSpeed();
@@ -176,6 +176,9 @@ public:
 
 	// Dead
 	bool isDead = false; // if true, the unit is performing their dead animation
+	
+	// Spawn
+	bool isSpawned = false;
 
 protected:
 
@@ -203,9 +206,9 @@ protected:
 	// Attack
 	list<TargetInfo*> targets;
 	TargetInfo* currTarget = nullptr;
+	TargetInfo* newTarget = nullptr;
 
-	//bool isAttacking = false; // if true, the unit is attacking their target (chasing or hitting them) -> Useful to decide whether attack a unit or not
-	bool isHitting = false; // if true, the unit is hitting their target -> Useful to change animation
+	bool isHitting = false; // if true, the unit is hitting their target
 
 	// Collision
 	ColliderGroup* sightRadiusCollider = nullptr;

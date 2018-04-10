@@ -80,7 +80,7 @@ public:
 	/// Entity is being attacked by units
 	bool AddAttackingUnit(Entity* entity);
 	bool RemoveAttackingUnit(Entity* entity);
-	uint GetAttackingUnitsSize() const;
+	uint GetAttackingUnitsSize(Entity* attackingUnit) const;
 
 public:
 
