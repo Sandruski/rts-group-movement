@@ -330,6 +330,10 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 
 		CheckForFutureCollision(singleUnit);
 
+		if (singleUnit->unit->GetColorName() == "Yellow") {
+			LOG("Yell");
+		}
+
 		if (singleUnit->coll != CollisionType_NoCollision) {
 
 			// The unit is still
@@ -414,8 +418,13 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 							LOG("%s: MOVED AWAY %s", singleUnit->waitUnit->unit->GetColorName().data(), singleUnit->unit->GetColorName().data());
 
 						/// COLLISION RESOLVED
-						singleUnit->ResetUnitCollisionParameters();
+						//if (singleUnit->coll == CollisionType_TowardsCell) {
 
+							//if (singleUnit->waitUnit->coll == CollisionType_NoCollision)
+								//singleUnit->waitUnit->wait = false;
+						//}
+
+						singleUnit->ResetUnitCollisionParameters();
 						break;
 					}
 					break;
@@ -463,6 +472,12 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 							LOG("%s: MOVED AWAY %s", singleUnit->unit->GetColorName().data(), singleUnit->waitUnit->unit->GetColorName().data());
 
 						/// COLLISION RESOLVED
+						//if (singleUnit->coll == CollisionType_TowardsCell) {
+
+							//if (singleUnit->waitUnit->coll == CollisionType_NoCollision)
+								//singleUnit->waitUnit->wait = false;
+						//}
+
 						singleUnit->ResetUnitCollisionParameters();
 						break;
 					}
@@ -644,9 +659,10 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 							LOG("%s: MOVED AWAY TOWARDS %s", singleUnit->waitUnit->unit->GetColorName().data(), singleUnit->unit->GetColorName().data());
 
 						/// COLLISION RESOLVED
-						singleUnit->waitUnit->wait = false;
-						singleUnit->ResetUnitCollisionParameters();
+						//if (singleUnit->waitUnit->coll == CollisionType_NoCollision)
+							//singleUnit->waitUnit->wait = false;
 
+						singleUnit->ResetUnitCollisionParameters();
 						break;
 					}
 					break;
@@ -774,8 +790,9 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 								break;
 
 							else if ((*units)->coll != CollisionType_TowardsCell) {
+
 								(*units)->SetCollisionParameters(CollisionType_TowardsCell, singleUnit, (*units)->nextTile);
-								singleUnit->wait = true;
+								//singleUnit->wait = true;
 								LOG("%s: TOWARDS with %s", (*units)->unit->GetColorName().data(), singleUnit->unit->GetColorName().data());
 							}
 						}
@@ -785,8 +802,9 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 								break;
 
 							else if (singleUnit->coll != CollisionType_TowardsCell && (*units)->waitUnit != singleUnit) {
+
 								singleUnit->SetCollisionParameters(CollisionType_TowardsCell, *units, singleUnit->nextTile);
-								(*units)->wait = true;
+								//(*units)->wait = true;
 								LOG("%s: TOWARDS with %s", singleUnit->unit->GetColorName().data(), (*units)->unit->GetColorName().data());
 							}
 						}
@@ -805,6 +823,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 						singleUnit->waitTile = singleUnit->nextTile;
 
 						if (!singleUnit->wait) {
+
 							singleUnit->coll = CollisionType_ItsCell;
 							singleUnit->wait = true;
 
@@ -818,9 +837,6 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 					/// The unit with the highest area inside the nextTile must deal with the collision
 
 					else if (singleUnit->nextTile == (*units)->nextTile && !(*units)->wait) {
-
-						singleUnit->waitUnit = *units;
-						singleUnit->waitTile = singleUnit->nextTile;
 
 						// The agent that is already inside the tile has the priority. If none of them are, choose one randomly
 						SDL_Rect posA = { (int)singleUnit->unit->GetPos().x, (int)singleUnit->unit->GetPos().y, App->map->data.tile_width, App->map->data.tile_height };
@@ -839,7 +855,12 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 						// Decide which unit waits
 						// The unit who has the smaller area waits
 						if (areaA <= areaB) {
+
+							singleUnit->waitUnit = *units;
+							singleUnit->waitTile = singleUnit->nextTile;
+
 							if (!singleUnit->wait) {
+
 								singleUnit->coll = CollisionType_SameCell;
 								singleUnit->wait = true;
 
@@ -848,6 +869,10 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 							}
 						}
 						else {
+
+							(*units)->waitUnit = singleUnit;
+							(*units)->waitTile = (*units)->nextTile;
+
 							(*units)->coll = CollisionType_SameCell;
 							(*units)->wait = true;
 
