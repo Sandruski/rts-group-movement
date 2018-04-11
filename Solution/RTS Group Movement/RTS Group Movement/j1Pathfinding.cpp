@@ -324,6 +324,8 @@ int j1PathFinding::CreatePath(const iPoint& origin, const iPoint& destination, D
 
 int j1PathFinding::BacktrackToCreatePath()
 {
+	last_path.clear();
+
 	// Backtrack to create the final path
 	if (close.pathNodeList.size() > 1) {
 

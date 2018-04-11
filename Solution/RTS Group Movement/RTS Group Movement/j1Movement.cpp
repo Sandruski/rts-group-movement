@@ -330,10 +330,6 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 
 		CheckForFutureCollision(singleUnit);
 
-		if (singleUnit->unit->GetColorName() == "Yellow") {
-			LOG("Yell");
-		}
-
 		if (singleUnit->coll != CollisionType_NoCollision) {
 
 			// The unit is still
@@ -348,7 +344,6 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 			}
 
 			// waitUnit is dead
-			// TODO: Check that this works fine and doesn't crash
 			if (singleUnit->waitUnit->unit->isRemove) {
 
 				singleUnit->waitUnit = nullptr;
@@ -359,7 +354,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 			// SPECIAL CASES
 			// ---------------------------------------------------------------------
 
-			// a) The other unit is attacking and won't respond to any movement order
+			// a) The other unit is hitting or still and won't respond to any movement order
 			if (singleUnit->waitUnit->unit->IsHitting() || singleUnit->waitUnit->unit->IsStill()) {
 			
 				// Current unit must react to the collision
@@ -404,15 +399,22 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 
 					// ***IS THE PATH READY?***
 					if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
+				
+						vector<iPoint> path = singleUnit->unit->GetPathPlanner()->GetPath();
 
-						// TODO: sometimes crashes here
-						singleUnit->path = singleUnit->unit->GetPathPlanner()->GetPath();
 						singleUnit->unit->GetPathPlanner()->SetSearchRequested(false);
+						singleUnit->isSearching = false; /// The unit has finished changing its nextTile
 
-						singleUnit->isSearching = false;/// The unit has finished changing its nextTile
+						// Always check if the path found is correct
+						if (!IsNeighborTile(singleUnit->currTile, path.front()) && singleUnit->currTile != path.front())
+							break;
+
+						singleUnit->path = path;
 
 						// Update the unit's nextTile
-						singleUnit->nextTile = singleUnit->path.front();
+						//singleUnit->nextTile = singleUnit->path.front();
+						//singleUnit->path.erase(singleUnit->path.begin());
+						singleUnit->movementState = MovementState_IncreaseWaypoint;
 
 						if (singleUnit->unit->isSelected)
 							LOG("%s: MOVED AWAY %s", singleUnit->waitUnit->unit->GetColorName().data(), singleUnit->unit->GetColorName().data());
@@ -453,33 +455,37 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 				if ((singleUnit->unit->GetPriority() >= singleUnit->waitUnit->unit->GetPriority() || singleUnit->reversePriority)) {
 
 					// 1. waitUnit moves
-					singleUnit->waitUnit->unit->GetPathPlanner()->RequestDijkstra(singleUnit->waitUnit->goal, FindActiveTrigger::ActiveTriggerType_Goal);
-					singleUnit->waitUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
-					singleUnit->waitUnit->unit->GetPathPlanner()->SetCheckingNextTile(true); // TODO: trigger must be fully customizable
-					singleUnit->waitUnit->isSearching = true;
+					if (!singleUnit->waitUnit->isSearching) {
+
+						singleUnit->waitUnit->unit->GetPathPlanner()->RequestDijkstra(singleUnit->waitUnit->goal, FindActiveTrigger::ActiveTriggerType_Goal);
+						singleUnit->waitUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
+						singleUnit->waitUnit->unit->GetPathPlanner()->SetCheckingNextTile(true); // TODO: trigger must be fully customizable
+						singleUnit->waitUnit->isSearching = true;
+					}
 
 					// ***IS THE TILE READY?***
-					if (singleUnit->waitUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
+					if (singleUnit->waitUnit->isSearching) {
 
-						singleUnit->waitUnit->unit->GetBrain()->AddGoal_MoveToPosition(singleUnit->waitUnit->unit->GetPathPlanner()->GetTile());
-						singleUnit->waitUnit->unit->GetPathPlanner()->SetSearchRequested(false);
+						if (singleUnit->waitUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
-						singleUnit->waitUnit->isSearching = false;
+							singleUnit->waitUnit->unit->GetBrain()->AddGoal_MoveToPosition(singleUnit->waitUnit->unit->GetPathPlanner()->GetTile());
+							singleUnit->waitUnit->unit->GetPathPlanner()->SetSearchRequested(false);
 
-						LOG("DEL changed path waitUnit Still Goal %i, %i", singleUnit->waitUnit->unit->GetPathPlanner()->GetTile().x, singleUnit->waitUnit->unit->GetPathPlanner()->GetTile().y);
+							singleUnit->waitUnit->isSearching = false;
 
-						if (singleUnit->unit->isSelected)
-							LOG("%s: MOVED AWAY %s", singleUnit->unit->GetColorName().data(), singleUnit->waitUnit->unit->GetColorName().data());
+							if (singleUnit->unit->isSelected)
+								LOG("%s: MOVED AWAY %s", singleUnit->unit->GetColorName().data(), singleUnit->waitUnit->unit->GetColorName().data());
 
-						/// COLLISION RESOLVED
-						//if (singleUnit->coll == CollisionType_TowardsCell) {
+							/// COLLISION RESOLVED
+							//if (singleUnit->coll == CollisionType_TowardsCell) {
 
-							//if (singleUnit->waitUnit->coll == CollisionType_NoCollision)
-								//singleUnit->waitUnit->wait = false;
-						//}
+								//if (singleUnit->waitUnit->coll == CollisionType_NoCollision)
+									//singleUnit->waitUnit->wait = false;
+							//}
 
-						singleUnit->ResetUnitCollisionParameters();
-						break;
+							singleUnit->ResetUnitCollisionParameters();
+							break;
+						}
 					}
 					break;
 				}
@@ -498,7 +504,6 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 							singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
 
 							singleUnit->isSearching = true; /// The unit is changing its nextTile
-							LOG("DEL waitUnit Still Goal1 %i, %i", newTile.x, newTile.y);
 							break;
 						}
 						else {
@@ -513,7 +518,6 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 								singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
 
 								singleUnit->isSearching = true; /// The unit is changing its nextTile
-								LOG("DEL waitUnit Still Goal2 %i, %i", newTile.x, newTile.y);
 								break;
 							}
 							break;
@@ -527,13 +531,21 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 						// ***IS THE PATH READY?***
 						if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
-							singleUnit->path = singleUnit->unit->GetPathPlanner()->GetPath();
-							singleUnit->unit->GetPathPlanner()->SetSearchRequested(false);
+							vector<iPoint> path = singleUnit->unit->GetPathPlanner()->GetPath();
 
-							singleUnit->isSearching = false;/// The unit has finished changing its nextTile
+							singleUnit->unit->GetPathPlanner()->SetSearchRequested(false);
+							singleUnit->isSearching = false; /// The unit has finished changing its nextTile
+
+							// Always check if the path found is correct
+							if (!IsNeighborTile(singleUnit->currTile, path.front()) && singleUnit->currTile != path.front())
+								break;
+
+							singleUnit->path = path;
 
 							// Update the unit's nextTile
-							singleUnit->nextTile = singleUnit->path.front();
+							//singleUnit->nextTile = singleUnit->path.front();
+							//singleUnit->path.erase(singleUnit->path.begin());
+							singleUnit->movementState = MovementState_IncreaseWaypoint;
 
 							if (singleUnit->unit->isSelected)
 								LOG("%s: MOVED AWAY %s", singleUnit->waitUnit->unit->GetColorName().data(), singleUnit->unit->GetColorName().data());
@@ -618,7 +630,6 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 						singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
 
 						singleUnit->isSearching = true; /// The unit is changing its nextTile
-						LOG("DEL towards1 %i, %i", newTile.x, newTile.y);
 						break;
 					}
 					else {
@@ -633,7 +644,6 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 							singleUnit->unit->GetPathPlanner()->SetCheckingCurrTile(true);
 
 							singleUnit->isSearching = true; /// The unit is changing its nextTile
-							LOG("DEL towards2 %i, %i", newTile.x, newTile.y);
 							break;
 						}
 						break;
@@ -647,13 +657,21 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 					// ***IS THE PATH READY?***
 					if (singleUnit->unit->GetPathPlanner()->IsSearchCompleted()) {
 
-						singleUnit->path = singleUnit->unit->GetPathPlanner()->GetPath();
-						singleUnit->unit->GetPathPlanner()->SetSearchRequested(false);
+						vector<iPoint> path = singleUnit->unit->GetPathPlanner()->GetPath();
 
+						singleUnit->unit->GetPathPlanner()->SetSearchRequested(false);
 						singleUnit->isSearching = false; /// The unit has finished changing its nextTile
 
+						// Always check if the path found is correct
+						if (!IsNeighborTile(singleUnit->currTile, path.front()) && singleUnit->currTile != path.front())
+							break;
+
+						singleUnit->path = path;
+
 						// Update the unit's nextTile
-						singleUnit->nextTile = singleUnit->path.front();
+						//singleUnit->nextTile = singleUnit->path.front();
+						//singleUnit->path.erase(singleUnit->path.begin());
+						singleUnit->movementState = MovementState_IncreaseWaypoint;
 
 						if (singleUnit->unit->isSelected)
 							LOG("%s: MOVED AWAY TOWARDS %s", singleUnit->waitUnit->unit->GetColorName().data(), singleUnit->unit->GetColorName().data());
@@ -793,6 +811,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 
 								(*units)->SetCollisionParameters(CollisionType_TowardsCell, singleUnit, (*units)->nextTile);
 								//singleUnit->wait = true;
+
 								LOG("%s: TOWARDS with %s", (*units)->unit->GetColorName().data(), singleUnit->unit->GetColorName().data());
 							}
 						}
@@ -805,6 +824,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 
 								singleUnit->SetCollisionParameters(CollisionType_TowardsCell, *units, singleUnit->nextTile);
 								//(*units)->wait = true;
+
 								LOG("%s: TOWARDS with %s", singleUnit->unit->GetColorName().data(), (*units)->unit->GetColorName().data());
 							}
 						}
@@ -818,11 +838,11 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 					/// The unit who would reach another unit's tile must deal with the collision
 
 					if (singleUnit->nextTile == (*units)->currTile) {
-						
+
 						singleUnit->waitUnit = *units;
 						singleUnit->waitTile = singleUnit->nextTile;
 
-						if (!singleUnit->wait) {
+						if (!singleUnit->wait) {	
 
 							singleUnit->coll = CollisionType_ItsCell;
 							singleUnit->wait = true;
@@ -924,6 +944,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 									if (!(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
 
 										singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myUp);
+
 										LOG("%s: Up CROSSING", singleUnit->unit->GetColorName().data());
 									}
 								}
@@ -932,6 +953,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 									if (!singleUnit->wait && IsValidTile(nullptr, singleUnit->nextTile, true)) {
 
 										(*units)->SetCollisionParameters(CollisionType_DiagonalCrossing, singleUnit, up);
+
 										LOG("%s: Up CROSSING", (*units)->unit->GetColorName().data());
 									}
 								}
@@ -949,6 +971,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 									if (!(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
 
 										singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myDown);
+
 										LOG("%s: Down CROSSING", singleUnit->unit->GetColorName().data());
 									}
 								}
@@ -957,6 +980,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 									if (!singleUnit->wait && IsValidTile(nullptr, singleUnit->nextTile, true)) {
 
 										(*units)->SetCollisionParameters(CollisionType_DiagonalCrossing, singleUnit, down);
+
 										LOG("%s: Down CROSSING", (*units)->unit->GetColorName().data());
 									}
 								}
@@ -974,6 +998,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 									if (!(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
 
 										singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myLeft);
+
 										LOG("%s: Left CROSSING", singleUnit->unit->GetColorName().data());
 									}
 								}
@@ -982,6 +1007,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 									if (!singleUnit->wait && IsValidTile(nullptr, singleUnit->nextTile, true)) {
 
 										(*units)->SetCollisionParameters(CollisionType_DiagonalCrossing, singleUnit, left);
+
 										LOG("%s: Left CROSSING", (*units)->unit->GetColorName().data());
 									}
 								}
@@ -999,6 +1025,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 									if (!(*units)->wait && IsValidTile(nullptr, (*units)->nextTile, true)) {
 
 										singleUnit->SetCollisionParameters(CollisionType_DiagonalCrossing, *units, myRight);
+
 										LOG("%s: Right CROSSING", singleUnit->unit->GetColorName().data());
 									}
 								}
@@ -1007,6 +1034,7 @@ void j1Movement::CheckForFutureCollision(SingleUnit* singleUnit) const
 									if (!singleUnit->wait && IsValidTile(nullptr, singleUnit->nextTile, true)) {
 
 										(*units)->SetCollisionParameters(CollisionType_DiagonalCrossing, singleUnit, right);
+
 										LOG("%s: Right CROSSING", (*units)->unit->GetColorName().data());
 									}
 								}
@@ -1572,6 +1600,9 @@ void SingleUnit::ResetUnitParameters()
 
 	wakeUp = false;
 	nextTile = { -1,-1 };
+
+	isSearching = false;
+	unit->GetPathPlanner()->SetSearchRequested(false);
 }
 
 // Resets the collision parameters of the unit
