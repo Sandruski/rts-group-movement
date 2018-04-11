@@ -1195,7 +1195,7 @@ iPoint j1Movement::FindNewValidTile(SingleUnit* singleUnit, bool checkOnlyFront)
 	}
 
 	// 2. PRIORITY: the neighbor closer to the unit's goal
-	priority_queue<iPointPriority, vector<iPointPriority>, Comparator> queue;
+	priority_queue<iPointPriority, vector<iPointPriority>, iPointPriorityComparator> queue;
 	iPointPriority priorityNeighbors;
 
 	for (uint i = 0; i < 8; ++i)

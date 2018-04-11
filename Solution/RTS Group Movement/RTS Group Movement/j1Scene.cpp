@@ -375,6 +375,43 @@ bool j1Scene::Update(float dt)
 
 				App->entities->CommandToUnits(units, UnitCommand_Stop);
 			}
+
+			/// COMMAND ATTACK
+			/// Enemy
+			Entity* target = App->entities->IsEntityOnTile(mouseTile, EntityType_NoType, EntitySide_Enemy);
+
+			if (App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN && target != nullptr) {
+
+				// All the group is issued to attack this enemy (and other enemies if seen when arrived at destination)
+				list<DynamicEntity*>::const_iterator it = units.begin();
+
+				while (it != units.end()) {
+
+					(*it)->SetCurrTarget(target);
+
+					it++;
+				}
+
+				App->entities->CommandToUnits(units, UnitCommand_AttackTarget);
+			}
+
+			/// Critter
+			Entity* critter = App->entities->IsEntityOnTile(mouseTile, EntityType_NoType, EntitySide_Neutral);
+
+			if (App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_DOWN && critter != nullptr) {
+
+				// All the group is issued to attack this enemy (and other enemies if seen when arrived at destination)
+				list<DynamicEntity*>::const_iterator it = units.begin();
+
+				while (it != units.end()) {
+
+					(*it)->SetCurrTarget(critter);
+
+					it++;
+				}
+
+				App->entities->CommandToUnits(units, UnitCommand_AttackTarget);
+			}
 		}
 	}
 

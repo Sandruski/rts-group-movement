@@ -225,13 +225,13 @@ public:
 	}
 
 	iPoint point = { 0,0 };
-	uint priority = 0;
+	int priority = 0;
 };
 
 // ---------------------------------------------------------------------
 // Helper class to compare two iPoints by its priority values
 // ---------------------------------------------------------------------
-class Comparator
+class iPointPriorityComparator
 {
 public:
 	int operator() (const iPointPriority a, const iPointPriority b)

@@ -28,6 +28,7 @@ enum EntitySide
 	EntitySide_NoSide,
 	EntitySide_Player,
 	EntitySide_Enemy,
+	EntitySide_Neutral,
 	EntitySide_MaxSides
 };
 

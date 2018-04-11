@@ -462,6 +462,8 @@ Entity* DynamicEntity::GetCurrTarget() const
 
 bool DynamicEntity::SetCurrTarget(Entity* target)
 {
+	bool ret = false;
+
 	if (target == nullptr)
 		return false;
 
@@ -478,11 +480,16 @@ bool DynamicEntity::SetCurrTarget(Entity* target)
 		it++;
 	}
 
-	// Push the target to the front of the list, so it is the new currTarget
-	TargetInfo targetInfo;
-	targetInfo.target = target;
+	// Create a new TargetInfo and push it to the front of the list
+	TargetInfo* targetInfo = new TargetInfo();
+	targetInfo->target = target;
 
-	targets.push_back(&targetInfo);
+	targets.push_back(targetInfo);
+
+	if (ret)
+		currTarget = targets.front();
+
+	return ret;
 }
 
 bool DynamicEntity::IsEntityInTargetsList(Entity* entity) const
@@ -573,25 +580,37 @@ TargetInfo* DynamicEntity::GetBestTargetInfo() const
 	list<TargetInfo*>::const_iterator it = targets.begin();
 	bool isChecked = false;
 
+	// Order the targets by their priority (the target closer to the unit has the max priority)
+	priority_queue<TargetInfoPriority, vector<TargetInfoPriority>, TargetInfoPriorityComparator> queue;
+	TargetInfoPriority priorityTargetInfo;
+
 	while (it != targets.end()) {
 
-		if (!(*it)->isRemoved) {
-
-			if (!isChecked) {
-
-				result = *it;
-				isChecked = true;
-			}
-			else {
-
-				// Pick the target with the less units attacking them (except for the unit)
-				if (result->target->GetAttackingUnitsSize((Entity*)this) > (*it)->target->GetAttackingUnitsSize((Entity*)this))
-
-					result = *it;
-			}
-		}
+		priorityTargetInfo.targetInfo = *it;
+		priorityTargetInfo.priority = (*it)->target->GetPos().DistanceManhattan(pos);
+		queue.push(priorityTargetInfo);
 
 		it++;
+	}
+
+	TargetInfoPriority curr;
+	while (queue.size() > 0) {
+
+		curr = queue.top();
+		queue.pop();
+
+		if (!isChecked) {
+
+			result = curr.targetInfo;
+			isChecked = true;
+		}
+		else {
+		
+			// Pick the target with the less units attacking them (except for the unit)
+			if (result->target->GetAttackingUnitsSize((Entity*)this) > curr.targetInfo->target->GetAttackingUnitsSize((Entity*)this))
+
+				result = curr.targetInfo;
+		}
 	}
 
 	return result;

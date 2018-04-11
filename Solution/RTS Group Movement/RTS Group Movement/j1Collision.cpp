@@ -287,7 +287,7 @@ void j1Collision::DebugDraw()
 {
 	BROFILER_CATEGORY(__FUNCTION__, Profiler::Color::Orchid);
 
-	Uint8 alpha = 80;
+	Uint8 alpha = 60;
 	SDL_Color color;
 
 	list<ColliderGroup*>::const_iterator it = colliderGroups.begin();

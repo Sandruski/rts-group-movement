@@ -71,56 +71,76 @@ void Grunt::Move(float dt)
 
 	// Is the unit dead?
 	/// The unit must fit the tile (it is more attractive for the player)
-	if (currLife <= 0 && unitState != UnitState_Die && singleUnit->IsFittingTile()) {
+	if (singleUnit != nullptr) {
 
-		isDead = true;
+		if (currLife <= 0
+			&& unitState != UnitState_Die
+			&& singleUnit->IsFittingTile()) {
 
-		// Invalidate colliders
-		sightRadiusCollider->isValid = false;
-		attackRadiusCollider->isValid = false;
-		entityCollider->isValid = false;
+			isDead = true;
 
-		// If the player dies, remove all their goals
-		unitCommand = UnitCommand_Stop;
-	}
+			// Remove the entity from the unitsSelected list
+			App->entities->RemoveUnitFromUnitsSelected(this);
 
-	/// GOAL: MoveToPosition
-	// The goal of the unit has been changed manually
-	if (singleUnit->isGoalChanged)
+			// Remove Movement (so other units can walk above them)
+			App->entities->InvalidateMovementEntity(this);
 
-		brain->AddGoal_MoveToPosition(singleUnit->goal);
+			if (singleUnit != nullptr)
+				delete singleUnit;
+			singleUnit = nullptr;
 
-	/// GOAL: AttackTarget
-	// Check if there are available targets
-	/// Prioritize a type of target (static or dynamic)
-	if (singleUnit->IsFittingTile()) {
+			// Invalidate colliders
+			sightRadiusCollider->isValid = false;
+			attackRadiusCollider->isValid = false;
+			entityCollider->isValid = false;
 
-		newTarget = GetBestTargetInfo();
-
-		if (newTarget != nullptr) {
-
-			// A new target has found, update the attacking target
-			if (currTarget != newTarget) {
-
-				if (currTarget != nullptr) {
-
-					if (!currTarget->isRemoved) {
-
-						currTarget->target->RemoveAttackingUnit(this);
-						isHitting = false;
-					}
-				}
-
-				currTarget = newTarget;
-				brain->AddGoal_AttackTarget(currTarget);
-			}
+			// If the player dies, remove all their goals
+			unitCommand = UnitCommand_Stop;
 		}
 	}
 
-	// ---------------------------------------------------------------------
+	if (!isDead) {
 
-	// Process the currently active goal
-	brain->Process(dt);
+		/// GOAL: MoveToPosition
+		// The goal of the unit has been changed manually
+		if (singleUnit->isGoalChanged)
+
+			brain->AddGoal_MoveToPosition(singleUnit->goal);
+
+		/// GOAL: AttackTarget
+		// Check if there are available targets
+		/// Prioritize a type of target (static or dynamic)
+		if (singleUnit->IsFittingTile()) {
+
+			newTarget = GetBestTargetInfo();
+
+			if (newTarget != nullptr) {
+
+				// A new target has found, update the attacking target
+				if (currTarget != newTarget) {
+
+					if (currTarget != nullptr) {
+
+						if (!currTarget->isRemoved) {
+
+							currTarget->target->RemoveAttackingUnit(this);
+							isHitting = false;
+						}
+					}
+
+					currTarget = newTarget;
+					brain->AddGoal_AttackTarget(currTarget);
+				}
+			}
+		}
+
+		// ---------------------------------------------------------------------
+
+		// PROCESS THE CURRENTLY ACTIVE GOAL
+		brain->Process(dt);
+	}
+
+	// ---------------------------------------------------------------------
 
 	UnitStateMachine(dt);
 
@@ -170,7 +190,7 @@ void Grunt::OnCollision(ColliderGroup* c1, ColliderGroup* c2, CollisionState col
 
 	case CollisionState_OnEnter:
 
-		// An player is within the sight of this player unit
+		// An player is within the sight of this enemy unit
 		if (c1->colliderType == ColliderType_EnemySightRadius && c2->colliderType == ColliderType_PlayerUnit) { // || c2->colliderType == ColliderType_PlayerBuilding
 
 			DynamicEntity* dynEnt = (DynamicEntity*)c2->entity;

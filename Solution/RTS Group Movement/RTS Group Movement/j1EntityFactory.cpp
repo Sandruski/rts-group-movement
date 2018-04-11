@@ -705,7 +705,7 @@ DynamicEntity* j1EntityFactory::AddDynamicEntity(DynamicEntityType dynamicEntity
 	{
 		CritterSheep* critterSheep = new CritterSheep(pos, size, currLife, maxLife, unitInfo, (const CritterSheepInfo&)entityInfo);
 		critterSheep->entityType = EntityType_DynamicEntity;
-		critterSheep->entitySide = EntitySide_NoSide;
+		critterSheep->entitySide = EntitySide_Neutral;
 		critterSheep->dynamicEntityType = DynamicEntityType_CritterSheep;
 
 		toSpawnEntities.push_back((Entity*)critterSheep);
@@ -717,7 +717,7 @@ DynamicEntity* j1EntityFactory::AddDynamicEntity(DynamicEntityType dynamicEntity
 	{
 		CritterBoar* critterBoar = new CritterBoar(pos, size, currLife, maxLife, unitInfo, (const CritterBoarInfo&)entityInfo);
 		critterBoar->entityType = EntityType_DynamicEntity;
-		critterBoar->entitySide = EntitySide_NoSide;
+		critterBoar->entitySide = EntitySide_Neutral;
 		critterBoar->dynamicEntityType = DynamicEntityType_CritterBoar;
 
 		toSpawnEntities.push_back((Entity*)critterBoar);
@@ -757,6 +757,12 @@ Entity* j1EntityFactory::IsEntityOnTile(iPoint tile, EntityType entityType, Enti
 					if (tile.x == entityTile.x && tile.y == entityTile.y)
 						return (Entity*)(*activeDyn);
 
+			case EntitySide_Neutral:
+
+				if ((*activeDyn)->entitySide == EntitySide_Neutral)
+					if (tile.x == entityTile.x && tile.y == entityTile.y)
+						return (Entity*)(*activeDyn);
+
 			case EntitySide_NoSide:
 
 				if (tile.x == entityTile.x && tile.y == entityTile.y)
@@ -787,6 +793,12 @@ Entity* j1EntityFactory::IsEntityOnTile(iPoint tile, EntityType entityType, Enti
 		case EntitySide_Enemy:
 
 			if ((*toSpawn)->entitySide == EntitySide_Enemy)
+				if (tile.x == entityTile.x && tile.y == entityTile.y)
+					return (Entity*)(*toSpawn);
+
+		case EntitySide_Neutral:
+
+			if ((*toSpawn)->entitySide == EntitySide_Neutral)
 				if (tile.x == entityTile.x && tile.y == entityTile.y)
 					return (Entity*)(*toSpawn);
 

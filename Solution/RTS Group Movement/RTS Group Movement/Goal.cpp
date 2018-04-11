@@ -212,11 +212,13 @@ void Goal_AttackTarget::Activate()
 	}
 
 	// The attack is only performed if the sight distance is satisfied
+	/*
 	else if (!targetInfo->isSightSatisfied) {
 
 		goalStatus = GoalStatus_Failed;
 		return;	
 	}
+	*/
 
 	// -----
 

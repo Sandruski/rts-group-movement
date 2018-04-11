@@ -163,7 +163,7 @@ public:
 	bool InvalidateTarget(Entity* entity); // sets isRemove to true
 	bool RemoveTargetInfo(TargetInfo* targetInfo);
 
-	TargetInfo* GetBestTargetInfo() const;
+	TargetInfo* GetBestTargetInfo() const; // TODO: add argument EntityType??? For critters vs enemies
 
 	void SetHitting(bool isHitting);
 	bool IsHitting() const;
@@ -222,6 +222,36 @@ protected:
 	// Selection color
 	SDL_Color color = ColorWhite;
 	string colorName = "White";
+};
+
+// ---------------------------------------------------------------------
+// Helper class to establish a priority to a TargetInfo
+// ---------------------------------------------------------------------
+class TargetInfoPriority
+{
+public:
+	TargetInfoPriority() {}
+	TargetInfoPriority(TargetInfo* targetInfo, int priority) :targetInfo(targetInfo), priority(priority) {}
+	TargetInfoPriority(const TargetInfoPriority& t)
+	{
+		targetInfo = t.targetInfo;
+		priority = t.priority;
+	}
+
+	TargetInfo* targetInfo = nullptr;
+	int priority = 0;
+};
+
+// ---------------------------------------------------------------------
+// Helper class to compare two TargetInfo by its priority values
+// ---------------------------------------------------------------------
+class TargetInfoPriorityComparator
+{
+public:
+	int operator() (const TargetInfoPriority a, const TargetInfoPriority b)
+	{
+		return a.priority > b.priority;
+	}
 };
 
 #endif //__DynamicEntity_H__
