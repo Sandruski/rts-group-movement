@@ -23,6 +23,7 @@ class Goal_Think;
 
 enum ColliderType;
 enum CollisionState;
+enum DistanceHeuristic;
 
 #define TIME_REMOVE_CORPSE 3.0
 
@@ -150,8 +151,8 @@ public:
 	ColliderGroup* GetSightRadiusCollider() const;
 	ColliderGroup* GetAttackRadiusCollider() const;
 
-	ColliderGroup* CreateRhombusCollider(ColliderType colliderType, uint radius);
-	void UpdateRhombusColliderPos(ColliderGroup* collider, uint radius);
+	ColliderGroup* CreateRhombusCollider(ColliderType colliderType, uint radius, DistanceHeuristic distanceHeuristic);
+	void UpdateRhombusColliderPos(ColliderGroup* collider, uint radius, DistanceHeuristic distanceHeuristic);
 
 	// Attack
 	/// Unit attacks a target

@@ -51,8 +51,8 @@ Footman::Footman(fPoint pos, iPoint size, int currLife, uint maxLife, const Unit
 
 	// Collisions
 	CreateEntityCollider(EntitySide_Player);
-	sightRadiusCollider = CreateRhombusCollider(ColliderType_PlayerSightRadius, unitInfo.sightRadius);
-	attackRadiusCollider = CreateRhombusCollider(ColliderType_PlayerAttackRadius, unitInfo.attackRadius);
+	sightRadiusCollider = CreateRhombusCollider(ColliderType_PlayerSightRadius, unitInfo.sightRadius, DistanceHeuristic_DistanceManhattan);
+	attackRadiusCollider = CreateRhombusCollider(ColliderType_PlayerAttackRadius, unitInfo.attackRadius, DistanceHeuristic_DistanceTo);
 	entityCollider->isTrigger = true;
 	sightRadiusCollider->isTrigger = true;
 	attackRadiusCollider->isTrigger = true;
@@ -184,8 +184,8 @@ void Footman::Move(float dt)
 
 		// Update colliders
 		UpdateEntityColliderPos();
-		UpdateRhombusColliderPos(sightRadiusCollider, unitInfo.sightRadius);
-		UpdateRhombusColliderPos(attackRadiusCollider, unitInfo.attackRadius);
+		UpdateRhombusColliderPos(sightRadiusCollider, unitInfo.sightRadius, DistanceHeuristic_DistanceManhattan);
+		UpdateRhombusColliderPos(attackRadiusCollider, unitInfo.attackRadius, DistanceHeuristic_DistanceTo);
 
 		lastColliderUpdateTile = singleUnit->currTile;
 	}

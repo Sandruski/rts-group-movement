@@ -300,7 +300,7 @@ ColliderGroup* DynamicEntity::GetAttackRadiusCollider() const
 	return attackRadiusCollider;
 }
 
-ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, uint radius)
+ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, uint radius, DistanceHeuristic distanceHeuristic)
 {
 	vector<Collider*> colliders;
 
@@ -331,7 +331,7 @@ ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, u
 
 		for (uint i = 0; i < 4; ++i)
 		{
-			if (neighbors[i].DistanceManhattan(singleUnit->currTile) < radius) {
+			if (CalculateDistance(neighbors[i], singleUnit->currTile, distanceHeuristic) < radius) {
 
 				if (find(visited.begin(), visited.end(), neighbors[i]) == visited.end()) {
 
@@ -369,7 +369,7 @@ ColliderGroup* DynamicEntity::CreateRhombusCollider(ColliderType colliderType, u
 	return App->collision->CreateAndAddColliderGroup(colliders, colliderType, App->entities, this);
 }
 
-void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radius)
+void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radius, DistanceHeuristic distanceHeuristic)
 {
 	collider->RemoveAllColliders();
 
@@ -402,7 +402,7 @@ void DynamicEntity::UpdateRhombusColliderPos(ColliderGroup* collider, uint radiu
 
 		for (uint i = 0; i < 4; ++i)
 		{
-			if (navgraph->IsWalkable(neighbors[i]) && neighbors[i].DistanceManhattan(singleUnit->currTile) < radius) {
+			if (navgraph->IsWalkable(neighbors[i]) && CalculateDistance(neighbors[i], singleUnit->currTile, distanceHeuristic) < radius) {
 
 				if (find(visited.begin(), visited.end(), neighbors[i]) == visited.end()) {
 

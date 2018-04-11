@@ -118,7 +118,7 @@ bool j1Scene::PreUpdate()
 
 	// 1: spawn a Footman with priority 1
 	unitInfo.sightRadius = 6;
-	unitInfo.attackRadius = 3;
+	unitInfo.attackRadius = 2;
 	unitInfo.maxSpeed = 80.0f;
 
 	if (App->input->GetKey(SDL_SCANCODE_1) == KEY_DOWN) {
@@ -143,7 +143,7 @@ bool j1Scene::PreUpdate()
 
 	// 2: spawn a Grunt with priority 1
 	unitInfo.sightRadius = 5;
-	unitInfo.attackRadius = 3;
+	unitInfo.attackRadius = 2;
 	unitInfo.maxSpeed = 50.0f;
 
 	maxLife = 20;

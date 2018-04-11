@@ -51,8 +51,8 @@ Grunt::Grunt(fPoint pos, iPoint size, int currLife, uint maxLife, const UnitInfo
 
 	// Collisions
 	CreateEntityCollider(EntitySide_Enemy);
-	sightRadiusCollider = CreateRhombusCollider(ColliderType_EnemySightRadius, unitInfo.sightRadius);
-	attackRadiusCollider = CreateRhombusCollider(ColliderType_EnemyAttackRadius, unitInfo.attackRadius);
+	sightRadiusCollider = CreateRhombusCollider(ColliderType_EnemySightRadius, unitInfo.sightRadius, DistanceHeuristic_DistanceManhattan);
+	attackRadiusCollider = CreateRhombusCollider(ColliderType_EnemyAttackRadius, unitInfo.attackRadius, DistanceHeuristic_DistanceTo);
 	entityCollider->isTrigger = true;
 	sightRadiusCollider->isTrigger = true;
 	attackRadiusCollider->isTrigger = true;
@@ -134,8 +134,8 @@ void Grunt::Move(float dt)
 
 		// Update colliders
 		UpdateEntityColliderPos();
-		UpdateRhombusColliderPos(sightRadiusCollider, unitInfo.sightRadius);
-		UpdateRhombusColliderPos(attackRadiusCollider, unitInfo.attackRadius);
+		UpdateRhombusColliderPos(sightRadiusCollider, unitInfo.sightRadius, DistanceHeuristic_DistanceManhattan);
+		UpdateRhombusColliderPos(attackRadiusCollider, unitInfo.attackRadius, DistanceHeuristic_DistanceTo);
 
 		lastColliderUpdateTile = singleUnit->currTile;
 	}
