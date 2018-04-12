@@ -196,6 +196,12 @@ void Goal_AttackTarget::Activate()
 
 	RemoveAllSubgoals();
 
+	if (targetInfo == nullptr) {
+
+		goalStatus = GoalStatus_Completed;
+		return;
+	}
+
 	/// The target has been removed from another unit!!!
 	if (targetInfo->isRemoved) {
 	
@@ -267,6 +273,9 @@ void Goal_AttackTarget::Terminate()
 
 	// -----
 
+	if (targetInfo == nullptr)
+		return;
+
 	/// The target has been removed from another unit!!!
 	if (targetInfo->isRemoved) {
 
@@ -290,7 +299,8 @@ void Goal_AttackTarget::Terminate()
 		App->entities->InvalidateAttackEntity(targetInfo->target);
 
 	// If the sight distance is not satisfied, remove the target from the entity targets list
-	if (!targetInfo->isSightSatisfied || !targetInfo->IsTargetPresent())
+	// !targetInfo->isSightSatisfied ||
+	if (!targetInfo->IsTargetPresent())
 
 		// Remove the target from this owner
 		owner->RemoveTargetInfo(targetInfo);

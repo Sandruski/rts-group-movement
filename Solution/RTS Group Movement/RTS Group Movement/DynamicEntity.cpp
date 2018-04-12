@@ -470,7 +470,7 @@ bool DynamicEntity::SetCurrTarget(Entity* target)
 	if (currTarget != nullptr) {
 
 		if (target == currTarget->target)
-			return false;
+			return true;
 	} 
 
 	list<TargetInfo*>::const_iterator it = targets.begin();
@@ -482,7 +482,7 @@ bool DynamicEntity::SetCurrTarget(Entity* target)
 
 		if ((*it)->target == target) {
 
-			targetInfo = (*it);
+			targetInfo = *it;
 			break;
 		}
 		it++;
