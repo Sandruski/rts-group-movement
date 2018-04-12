@@ -111,9 +111,8 @@ void Footman::Move(float dt)
 				brain->RemoveAllSubgoals();
 
 				unitState = UnitState_Idle;
+				unitCommand = UnitCommand_NoCommand;
 			}
-
-			unitCommand = UnitCommand_NoCommand;
 
 			break;
 
@@ -124,10 +123,10 @@ void Footman::Move(float dt)
 
 				if (singleUnit->IsFittingTile()) {
 
+					brain->RemoveAllSubgoals();
 					brain->AddGoal_MoveToPosition(singleUnit->goal);
 
 					unitState = UnitState_Walk;
-
 					unitCommand = UnitCommand_NoCommand;
 				}
 			}
@@ -139,10 +138,10 @@ void Footman::Move(float dt)
 			// The goal of the unit has been changed manually (to patrol)
 			if (singleUnit->isGoalChanged) {
 
+				brain->RemoveAllSubgoals();
 				brain->AddGoal_Patrol(singleUnit->currTile, singleUnit->goal);
 
 				unitState = UnitState_Patrol;
-
 				unitCommand = UnitCommand_NoCommand;
 			}
 
@@ -150,16 +149,16 @@ void Footman::Move(float dt)
 
 		case UnitCommand_AttackTarget:
 
-			if (singleUnit->IsFittingTile()) {
+			if (currTarget != nullptr) {
 
-				if (currTarget != nullptr) {
+				if (singleUnit->IsFittingTile()) {
 
+					brain->RemoveAllSubgoals();
 					brain->AddGoal_AttackTarget(currTarget);
 
 					unitState = UnitState_AttackTarget;
+					unitCommand = UnitCommand_NoCommand;
 				}
-
-				unitCommand = UnitCommand_NoCommand;
 			}
 
 			break;

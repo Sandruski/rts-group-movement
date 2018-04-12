@@ -352,18 +352,14 @@ bool j1Scene::Update(float dt)
 		if (group != nullptr) {
 
 			/// COMMAND PATROL
-			if (App->input->GetKey(SDL_SCANCODE_P) == KEY_DOWN) {
+			if (App->input->GetKey(SDL_SCANCODE_P) == KEY_DOWN)
 
-				App->entities->RemoveAllUnitsGoals(units);
 				App->entities->CommandToUnits(units, UnitCommand_Patrol);
-			}
 
 			/// STOP UNIT (FROM WHATEVER THEY ARE DOING)
-			if (App->input->GetKey(SDL_SCANCODE_S) == KEY_DOWN) {
+			if (App->input->GetKey(SDL_SCANCODE_S) == KEY_DOWN)
 
-				App->entities->RemoveAllUnitsGoals(units);
 				App->entities->CommandToUnits(units, UnitCommand_Stop);
-			}
 
 			/// COMMAND ATTACK
 			/// Enemy
@@ -384,11 +380,9 @@ bool j1Scene::Update(float dt)
 					it++;
 				}
 
-				if (isTarget) {
+				if (isTarget)
 
-					App->entities->RemoveAllUnitsGoals(units);
 					App->entities->CommandToUnits(units, UnitCommand_AttackTarget);
-				}
 			}
 
 			/// Critter
@@ -409,11 +403,9 @@ bool j1Scene::Update(float dt)
 					it++;
 				}
 
-				if (isTarget) {
+				if (isTarget)
 
-					App->entities->RemoveAllUnitsGoals(units);
 					App->entities->CommandToUnits(units, UnitCommand_AttackTarget);
-				}
 			}
 
 			/// SET GOAL (COMMAND MOVE TO POSITION)

@@ -354,7 +354,7 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 			// SPECIAL CASES
 			// ---------------------------------------------------------------------
 
-			// a) The other unit is hitting and won't respond to any movement order
+ 			// a) The other unit is hitting and won't respond to any movement order
 			if (singleUnit->waitUnit->unit->IsHitting()) {
 			
 				// Current unit must react to the collision
@@ -762,6 +762,8 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 
 				singleUnit->goal = singleUnit->shapedGoal;
 				singleUnit->isGoalChanged = true;
+
+				singleUnit->movementState = MovementState_WaitForPath;
 			}
 		}
 
@@ -1645,8 +1647,10 @@ void SingleUnit::SetCollisionParameters(CollisionType collisionType, SingleUnit*
 }
 
 // Prepares the unit for its next movement cycle
-void SingleUnit::GetReadyForNewMove()
+bool SingleUnit::GetReadyForNewMove()
 {
+	bool ret = false;
+
 	if (IsFittingTile()) {
 
 		ResetUnitParameters();
@@ -1657,7 +1661,11 @@ void SingleUnit::GetReadyForNewMove()
 		movementState = MovementState_WaitForPath;
 
 		isGoalChanged = false;
+
+		ret = true;
 	}
+
+	return ret;
 }
 
 // Sets the state of the unit to UnitState_Walk

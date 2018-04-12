@@ -174,7 +174,7 @@ struct SingleUnit
 	void SetCollisionParameters(CollisionType collisionType, SingleUnit* waitUnit, iPoint waitTile);
 
 	// Prepares the unit for its next movement cycle
-	void GetReadyForNewMove();
+	bool GetReadyForNewMove();
 
 	// Sets the state of the unit to UnitState_Walk
 	void WakeUp();

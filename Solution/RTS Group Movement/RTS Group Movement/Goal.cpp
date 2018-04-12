@@ -408,7 +408,7 @@ void Goal_Wander::Terminate()
 
 Goal_MoveToPosition::Goal_MoveToPosition(DynamicEntity* owner, iPoint destinationTile) :AtomicGoal(owner, GoalType_MoveToPosition), destinationTile(destinationTile) {}
 
-void Goal_MoveToPosition::Activate() 
+void Goal_MoveToPosition::Activate()
 {
 	goalStatus = GoalStatus_Active;
 
@@ -424,7 +424,11 @@ void Goal_MoveToPosition::Activate()
 
 		owner->GetSingleUnit()->SetGoal(destinationTile);
 
-	owner->GetSingleUnit()->GetReadyForNewMove();
+	if (!owner->GetSingleUnit()->GetReadyForNewMove()) {
+
+		goalStatus = GoalStatus_Failed;
+		return;
+	}
 }
 
 GoalStatus Goal_MoveToPosition::Process(float dt) 
@@ -441,6 +445,7 @@ GoalStatus Goal_MoveToPosition::Process(float dt)
 		if (owner->GetSingleUnit()->group->isShapedGoal) {
 
 			if (owner->GetSingleUnit()->goal == owner->GetSingleUnit()->shapedGoal)
+
 				goalStatus = GoalStatus_Completed;
 		}
 		else
