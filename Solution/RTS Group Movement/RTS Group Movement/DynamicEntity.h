@@ -49,6 +49,7 @@ enum UnitState
 	UnitState_NoState,
 
 	UnitState_Idle,
+	UnitState_Walk,
 	UnitState_Die,
 
 	// Composite goals only
@@ -78,6 +79,7 @@ enum UnitCommand
 	UnitCommand_NoCommand,
 
 	UnitCommand_Stop,
+	UnitCommand_MoveToPosition,
 	UnitCommand_AttackTarget,
 	UnitCommand_Patrol,
 
@@ -169,7 +171,8 @@ public:
 	bool IsHitting() const;
 
 	// Player commands
-	bool SetCommand(UnitCommand unitCommand);
+	bool SetUnitCommand(UnitCommand unitCommand);
+	UnitCommand GetUnitCommand() const;
 
 public:
 

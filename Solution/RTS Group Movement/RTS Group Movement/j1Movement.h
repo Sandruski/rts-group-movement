@@ -136,6 +136,10 @@ struct UnitGroup
 
 	bool SetShapedGoal();
 
+	uint GetShapedGoalSize() const;
+
+	bool ClearShapedGoal();
+
 	// -----
 
 	list<SingleUnit*> units; // contains all the units of a given group

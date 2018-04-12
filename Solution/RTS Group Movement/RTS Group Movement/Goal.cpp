@@ -412,6 +412,8 @@ void Goal_MoveToPosition::Activate()
 {
 	goalStatus = GoalStatus_Active;
 
+	owner->SetHitting(false);
+
 	if (!owner->GetNavgraph()->IsWalkable(destinationTile)) {
 
 		goalStatus = GoalStatus_Failed;

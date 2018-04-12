@@ -110,7 +110,26 @@ void Footman::Move(float dt)
 
 				brain->RemoveAllSubgoals();
 
-				unitCommand = UnitCommand_NoCommand;
+				unitState = UnitState_Idle;
+			}
+
+			unitCommand = UnitCommand_NoCommand;
+
+			break;
+
+		case UnitCommand_MoveToPosition:
+
+			// The goal of the unit has been changed manually
+			if (singleUnit->isGoalChanged) {
+
+				if (singleUnit->IsFittingTile()) {
+
+					brain->AddGoal_MoveToPosition(singleUnit->goal);
+
+					unitState = UnitState_Walk;
+
+					unitCommand = UnitCommand_NoCommand;
+				}
 			}
 
 			break;
@@ -122,6 +141,8 @@ void Footman::Move(float dt)
 
 				brain->AddGoal_Patrol(singleUnit->currTile, singleUnit->goal);
 
+				unitState = UnitState_Patrol;
+
 				unitCommand = UnitCommand_NoCommand;
 			}
 
@@ -131,9 +152,12 @@ void Footman::Move(float dt)
 
 			if (singleUnit->IsFittingTile()) {
 
-				if (currTarget != nullptr)
+				if (currTarget != nullptr) {
 
 					brain->AddGoal_AttackTarget(currTarget);
+
+					unitState = UnitState_AttackTarget;
+				}
 
 				unitCommand = UnitCommand_NoCommand;
 			}
@@ -142,14 +166,6 @@ void Footman::Move(float dt)
 
 		case UnitCommand_NoCommand:
 		default:
-
-			// The goal of the unit has been changed manually (to move to position)
-			if (!isDead) {
-
-				if (singleUnit->isGoalChanged)
-
-					brain->AddGoal_MoveToPosition(singleUnit->goal);
-			}
 
 			break;
 		}
@@ -189,7 +205,7 @@ void Footman::Move(float dt)
 					SetUnitDirectionByValue(orientation);
 				}
 			}
-		}	
+		}
 	}
 
 	ChangeAnimation();
@@ -353,11 +369,15 @@ void Footman::UnitStateMachine(float dt)
 {
 	switch (unitState) {
 
-	case UnitState_AttackTarget:
+	case UnitState_Walk:
 
 		break;
 
 	case UnitState_Patrol:
+
+		break;
+
+	case UnitState_AttackTarget:
 
 		break;
 
@@ -468,16 +488,19 @@ bool Footman::ChangeAnimation()
 		// Set the direction of the unit as the orientation towards the attacking target
 		if (currTarget != nullptr) {
 
-			fPoint orientation = { currTarget->target->GetPos().x - pos.x, currTarget->target->GetPos().y - pos.y };
+			if (!currTarget->isRemoved) {
 
-			float m = sqrtf(pow(orientation.x, 2.0f) + pow(orientation.y, 2.0f));
+				fPoint orientation = { currTarget->target->GetPos().x - pos.x, currTarget->target->GetPos().y - pos.y };
 
-			if (m > 0.0f) {
-				orientation.x /= m;
-				orientation.y /= m;
+				float m = sqrtf(pow(orientation.x, 2.0f) + pow(orientation.y, 2.0f));
+
+				if (m > 0.0f) {
+					orientation.x /= m;
+					orientation.y /= m;
+				}
+
+				SetUnitDirectionByValue(orientation);
 			}
-
-			SetUnitDirectionByValue(orientation);
 		}
 
 		switch (GetUnitDirection()) {

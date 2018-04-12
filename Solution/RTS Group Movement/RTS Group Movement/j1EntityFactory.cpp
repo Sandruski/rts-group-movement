@@ -13,6 +13,7 @@
 #include "j1Pathfinding.h"
 #include "j1Collision.h"
 #include "j1Movement.h"
+#include "Goal.h"
 
 #include "Entity.h"
 
@@ -750,23 +751,27 @@ Entity* j1EntityFactory::IsEntityOnTile(iPoint tile, EntityType entityType, Enti
 				if ((*activeDyn)->entitySide == EntitySide_Player)
 					if (tile.x == entityTile.x && tile.y == entityTile.y)
 						return (Entity*)(*activeDyn);
+				break;
 
 			case EntitySide_Enemy:
 
 				if ((*activeDyn)->entitySide == EntitySide_Enemy)
 					if (tile.x == entityTile.x && tile.y == entityTile.y)
 						return (Entity*)(*activeDyn);
+				break;
 
 			case EntitySide_Neutral:
 
 				if ((*activeDyn)->entitySide == EntitySide_Neutral)
 					if (tile.x == entityTile.x && tile.y == entityTile.y)
 						return (Entity*)(*activeDyn);
+				break;
 
 			case EntitySide_NoSide:
 
 				if (tile.x == entityTile.x && tile.y == entityTile.y)
 					return (Entity*)(*activeDyn);
+				break;
 			}
 		}
 
@@ -789,23 +794,27 @@ Entity* j1EntityFactory::IsEntityOnTile(iPoint tile, EntityType entityType, Enti
 			if ((*toSpawn)->entitySide == EntitySide_Player)
 				if (tile.x == entityTile.x && tile.y == entityTile.y)
 					return (Entity*)(*toSpawn);
+			break;
 
 		case EntitySide_Enemy:
 
 			if ((*toSpawn)->entitySide == EntitySide_Enemy)
 				if (tile.x == entityTile.x && tile.y == entityTile.y)
 					return (Entity*)(*toSpawn);
+			break;
 
 		case EntitySide_Neutral:
 
 			if ((*toSpawn)->entitySide == EntitySide_Neutral)
 				if (tile.x == entityTile.x && tile.y == entityTile.y)
 					return (Entity*)(*toSpawn);
+			break;
 
 		case EntitySide_NoSide:
 
 			if (tile.x == entityTile.x && tile.y == entityTile.y)
 				return (Entity*)(*toSpawn);
+			break;
 		}
 
 		toSpawn++;
@@ -994,15 +1003,19 @@ EntityInfo& j1EntityFactory::GetDynamicEntityInfo(DynamicEntityType dynamicEntit
 	
 	case DynamicEntityType_Footman:
 		return (EntityInfo&)footmanInfo;
+		break;
 
 	case DynamicEntityType_Grunt:
 		return (EntityInfo&)gruntInfo;
+		break;
 
 	case DynamicEntityType_CritterSheep:
 		return (EntityInfo&)critterSheepInfo;
+		break;
 
 	case DynamicEntityType_CritterBoar:
 		return (EntityInfo&)critterBoarInfo;
+		break;
 	}
 }
 
@@ -1014,9 +1027,26 @@ bool j1EntityFactory::CommandToUnits(list<DynamicEntity*> units, UnitCommand uni
 
 	while (it != units.end()) {
 	
-		if ((*it)->SetCommand(unitCommand))
+		if ((*it)->SetUnitCommand(unitCommand))
 			ret = true;
 	
+		it++;
+	}
+
+	return ret;
+}
+
+bool j1EntityFactory::RemoveAllUnitsGoals(list<DynamicEntity*> units) 
+{
+	bool ret = false;
+
+	list<DynamicEntity*>::const_iterator it = units.begin();
+
+	while (it != units.end()) {
+
+		(*it)->GetBrain()->RemoveAllSubgoals();
+		ret = true;
+
 		it++;
 	}
 

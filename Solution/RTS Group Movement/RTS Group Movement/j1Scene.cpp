@@ -351,28 +351,17 @@ bool j1Scene::Update(float dt)
 
 		if (group != nullptr) {
 
-			/// SET GOAL
-			// Draw a shaped goal
-			if (App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_REPEAT)
-
-				group->DrawShapedGoal(mouseTile);
-
-			// Set a normal or shaped goal
-			if (App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_UP) {
-
-				if (!group->SetShapedGoal()) /// shaped goal
-					group->SetGoal(mouseTile); /// normal goal
-			}
-
 			/// COMMAND PATROL
 			if (App->input->GetKey(SDL_SCANCODE_P) == KEY_DOWN) {
-			
+
+				App->entities->RemoveAllUnitsGoals(units);
 				App->entities->CommandToUnits(units, UnitCommand_Patrol);
 			}
 
 			/// STOP UNIT (FROM WHATEVER THEY ARE DOING)
 			if (App->input->GetKey(SDL_SCANCODE_S) == KEY_DOWN) {
 
+				App->entities->RemoveAllUnitsGoals(units);
 				App->entities->CommandToUnits(units, UnitCommand_Stop);
 			}
 
@@ -385,14 +374,21 @@ bool j1Scene::Update(float dt)
 				// All the group is issued to attack this enemy (and other enemies if seen when arrived at destination)
 				list<DynamicEntity*>::const_iterator it = units.begin();
 
+				bool isTarget = true;
+
 				while (it != units.end()) {
 
-					(*it)->SetCurrTarget(target);
+					if (!(*it)->SetCurrTarget(target))
+						isTarget = false;
 
 					it++;
 				}
 
-				App->entities->CommandToUnits(units, UnitCommand_AttackTarget);
+				if (isTarget) {
+
+					App->entities->RemoveAllUnitsGoals(units);
+					App->entities->CommandToUnits(units, UnitCommand_AttackTarget);
+				}
 			}
 
 			/// Critter
@@ -403,14 +399,69 @@ bool j1Scene::Update(float dt)
 				// All the group is issued to attack this enemy (and other enemies if seen when arrived at destination)
 				list<DynamicEntity*>::const_iterator it = units.begin();
 
+				bool isTarget = true;
+
 				while (it != units.end()) {
 
-					(*it)->SetCurrTarget(critter);
+					if (!(*it)->SetCurrTarget(critter))
+						isTarget = false;
 
 					it++;
 				}
 
-				App->entities->CommandToUnits(units, UnitCommand_AttackTarget);
+				if (isTarget) {
+
+					App->entities->RemoveAllUnitsGoals(units);
+					App->entities->CommandToUnits(units, UnitCommand_AttackTarget);
+				}
+			}
+
+			/// SET GOAL (COMMAND MOVE TO POSITION)
+			// Draw a shaped goal
+			if (App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_REPEAT)
+
+				group->DrawShapedGoal(mouseTile);
+
+			// Set a normal or shaped goal
+			if (App->input->GetMouseButtonDown(SDL_BUTTON_RIGHT) == KEY_UP) {
+
+				bool isGoal = false;
+
+				if (group->GetShapedGoalSize() <= 1) {
+				
+					group->ClearShapedGoal();
+
+					if (group->SetGoal(mouseTile)) /// normal goal
+
+						isGoal = true;
+				}
+				else if (group->SetShapedGoal()) /// shaped goal
+
+					isGoal = true;
+
+				if (isGoal) {
+
+					uint isPatrol = 0;
+
+					list<DynamicEntity*>::const_iterator it = units.begin();
+
+					while (it != units.end()) {
+
+						if ((*it)->GetUnitCommand() == UnitCommand_Patrol)
+							isPatrol++;
+
+						it++;
+					}
+
+					/// If all units are in the Patrol command or the AttackTarget command, do not set the MoveToPosition command
+					bool isFull = false;
+
+					if (isPatrol == units.size() || target != nullptr || critter != nullptr)
+						isFull = true;
+
+					if (!isFull)
+						App->entities->CommandToUnits(units, UnitCommand_MoveToPosition);
+				}
 			}
 		}
 	}

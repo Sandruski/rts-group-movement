@@ -354,8 +354,8 @@ MovementState j1Movement::MoveUnit(DynamicEntity* unit, float dt)
 			// SPECIAL CASES
 			// ---------------------------------------------------------------------
 
-			// a) The other unit is hitting or still and won't respond to any movement order
-			if (singleUnit->waitUnit->unit->IsHitting() || singleUnit->waitUnit->unit->IsStill()) {
+			// a) The other unit is hitting and won't respond to any movement order
+			if (singleUnit->waitUnit->unit->IsHitting()) {
 			
 				// Current unit must react to the collision
 				// Current unit moves
@@ -1539,6 +1539,24 @@ bool UnitGroup::SetShapedGoal()
 	}
 
 	shapedGoal.clear();
+
+	return ret;
+}
+
+uint UnitGroup::GetShapedGoalSize() const 
+{
+	return shapedGoal.size();
+}
+
+bool UnitGroup::ClearShapedGoal()
+{
+	bool ret = false;
+
+	if (shapedGoal.size() > 0) {
+
+		shapedGoal.clear();
+		ret = true;
+	}
 
 	return ret;
 }

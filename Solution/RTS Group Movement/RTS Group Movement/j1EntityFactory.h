@@ -76,6 +76,8 @@ public:
 
 	bool CommandToUnits(list<DynamicEntity*> units, UnitCommand unitCommand = UnitCommand_NoCommand);
 
+	bool RemoveAllUnitsGoals(list<DynamicEntity*> units);
+
 	// Removes the entity from all the targets and attacking units lists
 	void InvalidateAttackEntity(Entity* entity);
 	void InvalidateMovementEntity(Entity* entity);

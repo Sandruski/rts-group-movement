@@ -155,3 +155,11 @@ uint Entity::GetAttackingUnitsSize(Entity* attackingUnit) const
 
 	return size;
 }
+
+// Struct TargetInfo -------------------------------------------------------------
+
+TargetInfo::TargetInfo() {}
+
+TargetInfo::TargetInfo(const TargetInfo& t) :
+	isSightSatisfied(t.isSightSatisfied), isAttackSatisfied(t.isAttackSatisfied),
+	isRemoved(t.isRemoved), target(t.target) {}

@@ -467,27 +467,45 @@ bool DynamicEntity::SetCurrTarget(Entity* target)
 	if (target == nullptr)
 		return false;
 
+	if (currTarget != nullptr) {
+
+		if (target == currTarget->target)
+			return false;
+	} 
+
 	list<TargetInfo*>::const_iterator it = targets.begin();
 
-	// Check if the target is already in a TargetInfo
+	TargetInfo* targetInfo = nullptr;
+	
+	// Check if the target is already in the targets list (this means that the TargetInfo exists)
 	while (it != targets.end()) {
 
 		if ((*it)->target == target) {
 
-			RemoveTargetInfo(*it);
+			targetInfo = (*it);
 			break;
 		}
 		it++;
 	}
 
-	// Create a new TargetInfo and push it to the front of the list
-	TargetInfo* targetInfo = new TargetInfo();
-	targetInfo->target = target;
+	// If the target is not in the targets list, create a new TargetInfo
+	if (targetInfo == nullptr) {
+	
+		targetInfo = new TargetInfo();
+		targetInfo->target = target;
 
-	targets.push_back(targetInfo);
+		targets.push_front(targetInfo);
+	}
 
-	if (ret)
-		currTarget = targets.front();
+	if (targetInfo != nullptr) {
+
+		// Only push it if it does not have to be removed
+		if (!targetInfo->isRemoved) {
+
+			currTarget = targetInfo;
+			ret = true;
+		}
+	}
 
 	return ret;
 }
@@ -586,9 +604,12 @@ TargetInfo* DynamicEntity::GetBestTargetInfo() const
 
 	while (it != targets.end()) {
 
-		priorityTargetInfo.targetInfo = *it;
-		priorityTargetInfo.priority = (*it)->target->GetPos().DistanceManhattan(pos);
-		queue.push(priorityTargetInfo);
+		if (!(*it)->isRemoved) {
+
+			priorityTargetInfo.targetInfo = *it;
+			priorityTargetInfo.priority = (*it)->target->GetPos().DistanceManhattan(pos);
+			queue.push(priorityTargetInfo);
+		}
 
 		it++;
 	}
@@ -627,7 +648,7 @@ bool DynamicEntity::IsHitting() const
 }
 
 // Player commands
-bool DynamicEntity::SetCommand(UnitCommand unitCommand) 
+bool DynamicEntity::SetUnitCommand(UnitCommand unitCommand) 
 {
 	bool ret = false;
 
@@ -638,6 +659,11 @@ bool DynamicEntity::SetCommand(UnitCommand unitCommand)
 	}
 
 	return ret;
+}
+
+UnitCommand DynamicEntity::GetUnitCommand() const 
+{
+	return unitCommand;
 }
 
 // TargetInfo struct ---------------------------------------------------------------------------------
