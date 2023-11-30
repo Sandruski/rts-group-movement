@@ -13,8 +13,8 @@ system.
 
 <I>It is not recommended to move simultaneously more than 16 units.</I>
 
-•	Website: [RTS Group Movement Website](https://sandruski.github.io/RTS-Group-Movement/)<br>
-•	GitHub repository: [RTS Group Movement Repository](https://github.com/Sandruski/RTS-Group-Movement)
+•	Website: [RTS Group Movement Website](https://sandruski.github.io/rts-group-movement)<br>
+•	GitHub repository: [RTS Group Movement Repository](https://github.com/Sandruski/rts-group-movement)
 
 ## Inputs
 
